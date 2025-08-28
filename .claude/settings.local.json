@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(d:\\University\\Sophomore\\MiraclePlus\\Signal-Product\\达芬Qi说\\figma/**)",
+      "Read(d:\\University\\Sophomore\\MiraclePlus\\Signal-Product\\达芬Qi说\\figma\\code/**)",
+      "Read(d:\\University\\Sophomore\\MiraclePlus\\Signal-Product\\达芬Qi说\\figma\\icon/**)",
+      "Read(d:\\University\\Sophomore\\MiraclePlus\\Signal-Product\\达芬Qi说\\figma\\icon/**)",
+      "Read(d:\\University\\Sophomore\\MiraclePlus\\Signal-Product\\达芬Qi说\\figma\\icon/**)",
+      "Read(d:\\University\\Sophomore\\MiraclePlus\\Signal-Product\\达芬Qi说\\figma\\icon/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
