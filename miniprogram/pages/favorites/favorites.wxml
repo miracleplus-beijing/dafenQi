@@ -1,0 +1,33 @@
+<!-- 收藏页面 -->
+<view class="favorites-container">
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{favoriteList.length === 0}}">
+    <image src="../../images/icons/收藏-未选择.svg" class="empty-icon"></image>
+    <text class="empty-text">暂无收藏内容</text>
+    <text class="empty-desc">收藏的内容会显示在这里</text>
+  </view>
+
+  <!-- 收藏列表 -->
+  <view class="favorites-list" wx:else>
+    <view wx:for="{{favoriteList}}" wx:key="id" class="favorite-item" 
+          bindtap="playFavoriteItem" data-item="{{item}}">
+      <view class="item-cover">
+        <image src="{{item.cover || '../../images/default-cover.png'}}" 
+               class="cover-image" mode="aspectFill"></image>
+      </view>
+      
+      <view class="item-info">
+        <text class="item-title">{{item.title}}</text>
+        <text class="item-channel">{{item.channel}}</text>
+        <text class="favorite-time">{{item.favoriteTimeText}}</text>
+      </view>
+      
+      <view class="item-actions">
+        <view class="action-btn" bindtap="removeFromFavorites" 
+              data-id="{{item.id}}" catchtap="true">
+          <image src="../../images/icons/收藏-已选择.svg" class="action-icon"></image>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

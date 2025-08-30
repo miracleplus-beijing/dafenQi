@@ -1,0 +1,80 @@
+<!-- 登录页面 -->
+<view class="login-container">
+  <!-- 顶部背景装饰 -->
+  <view class="bg-decoration">
+    <view class="circle circle-1"></view>
+    <view class="circle circle-2"></view>
+    <view class="circle circle-3"></view>
+  </view>
+
+  <!-- Logo区域 -->
+  <view class="logo-section">
+    <image src="../../images/icons/logo.png" class="app-logo" mode="aspectFit"></image>
+    <text class="app-name">达芬Qi说</text>
+    <text class="app-slogan">听见学术的声音</text>
+  </view>
+
+  <!-- 登录内容区域 -->
+  <view class="login-content">
+    <!-- 微信登录按钮 -->
+    <button 
+      class="login-btn wechat-login {{isAgreed ? '' : 'disabled'}}" 
+      bindtap="handleWechatLogin"
+      disabled="{{!isAgreed}}"
+      loading="{{isLogging}}"
+    >
+      <image src="{{isAgreed ? '../../images/icons/微信-白色.svg' : '../../images/icons/微信.svg'}}" class="login-icon"></image>
+      <text class="login-text">{{isLogging ? '登录中...' : '微信登录'}}</text>
+    </button>
+
+    <!-- 微信授权获取用户信息按钮（仅在需要时显示） -->
+    <button 
+      wx:if="{{showUserInfoAuth}}"
+      class="login-btn user-info-auth {{isAgreed ? '' : 'disabled'}}" 
+      open-type="getUserProfile"
+      bindgetuserprofile="handleGetUserProfile"
+      disabled="{{!isAgreed}}"
+    >
+      <image src="../../images/icons/用户.svg" class="login-icon"></image>
+      <text class="login-text">授权获取头像昵称</text>
+    </button>
+
+    <!-- 其他登录方式 -->
+    <view class="other-login">
+      <text class="divider-text">其他登录方式</text>
+      
+      <view class="login-options">
+        <view class="login-option" bindtap="handlePhoneLogin">
+          <image src="../../images/icons/手机.svg" class="option-icon"></image>
+          <text class="option-text">手机号登录</text>
+        </view>
+        
+        <view class="login-option" bindtap="handleEmailLogin">
+          <image src="../../images/icons/邮箱.svg" class="option-icon"></image>
+          <text class="option-text">邮箱登录</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 同意协议 -->
+    <view class="agreement-section">
+      <view class="agreement-checkbox" bindtap="toggleAgreement">
+        <image 
+          src="{{isAgreed ? '../../images/icons/登录同意按钮-已同意.svg' : '../../images/icons/登录同意按钮-空.svg'}}" 
+          class="checkbox-icon"
+        ></image>
+        <text class="agreement-text">登录即同意<text class="link-text" catchtap="showUserAgreement">《用户协议》</text>和<text class="link-text" catchtap="showPrivacyPolicy">《隐私政策》</text></text>
+      </view>
+    </view>
+
+    <!-- 游客模式 -->
+    <view class="guest-mode" bindtap="handleGuestMode">
+      <text class="guest-text">暂不登录，以游客身份浏览</text>
+    </view>
+  </view>
+
+  <!-- 底部装饰 -->
+  <view class="bottom-decoration">
+    <text class="copyright">© 2024 达芬Qi说 版权所有</text>
+  </view>
+</view>

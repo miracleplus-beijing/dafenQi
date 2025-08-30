@@ -1,0 +1,62 @@
+<!-- 设置页面 -->
+<view class="settings-container">
+  <!-- 播放设置 -->
+  <view class="setting-section">
+    <text class="section-title">播放设置</text>
+    
+    <view class="setting-item">
+      <text class="setting-label">自动播放下一集</text>
+      <switch class="setting-switch" checked="{{settings.autoPlay}}" 
+              bindchange="onAutoPlayChange" color="#0884FF"></switch>
+    </view>
+    
+    <view class="setting-item">
+      <text class="setting-label">下载画质</text>
+      <picker class="setting-picker" mode="selector" 
+              range="{{qualityOptions}}" value="{{qualityIndex}}"
+              bindchange="onQualityChange">
+        <view class="picker-display">
+          <text>{{qualityOptions[qualityIndex]}}</text>
+          <image src="../../images/icons/向右箭头-选择.svg" class="arrow-icon"></image>
+        </view>
+      </picker>
+    </view>
+  </view>
+
+  <!-- 通知设置 -->
+  <view class="setting-section">
+    <text class="section-title">通知设置</text>
+    
+    <view class="setting-item">
+      <text class="setting-label">新内容推送</text>
+      <switch class="setting-switch" checked="{{settings.pushNotification}}" 
+              bindchange="onPushChange" color="#0884FF"></switch>
+    </view>
+  </view>
+
+  <!-- 其他设置 -->
+  <view class="setting-section">
+    <text class="section-title">其他</text>
+    
+    <view class="setting-item" bindtap="clearCache">
+      <text class="setting-label">清除缓存</text>
+      <view class="setting-right">
+        <text class="cache-size">{{cacheSize}}</text>
+        <image src="../../images/icons/向右箭头-选择.svg" class="arrow-icon"></image>
+      </view>
+    </view>
+    
+    <view class="setting-item" bindtap="checkUpdate">
+      <text class="setting-label">检查更新</text>
+      <view class="setting-right">
+        <text class="version-text">v{{version}}</text>
+        <image src="../../images/icons/向右箭头-选择.svg" class="arrow-icon"></image>
+      </view>
+    </view>
+    
+    <view class="setting-item" bindtap="showAbout">
+      <text class="setting-label">关于我们</text>
+      <image src="../../images/icons/向右箭头-选择.svg" class="arrow-icon"></image>
+    </view>
+  </view>
+</view>

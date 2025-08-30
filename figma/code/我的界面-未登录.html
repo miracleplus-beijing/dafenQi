@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>达芬Qi说 - 我的界面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'SF Pro', 'WeChat Sans Std', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: white;
+            color: #333;
+            overflow: hidden;
+        }
+        
+        .container {
+            width: 375px;
+            height: 812px;
+            margin: 0 auto;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Status Bar */
+        .status-bar {
+            width: 100%;
+            height: 47px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 26px;
+        }
+        
+        .time {
+            font-size: 17px;
+            font-weight: 590;
+            color: black;
+        }
+        
+        .status-icons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-icon {
+            width: 18px;
+            height: 12px;
+        }
+        
+        .battery-icon {
+            width: 27px;
+            height: 13px;
+        }
+        
+        /* Header */
+        .header {
+            width: 100%;
+            height: 88px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 7px;
+        }
+        
+        .title {
+            font-size: 17px;
+            color: #191919;
+            font-weight: 400;
+        }
+        
+        /* Profile Section */
+        .profile-section {
+            background: rgba(133, 194, 255, 0.5);
+            height: 199px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .avatar-container {
+            width: 100px;
+            height: 100px;
+            border-radius: 50px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 40px;
+        }
+        
+        .login-prompt {
+            font-size: 16px;
+            color: #191919;
+            margin-bottom: 20px;
+        }
+        
+        .login-button {
+            background: #07C160;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            min-width: 120px;
+        }
+        
+        .login-button:hover {
+            background: #06AD56;
+        }
+        
+        /* Menu Items */
+        .menu-section {
+            padding: 20px 16px;
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+        
+        .menu-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 16px;
+        }
+        
+        .menu-title {
+            font-size: 16px;
+            color: rgba(0, 0, 0, 0.9);
+            flex: 1;
+        }
+        
+        .menu-arrow {
+            width: 16px;
+            height: 16px;
+            opacity: 0.3;
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 90px;
+            background: white;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            height: 56px;
+            align-items: center;
+            justify-content: space-around;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            text-align: center;
+            font-size: 17px;
+            cursor: pointer;
+            padding: 19px 0;
+            color: rgba(0, 0, 0, 0.9);
+            font-weight: 400;
+        }
+        
+        .nav-tab.active {
+            color: #0884FF;
+        }
+        
+        .nav-indicator {
+            width: 134px;
+            height: 5px;
+            background: black;
+            border-radius: 100px;
+            margin: 0 auto;
+            margin-top: 21px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="time">9:41</div>
+            <div class="status-icons">
+                <img src="../icon/Mobile Signal.svg" alt="Signal" class="status-icon">
+                <img src="../icon/Wifi.svg" alt="Wifi" class="status-icon">
+                <img src="../icon/Battery.svg" alt="Battery" class="battery-icon">
+            </div>
+        </div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="title">我的</div>
+        </div>
+
+        <!-- Profile Section -->
+        <div class="profile-section">
+            <div class="avatar-container">
+                <img src="../picture/MiracclePlus头像.png" alt="Avatar" class="avatar">
+            </div>
+            <div class="login-prompt">登录后可查看更多内容</div>
+            <button class="login-button" onclick="goToLogin()">立即登录</button>
+        </div>
+
+        <!-- Menu Section -->
+        <div class="menu-section">
+            <div class="menu-item" onclick="showLoginRequired()">
+                <img src="../icon/time.svg" alt="History" class="menu-icon">
+                <span class="menu-title">我的历史</span>
+                <img src="../icon/Arrow right-circle.svg" alt="Arrow" class="menu-arrow">
+            </div>
+            
+            <div class="menu-item" onclick="showLoginRequired()">
+                <img src="../icon/Heart.svg" alt="Favorites" class="menu-icon">
+                <span class="menu-title">我的收藏</span>
+                <img src="../icon/Arrow right-circle.svg" alt="Arrow" class="menu-arrow">
+            </div>
+            
+            <div class="menu-item" onclick="goToFeedback()">
+                <img src="../icon/评论.svg" alt="Feedback" class="menu-icon">
+                <span class="menu-title">问题反馈</span>
+                <img src="../icon/Arrow right-circle.svg" alt="Arrow" class="menu-arrow">
+            </div>
+            
+            <div class="menu-item" onclick="goToSettings()">
+                <img src="../icon/Home.svg" alt="Settings" class="menu-icon">
+                <span class="menu-title">设置</span>
+                <img src="../icon/Arrow right-circle.svg" alt="Arrow" class="menu-arrow">
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-tabs">
+                <div class="nav-tab" onclick="goToHome()">漫游</div>
+                <div class="nav-tab" onclick="goToCategory()">分类</div>
+                <div class="nav-tab active">我的</div>
+            </div>
+            <div class="nav-indicator"></div>
+        </div>
+    </div>
+
+    <script>
+        function goToLogin() {
+            // 跳转到微信登录页面
+            window.location.href = '微信登录-未同意.html';
+        }
+        
+        function showLoginRequired() {
+            alert('请先登录后再查看此内容');
+        }
+        
+        function goToFeedback() {
+            window.location.href = '问题反馈.html';
+        }
+        
+        function goToSettings() {
+            window.location.href = '设置.html';
+        }
+        
+        function goToHome() {
+            window.location.href = '漫游页面登录-完善版.html';
+        }
+        
+        function goToCategory() {
+            window.location.href = '达芬Qi 分类界面-综述榜-修复版.html';
+        }
+    </script>
+</body>
+</html>

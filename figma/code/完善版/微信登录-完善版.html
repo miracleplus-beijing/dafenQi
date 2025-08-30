@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>达芬Qi说 - 微信登录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro', 'WeChat Sans Std', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            width: 375px;
+            height: 812px;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            width: 375px;
+            height: 47px;
+            left: 0px;
+            top: 0px;
+            position: absolute;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 26px;
+        }
+
+        .status-bar .time {
+            width: 54px;
+            height: 20px;
+            left: 26px;
+            top: 14px;
+            position: absolute;
+            text-align: center;
+            color: black;
+            font-size: 17px;
+            font-family: SF Pro;
+            font-weight: 590;
+            line-height: 22px;
+        }
+
+        .status-bar .battery {
+            width: 27.40px;
+            height: 13px;
+            left: 323px;
+            top: 18px;
+            position: absolute;
+        }
+
+        .status-bar .battery .battery-outline {
+            width: 25px;
+            height: 13px;
+            left: 0px;
+            top: 0px;
+            position: absolute;
+            opacity: 0.35;
+            border-radius: 4px;
+            border: 1px black solid;
+        }
+
+        .status-bar .battery .battery-tip {
+            width: 1.40px;
+            height: 4.22px;
+            left: 26px;
+            top: 5px;
+            position: absolute;
+            opacity: 0.40;
+            background: black;
+        }
+
+        .status-bar .battery .battery-fill {
+            width: 21px;
+            height: 9px;
+            left: 2px;
+            top: 2px;
+            position: absolute;
+            background: black;
+            border-radius: 2px;
+        }
+
+        .status-bar .wifi {
+            width: 18px;
+            height: 12px;
+            left: 273px;
+            top: 19px;
+            position: absolute;
+            background: black;
+        }
+
+        /* 导航栏 */
+        .nav-bar {
+            width: 375px;
+            height: 41px;
+            left: 0px;
+            top: 47px;
+            position: absolute;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .nav-title {
+            width: 179px;
+            left: 98px;
+            top: 9px;
+            position: absolute;
+            text-align: center;
+            justify-content: center;
+            display: flex;
+            flex-direction: column;
+            color: #191919;
+            font-size: 17px;
+            font-family: SF Pro;
+            font-weight: 400;
+        }
+
+        .nav-right {
+            width: 83px;
+            height: 30px;
+            left: 285px;
+            top: 4px;
+            position: absolute;
+        }
+
+        .nav-right .bg {
+            width: 83px;
+            height: 30px;
+            left: 0px;
+            top: 0px;
+            position: absolute;
+            opacity: 0.70;
+            background: white;
+            border-radius: 15px;
+        }
+
+        .nav-right .border {
+            width: 83px;
+            height: 30px;
+            left: 0px;
+            top: 0px;
+            position: absolute;
+            border-radius: 15px;
+            border: 0.35px #DEDEDE solid;
+        }
+
+        .nav-right .icon1 {
+            width: 20px;
+            height: 20px;
+            left: 12px;
+            top: 5px;
+            position: absolute;
+        }
+
+        .nav-right .icon2 {
+            width: 20px;
+            height: 20px;
+            left: 52px;
+            top: 5px;
+            position: absolute;
+            overflow: hidden;
+        }
+
+        /* 左侧导航区域 */
+        .nav-left {
+            width: 83px;
+            height: 30px;
+            left: 7px;
+            top: 4px;
+            position: absolute;
+            display: flex;
+            align-items: center;
+        }
+
+        .back-button {
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            padding: 0;
+        }
+
+        .back-button:hover {
+            transform: scale(1.1);
+            opacity: 0.7;
+        }
+
+        .back-button:active {
+            transform: scale(0.95);
+        }
+
+        .back-button img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        /* Logo区域 */
+        .logo-section {
+            width: 300px;
+            height: 122px;
+            left: 37px;
+            top: 189px;
+            position: absolute;
+        }
+
+        .logo-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* 登录按钮区域 */
+        .login-section {
+            position: absolute;
+            left: 71px;
+            top: 421px;
+            width: 231px;
+        }
+
+        .login-btn {
+            width: 231px;
+            height: 40px;
+            background: #07C160;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 17px;
+            font-family: WeChat Sans Std;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-btn:hover {
+            background: #06AD56;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(7, 193, 96, 0.3);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .skip-btn {
+            width: 231px;
+            height: 40px;
+            background: white;
+            border: 2px solid rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+            color: rgba(0, 0, 0, 0.50);
+            font-size: 17px;
+            font-family: WeChat Sans Std;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .skip-btn:hover {
+            border-color: rgba(0, 0, 0, 0.25);
+            color: rgba(0, 0, 0, 0.7);
+        }
+
+        /* 协议区域 */
+        .agreement-section {
+            position: absolute;
+            left: 13px;
+            top: 624px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            width: 319px;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .checkbox.checked {
+            background: #07C160;
+            border-color: #07C160;
+        }
+
+        .checkbox.checked::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 26px;
+            height: 26px;
+            background-image: url('../icon/green_check_miniprogram.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        .agreement-text {
+            font-size: 14px;
+            font-family: WeChat Sans Std;
+            font-weight: 400;
+            color: rgba(0, 0, 0, 0.90);
+            line-height: 1.5;
+        }
+
+        .agreement-text a {
+            color: #0884FF;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .agreement-text a:hover {
+            color: #0666CC;
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 提示信息 */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* 按钮禁用状态 */
+        .login-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .login-btn:disabled:hover {
+            background: #ccc;
+            transform: none;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="time">9:41</div>
+            <div class="wifi"></div>
+            <div class="battery">
+                <div class="battery-outline"></div>
+                <div class="battery-tip"></div>
+                <div class="battery-fill"></div>
+            </div>
+        </div>
+
+        <!-- 导航栏 -->
+        <div class="nav-bar">
+            <!-- 返回按钮 -->
+            <div class="nav-left">
+                <button class="back-button" onclick="handleGoBack()">
+                    <img src="../../icon/返回.svg" alt="返回" />
+                </button>
+            </div>
+            
+            <div class="nav-title">达芬Qi说</div>
+            
+            <div class="nav-right">
+                <div class="bg"></div>
+                <div class="border"></div>
+                <div class="icon1"></div>
+                <div class="icon2"></div>
+            </div>
+        </div>
+
+        <!-- Logo区域 -->
+        <div class="logo-section">
+            <img src="../../picture/奇绩创坛.png" alt="奇绩创坛" class="logo-image">
+        </div>
+
+        <!-- 登录按钮区域 -->
+        <div class="login-section">
+            <button class="login-btn" id="loginBtn">
+                <span class="loading" id="loading"></span>
+                <span id="loginText">微信登录</span>
+            </button>
+            <button class="skip-btn" id="skipBtn">暂不登录</button>
+        </div>
+
+        <!-- 协议区域 -->
+        <div class="agreement-section">
+            <div class="checkbox" id="agreementCheckbox">
+                <img src="../../icon/登录同意按钮-空.svg" alt="未同意" style="width: 100%; height: 100%;">
+            </div>
+            <div class="agreement-text">
+                首次登录会自动创建新账号，且代表同意
+                <a href="#" onclick="showAgreement('user')">《用户服务协议》</a>
+                和
+                <a href="#" onclick="showAgreement('privacy')">《隐私政策》</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示信息 -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 全局变量
+        let isAgreed = false;
+        let isLoggingIn = false;
+
+        // DOM元素
+        const loginBtn = document.getElementById('loginBtn');
+        const skipBtn = document.getElementById('skipBtn');
+        const agreementCheckbox = document.getElementById('agreementCheckbox');
+        const loading = document.getElementById('loading');
+        const loginText = document.getElementById('loginText');
+        const toast = document.getElementById('toast');
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 绑定事件
+            loginBtn.addEventListener('click', handleLogin);
+            skipBtn.addEventListener('click', handleSkip);
+            agreementCheckbox.addEventListener('click', toggleAgreement);
+        });
+
+        // 处理登录
+        function handleLogin() {
+            if (!isAgreed) {
+                showToast('请先同意用户服务协议和隐私政策');
+                return;
+            }
+
+            if (isLoggingIn) {
+                return;
+            }
+
+            isLoggingIn = true;
+            loginBtn.disabled = true;
+            loading.style.display = 'inline-block';
+            loginText.textContent = '登录中...';
+
+            // 模拟微信登录流程
+            setTimeout(() => {
+                // 这里应该调用真实的微信登录API
+                simulateWeChatLogin();
+            }, 1000);
+        }
+
+        // 模拟微信登录
+        function simulateWeChatLogin() {
+            // 检查是否在微信环境中
+            const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+            
+            if (isWeChat) {
+                // 在微信中，调用微信登录
+                showToast('正在调用微信登录...');
+                setTimeout(() => {
+                    // 模拟登录成功
+                    showToast('登录成功！');
+                    setTimeout(() => {
+                        // 跳转到主页面
+                        window.location.href = '/pages/index/index';
+                    }, 1500);
+                }, 2000);
+            } else {
+                // 不在微信中，显示二维码
+                showToast('请在微信中打开此页面');
+                setTimeout(() => {
+                    resetLoginButton();
+                }, 2000);
+            }
+        }
+
+        // 处理跳过登录
+        function handleSkip() {
+            showToast('您选择了暂不登录');
+            setTimeout(() => {
+                // 跳转到游客模式页面
+                window.location.href = '/pages/guest/index';
+            }, 1500);
+        }
+
+        // 切换协议同意状态
+        function toggleAgreement() {
+            isAgreed = !isAgreed;
+            if (isAgreed) {
+                agreementCheckbox.innerHTML = '<img src="../../icon/登录同意按钮-已同意.svg" alt="已同意" style="width: 100%; height: 100%;">';
+            } else {
+                agreementCheckbox.innerHTML = '<img src="../../icon/登录同意按钮-空.svg" alt="未同意" style="width: 100%; height: 100%;">';
+            }
+        }
+
+        // 显示协议内容
+        function showAgreement(type) {
+            const title = type === 'user' ? '用户服务协议' : '隐私政策';
+            const content = type === 'user' 
+                ? '这里是用户服务协议的详细内容...'
+                : '这里是隐私政策的详细内容...';
+            
+            // 这里可以显示模态框或跳转到协议页面
+            alert(`${title}\n\n${content}`);
+        }
+
+        // 重置登录按钮
+        function resetLoginButton() {
+            isLoggingIn = false;
+            loginBtn.disabled = false;
+            loading.style.display = 'none';
+            loginText.textContent = '微信登录';
+        }
+
+        // 显示提示信息
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 微信小程序环境检测
+        function checkMiniProgram() {
+            if (typeof wx !== 'undefined') {
+                // 在微信小程序环境中
+                console.log('当前在微信小程序环境中');
+                return true;
+            }
+            return false;
+        }
+
+        // 处理返回按钮点击
+        function handleGoBack() {
+            console.log('返回我的界面');
+            // 返回到我的界面
+            window.location.href = './我的界面-完善版.html';
+        }
+
+        // 页面加载完成后的初始化
+        window.addEventListener('load', function() {
+            // 检查环境
+            const isMiniProgram = checkMiniProgram();
+            
+            if (isMiniProgram) {
+                // 小程序环境下的特殊处理
+                console.log('小程序环境初始化完成');
+            } else {
+                // 普通网页环境
+                console.log('网页环境初始化完成');
+            }
+        });
+
+        // 错误处理
+        window.addEventListener('error', function(e) {
+            console.error('页面错误:', e.error);
+            showToast('页面出现错误，请刷新重试');
+        });
+
+        // 网络状态检测
+        window.addEventListener('online', function() {
+            showToast('网络连接已恢复');
+        });
+
+        window.addEventListener('offline', function() {
+            showToast('网络连接已断开');
+        });
+    </script>
+</body>
+</html>

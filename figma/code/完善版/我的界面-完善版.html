@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>达芬Qi说 - 我的</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro', 'WeChat Sans Std', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-container {
+            width: 375px;
+            height: 812px;
+            background: white;
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            width: 375px;
+            height: 47px;
+            left: 0px;
+            top: 0px;
+            position: absolute;
+            background: white;
+            overflow: hidden;
+        }
+
+        .status-bar .time {
+            width: 54px;
+            height: 20px;
+            left: 26px;
+            top: 14px;
+            position: absolute;
+            text-align: center;
+            color: black;
+            font-size: 17px;
+            font-family: SF Pro;
+            font-weight: 590;
+            line-height: 22px;
+        }
+
+        .status-bar .battery {
+            width: 27.40px;
+            height: 13px;
+            left: 323px;
+            top: 18px;
+            position: absolute;
+        }
+
+        .status-bar .battery .battery-outline {
+            width: 25px;
+            height: 13px;
+            left: 0px;
+            top: 0px;
+            position: absolute;
+            opacity: 0.35;
+            border-radius: 4px;
+            border: 1px black solid;
+        }
+
+        .status-bar .battery .battery-tip {
+            width: 1.40px;
+            height: 4.22px;
+            left: 26px;
+            top: 5px;
+            position: absolute;
+            opacity: 0.40;
+            background: black;
+        }
+
+        .status-bar .battery .battery-fill {
+            width: 21px;
+            height: 9px;
+            left: 2px;
+            top: 2px;
+            position: absolute;
+            background: black;
+            border-radius: 2px;
+        }
+
+        .status-bar .wifi {
+            width: 18px;
+            height: 12px;
+            left: 273px;
+            top: 19px;
+            position: absolute;
+            background: black;
+        }
+
+        /* 导航栏 */
+        .nav-bar {
+            width: 375px;
+            height: 88px;
+            left: 0px;
+            top: 0px;
+            position: absolute;
+            background: white;
+        }
+
+        .nav-title {
+            width: 179px;
+            left: 98px;
+            top: 56px;
+            position: absolute;
+            text-align: center;
+            justify-content: center;
+            display: flex;
+            flex-direction: column;
+            color: #191919;
+            font-size: 17px;
+            font-family: SF Pro;
+            font-weight: 400;
+        }
+
+        .nav-right {
+            width: 83px;
+            height: 30px;
+            left: 285px;
+            top: 51px;
+            position: absolute;
+        }
+
+        .nav-right .bg {
+            width: 83px;
+            height: 30px;
+            left: 0px;
+            top: 0px;
+            position: absolute;
+            opacity: 0.70;
+            background: white;
+            border-radius: 15px;
+        }
+
+        .nav-right .border {
+            width: 83px;
+            height: 30px;
+            left: 0px;
+            top: 0px;
+            position: absolute;
+            border-radius: 15px;
+            border: 0.35px #DEDEDE solid;
+        }
+
+        .nav-right .icon1 {
+            width: 20px;
+            height: 20px;
+            left: 12px;
+            top: 5px;
+            position: absolute;
+        }
+
+        .nav-right .icon2 {
+            width: 20px;
+            height: 20px;
+            left: 52px;
+            top: 5px;
+            position: absolute;
+            overflow: hidden;
+        }
+
+        /* 蓝色背景区域 */
+        .blue-bg {
+            width: 375px;
+            height: 199px;
+            left: 0px;
+            top: 88px;
+            position: absolute;
+            opacity: 0.50;
+            background: #85C2FF;
+        }
+
+        /* 用户头像和登录区域 */
+        .user-section {
+            position: absolute;
+            top: 164px;
+            left: 0px;
+            width: 375px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .login-prompt {
+            width: 121px;
+            height: 26px;
+            left: 8px;
+            top: 65px;
+            position: absolute;
+            text-align: center;
+            color: rgba(0, 0, 0, 0.90);
+            font-size: 22px;
+            font-family: SF Pro;
+            font-weight: 510;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            left: 250px;
+            top: 0px;
+            position: absolute;
+            border-radius: 100px;
+        }
+
+        /* 菜单项区域 */
+        .menu-section {
+            position: absolute;
+            top: 320px;
+            left: 0px;
+            width: 375px;
+            background: white;
+        }
+
+        /* 登录状态控制 */
+        .logged-out .menu-section {
+            display: none;
+        }
+
+        .logged-in .menu-section {
+            display: block;
+        }
+
+        /* 登录后的用户信息 */
+        .logged-in .login-prompt {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            cursor: default;
+        }
+
+        .logged-in .avatar {
+            border: 3px solid #0884FF;
+        }
+
+        .menu-item {
+            width: 375px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .menu-item:hover {
+            background-color: #f8f8f8;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .menu-text {
+            flex: 1;
+            font-size: 16px;
+            font-family: SF Pro;
+            font-weight: 400;
+            color: rgba(0, 0, 0, 0.90);
+        }
+
+        .menu-arrow {
+            width: 16px;
+            height: 16px;
+            opacity: 0.3;
+        }
+
+        /* 底部导航栏 */
+        .bottom-nav {
+            width: 375px;
+            height: 90px;
+            left: 0px;
+            top: 722px;
+            position: absolute;
+            background: white;
+        }
+
+        .nav-tabs {
+            width: 375px;
+            height: 56px;
+            left: 0px;
+            top: 0px;
+            position: absolute;
+            justify-content: flex-start;
+            align-items: center;
+            display: inline-flex;
+        }
+
+        .nav-tab {
+            flex: 1;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            display: flex;
+        }
+
+        .nav-tab-content {
+            width: 56px;
+            height: 56px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .nav-tab-text {
+            width: 56px;
+            left: 0px;
+            top: 18px;
+            position: absolute;
+            text-align: center;
+            justify-content: center;
+            display: flex;
+            flex-direction: column;
+            font-size: 17px;
+            font-family: SF Pro;
+            font-weight: 400;
+        }
+
+        .nav-tab-text.active {
+            color: #0884FF;
+        }
+
+        .nav-tab-text.inactive {
+            color: rgba(0, 0, 0, 0.90);
+        }
+
+        .home-indicator {
+            width: 375px;
+            height: 34px;
+            left: 0px;
+            top: 56px;
+            position: absolute;
+        }
+
+        .home-indicator-bar {
+            width: 134px;
+            height: 5px;
+            left: 121px;
+            top: 21px;
+            position: absolute;
+            background: black;
+            border-radius: 100px;
+        }
+
+        /* 图标样式 */
+        .icon {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* 分割线 */
+        .section-divider {
+            width: 375px;
+            height: 10px;
+            background: #f5f5f5;
+            margin: 0;
+        }
+
+        /* 页面切换动画 */
+        .page-transition {
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s ease;
+        }
+
+        .page-slide-left {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+
+        .page-slide-right {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        .page-slide-in {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        /* 触摸反馈 */
+        .touch-feedback {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .swipe-indicator {
+            position: absolute;
+            top: 50%;
+            width: 4px;
+            height: 60px;
+            background: rgba(8, 132, 255, 0.6);
+            border-radius: 2px;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .swipe-indicator.left {
+            left: 10px;
+        }
+
+        .swipe-indicator.right {
+            right: 10px;
+        }
+
+        .swipe-indicator.active {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="time">9:41</div>
+            <div class="wifi"></div>
+            <div class="battery">
+                <div class="battery-outline"></div>
+                <div class="battery-tip"></div>
+                <div class="battery-fill"></div>
+            </div>
+        </div>
+
+        <!-- 导航栏 -->
+        <div class="nav-bar">
+            <div class="nav-title">达芬Qi说</div>
+            <div class="nav-right">
+                <div class="bg"></div>
+                <div class="border"></div>
+                <div class="icon1"></div>
+                <div class="icon2"></div>
+            </div>
+        </div>
+
+        <!-- 蓝色背景区域 -->
+        <div class="blue-bg"></div>
+
+        <!-- 用户区域 -->
+        <div class="user-section">
+            <div class="login-prompt" onclick="handleLogin()">登录/注册></div>
+            <img class="avatar" src="../../picture/MiracclePlus头像.png" alt="用户头像" />
+        </div>
+
+        <!-- 菜单项区域 -->
+        <div class="menu-section">
+            <div class="menu-item" onclick="handleMenuClick('history')">
+                <img src="../../icon/历史.svg" alt="历史" class="menu-icon">
+                <span class="menu-text">我的历史</span>
+                <img src="../../icon/向右箭头-选择.svg" alt=">" class="menu-arrow">
+            </div>
+            
+            <div class="menu-item" onclick="handleMenuClick('favorites')">
+                <img src="../../icon/收藏-已选择.svg" alt="收藏" class="menu-icon">
+                <span class="menu-text">我的收藏</span>
+                <img src="../../icon/向右箭头-选择.svg" alt=">" class="menu-arrow">
+            </div>
+            
+            <div class="section-divider"></div>
+            
+            <div class="menu-item" onclick="handleMenuClick('share')">
+                <img src="../../icon/分享.svg" alt="分享" class="menu-icon">
+                <span class="menu-text">分享给朋友</span>
+                <img src="../../icon/向右箭头-选择.svg" alt=">" class="menu-arrow">
+            </div>
+            
+            <div class="menu-item" onclick="handleMenuClick('feedback')">
+                <img src="../../icon/问题反馈.svg" alt="反馈" class="menu-icon">
+                <span class="menu-text">问题反馈</span>
+                <img src="../../icon/向右箭头-选择.svg" alt=">" class="menu-arrow">
+            </div>
+            
+            <div class="menu-item" onclick="handleMenuClick('settings')">
+                <img src="../../icon/设置.svg" alt="设置" class="menu-icon">
+                <span class="menu-text">设置</span>
+                <img src="../../icon/向右箭头-选择.svg" alt=">" class="menu-arrow">
+            </div>
+        </div>
+
+        <!-- 底部导航栏 -->
+        <div class="bottom-nav">
+            <div class="nav-tabs">
+                <div class="nav-tab">
+                    <div class="nav-tab-content" onclick="handleNavClick('browse')">
+                        <div class="nav-tab-text inactive">漫游</div>
+                    </div>
+                </div>
+                <div class="nav-tab">
+                    <div class="nav-tab-content" onclick="handleNavClick('category')">
+                        <div class="nav-tab-text inactive">分类</div>
+                    </div>
+                </div>
+                <div class="nav-tab">
+                    <div class="nav-tab-content" onclick="handleNavClick('profile')">
+                        <div class="nav-tab-text active">我的</div>
+                    </div>
+                </div>
+            </div>
+            <div class="home-indicator">
+                <div class="home-indicator-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 处理登录点击
+        function handleLogin() {
+            // 跳转到登录页面
+            window.location.href = './微信登录-完善版.html';
+        }
+
+        // 处理菜单项点击
+        function handleMenuClick(type) {
+            switch(type) {
+                case 'history':
+                    console.log('跳转到我的历史');
+                    navigateToPage('./我的历史.html', 'left');
+                    break;
+                case 'favorites':
+                    console.log('跳转到我的收藏');
+                    navigateToPage('./我的收藏.html', 'left');
+                    break;
+                case 'share':
+                    console.log('分享给朋友');
+                    // 这里可以添加分享逻辑
+                    break;
+                case 'feedback':
+                    console.log('跳转到问题反馈');
+                    // 这里可以添加跳转逻辑
+                    break;
+                case 'settings':
+                    console.log('跳转到设置');
+                    navigateToPage('./设置.html', 'left');
+                    break;
+                default:
+                    console.log('未知菜单项:', type);
+            }
+        }
+
+        // 页面切换动画
+        function navigateToPage(targetPage, direction = 'left') {
+            const container = document.querySelector('.profile-container');
+            container.classList.add('page-transition');
+            
+            if (direction === 'left') {
+                container.classList.add('page-slide-left');
+            } else {
+                container.classList.add('page-slide-right');
+            }
+            
+            setTimeout(() => {
+                window.location.href = targetPage;
+            }, 150);
+        }
+
+        // 处理底部导航点击
+        function handleNavClick(type) {
+            switch(type) {
+                case 'browse':
+                    console.log('跳转到漫游页面');
+                    navigateToPage('./漫游界面-完善版.html', 'left');
+                    break;
+                case 'category':
+                    console.log('跳转到分类页面');
+                    navigateToPage('./分类界面-完善版.html', 'left');
+                    break;
+                case 'profile':
+                    console.log('当前就在我的页面');
+                    break;
+                default:
+                    console.log('未知导航项:', type);
+            }
+        }
+
+        // 触摸和滑动支持
+        let startX = 0;
+        let startY = 0;
+        let currentX = 0;
+        let currentY = 0;
+        let isDragging = false;
+        let swipeIndicatorLeft = null;
+        let swipeIndicatorRight = null;
+
+        // 初始化滑动指示器
+        function initSwipeIndicators() {
+            const touchFeedback = document.createElement('div');
+            touchFeedback.className = 'touch-feedback';
+            
+            swipeIndicatorLeft = document.createElement('div');
+            swipeIndicatorLeft.className = 'swipe-indicator left';
+            
+            swipeIndicatorRight = document.createElement('div');
+            swipeIndicatorRight.className = 'swipe-indicator right';
+            
+            touchFeedback.appendChild(swipeIndicatorLeft);
+            touchFeedback.appendChild(swipeIndicatorRight);
+            document.body.appendChild(touchFeedback);
+        }
+
+        // 触摸开始
+        function handleTouchStart(e) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            currentX = startX;
+            currentY = startY;
+            isDragging = false;
+        }
+
+        // 触摸移动
+        function handleTouchMove(e) {
+            if (!startX || !startY) return;
+            
+            currentX = e.touches[0].clientX;
+            currentY = e.touches[0].clientY;
+            
+            const deltaX = currentX - startX;
+            const deltaY = currentY - startY;
+            
+            // 检查是否是水平滑动
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+                isDragging = true;
+                e.preventDefault();
+                
+                // 显示滑动指示器
+                if (deltaX > 50 && swipeIndicatorRight) {
+                    swipeIndicatorRight.classList.add('active');
+                    swipeIndicatorLeft.classList.remove('active');
+                } else if (deltaX < -50 && swipeIndicatorLeft) {
+                    swipeIndicatorLeft.classList.add('active');
+                    swipeIndicatorRight.classList.remove('active');
+                } else {
+                    swipeIndicatorLeft.classList.remove('active');
+                    swipeIndicatorRight.classList.remove('active');
+                }
+            }
+        }
+
+        // 触摸结束
+        function handleTouchEnd(e) {
+            if (!isDragging) {
+                resetSwipeState();
+                return;
+            }
+            
+            const deltaX = currentX - startX;
+            const threshold = 100;
+            
+            // 隐藏指示器
+            swipeIndicatorLeft.classList.remove('active');
+            swipeIndicatorRight.classList.remove('active');
+            
+            if (Math.abs(deltaX) > threshold) {
+                if (deltaX > 0) {
+                    // 向右滑动 - 去分类页面
+                    console.log('向右滑动到分类页面');
+                    navigateToPage('./分类界面-完善版.html', 'right');
+                } else {
+                    // 向左滑动 - 暂无页面
+                    console.log('向左滑动 - 已是最后一页');
+                }
+            }
+            
+            resetSwipeState();
+        }
+
+        // 重置滑动状态
+        function resetSwipeState() {
+            startX = 0;
+            startY = 0;
+            currentX = 0;
+            currentY = 0;
+            isDragging = false;
+        }
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('我的界面初始化完成');
+            
+            // 初始化滑动指示器
+            initSwipeIndicators();
+            
+            // 添加触摸事件监听
+            const container = document.querySelector('.profile-container');
+            container.addEventListener('touchstart', handleTouchStart, { passive: false });
+            container.addEventListener('touchmove', handleTouchMove, { passive: false });
+            container.addEventListener('touchend', handleTouchEnd);
+            
+            // 页面进入动画
+            setTimeout(() => {
+                container.classList.add('page-transition', 'page-slide-in');
+            }, 50);
+            
+            // 可以在这里添加用户状态检查
+            // checkUserStatus();
+        });
+
+        // 检查用户登录状态
+        function checkUserStatus() {
+            // 检查是否已登录
+            const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+            const userInfo = localStorage.getItem('userInfo');
+            
+            if (isLoggedIn && userInfo) {
+                // 已登录状态
+                displayUserInfo(JSON.parse(userInfo));
+            } else {
+                // 未登录状态 - 当前默认显示
+                console.log('用户未登录');
+            }
+        }
+
+        // 显示用户信息
+        function displayUserInfo(userInfo) {
+            const loginPrompt = document.querySelector('.login-prompt');
+            const avatar = document.querySelector('.avatar');
+            
+            if (userInfo.nickname) {
+                loginPrompt.textContent = userInfo.nickname;
+            }
+            
+            if (userInfo.avatar) {
+                avatar.src = userInfo.avatar;
+            }
+        }
+
+        // 错误处理
+        window.addEventListener('error', function(e) {
+            console.error('页面错误:', e.error);
+        });
+    </script>
+</body>
+</html>

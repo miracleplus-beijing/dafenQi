@@ -1,0 +1,284 @@
+/* 登录页面样式 */
+/* 用户信息授权按钮样式 */
+.user-info-auth {
+  background: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%);
+  color: white;
+  margin-top: 20px;
+  animation: pulse 2s infinite;
+}
+
+.user-info-auth.disabled {
+  background: #E5E7EB;
+  color: #9CA3AF;
+}
+.login-container {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0884FF 0%, #85C2FF 100%);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 20px 40px;
+}
+
+/* 背景装饰 */
+.bg-decoration {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.circle {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  animation: float 6s ease-in-out infinite;
+}
+
+.circle-1 {
+  width: 120px;
+  height: 120px;
+  top: 10%;
+  right: -20px;
+  animation-delay: 0s;
+}
+
+.circle-2 {
+  width: 80px;
+  height: 80px;
+  top: 30%;
+  left: -10px;
+  animation-delay: 2s;
+}
+
+.circle-3 {
+  width: 60px;
+  height: 60px;
+  bottom: 20%;
+  right: 30px;
+  animation-delay: 4s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* Logo区域 */
+.logo-section {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  margin-top: 80px;
+  margin-bottom: 60px;
+}
+
+.app-logo {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 20px;
+  border-radius: 24px;
+  background: white;
+  padding: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.app-name {
+  display: block;
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.app-slogan {
+  display: block;
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 登录内容区域 */
+.login-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 320px;
+  background: white;
+  border-radius: 20px;
+  padding: 32px 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* 微信登录按钮 */
+.login-btn {
+  width: 100%;
+  height: 52px;
+  background: #07C160;
+  color: white;
+  border: none;
+  border-radius: 26px;
+  font-size: 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(7, 193, 96, 0.3);
+  transition: all 0.2s ease;
+}
+
+.login-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(7, 193, 96, 0.4);
+}
+
+.login-btn.disabled {
+  background: #CCCCCC;
+  color: #999999;
+  box-shadow: none;
+}
+
+.login-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+}
+
+.login-text {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* 其他登录方式 */
+.other-login {
+  margin-bottom: 24px;
+}
+
+.divider-text {
+  display: block;
+  text-align: center;
+  font-size: 14px;
+  color: #999999;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.divider-text::before,
+.divider-text::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 60px;
+  height: 1px;
+  background: #EEEEEE;
+}
+
+.divider-text::before {
+  left: 20px;
+}
+
+.divider-text::after {
+  right: 20px;
+}
+
+.login-options {
+  display: flex;
+  gap: 16px;
+}
+
+.login-option {
+  flex: 1;
+  height: 48px;
+  background: #F8F8F8;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.login-option:active {
+  background: #EEEEEE;
+}
+
+.option-icon {
+  width: 20px;
+  height: 20px;
+  margin-bottom: 2px;
+}
+
+.option-text {
+  font-size: 12px;
+  color: #666666;
+}
+
+/* 同意协议 */
+.agreement-section {
+  margin-bottom: 24px;
+  padding: 0 4px;
+}
+
+.agreement-checkbox {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.checkbox-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-right: 8px;
+  margin-top: 2px;
+}
+
+.agreement-text {
+  flex: 1;
+  font-size: 12px;
+  color: #666666;
+  line-height: 1.4;
+}
+
+.link-text {
+  color: #0884FF;
+  text-decoration: underline;
+}
+
+/* 游客模式 */
+.guest-mode {
+  text-align: center;
+  padding: 12px;
+}
+
+.guest-text {
+  font-size: 14px;
+  color: #999999;
+  text-decoration: underline;
+}
+
+/* 底部装饰 */
+.bottom-decoration {
+  position: relative;
+  z-index: 2;
+  margin-top: auto;
+  padding-top: 40px;
+}
+
+.copyright {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+}

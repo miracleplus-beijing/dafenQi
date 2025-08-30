@@ -1,16 +1,50 @@
 {
   "pages": [
-    "pages/index/index",
-    "pages/example/index"
+    "pages/browse/browse",
+    "pages/category/category", 
+    "pages/profile/profile",
+    "pages/login/login",
+    "pages/history/history",
+    "pages/favorites/favorites",
+    "pages/settings/settings",
+    "pages/feedback/feedback"
   ],
   "window": {
-    "backgroundColor": "#F6F6F6",
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#F6F6F6",
-    "navigationBarTitleText": "云开发 QuickStart",
-    "navigationBarTextStyle": "black"
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTitleText": "达芬Qi说",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#ffffff"
+  },
+  "tabBar": {
+    "color": "rgba(0, 0, 0, 0.90)",
+    "selectedColor": "#0884FF",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "position": "bottom",
+    "list": [
+      {
+        "pagePath": "pages/browse/browse",
+        "text": "漫游",
+        "iconPath": "images/icons/漫游.png",
+        "selectedIconPath": "images/icons/漫游.png"
+      },
+      {
+        "pagePath": "pages/category/category",
+        "text": "分类",
+        "iconPath": "images/icons/分类.png", 
+        "selectedIconPath": "images/icons/分类.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/icons/我的.png",
+        "selectedIconPath": "images/icons/我的.png"
+      }
+    ]
   },
   "sitemapLocation": "sitemap.json",
   "style": "v2",
+  "componentFramework": "glass-easel",
   "lazyCodeLoading": "requiredComponents"
 }

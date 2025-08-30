@@ -1,0 +1,261 @@
+/* 漫游页面样式 */
+.browse-container {
+  width: 100%;
+  height: 100vh;
+  background: white;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+/* 播客封面区域 */
+.podcast-cover {
+  width: 300px;
+  height: 300px;
+  background: var(--Fills-Secondary, rgba(120, 120, 128, 0.16));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.cover-placeholder {
+  color: #666;
+  font-size: 14px;
+}
+
+/* Loader放置在播客封面正中心 */
+.podcast-loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 86px;
+  height: 53px;
+  z-index: 1;
+}
+
+/* 播客信息区域 */
+.podcast-info {
+  width: 300px;
+  text-align: center;
+  margin: 24px 0;
+}
+
+.podcast-title {
+  color: rgba(0, 0, 0, 0.90);
+  font-size: 22px;
+  font-family: SF Pro;
+  font-weight: 510;
+  line-height: 1.2;
+  margin-bottom: 25px;
+}
+
+.podcast-channel {
+  color: #0884FF;
+  font-size: 17px;
+  font-family: SF Pro;
+  font-weight: 400;
+  text-decoration: underline;
+}
+
+/* 交互按钮区域 */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  padding: 0 84px;
+  margin: 20px 0;
+}
+
+.action-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.action-btn:active {
+  transform: scale(0.95);
+}
+
+.action-btn .icon {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+/* 进度条区域 */
+.progress-container {
+  width: 100%;
+  height: 41px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  margin: 20px 0;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--Fills-Primary, rgba(120, 120, 120, 0.20));
+  border-radius: 3px;
+  position: relative;
+}
+
+.progress-fill {
+  height: 6px;
+  background: #0884FF;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progress-thumb {
+  width: 12px;
+  height: 12px;
+  background: #0884FF;
+  border-radius: 50%;
+  position: absolute;
+  top: -3px;
+  transform: translateX(-6px);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.progress-bar:active .progress-thumb {
+  opacity: 1;
+}
+
+/* 播放控制区域 */
+.playback-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 37px;
+  width: 100%;
+  margin: 20px 0;
+}
+
+.control-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.control-btn:active {
+  transform: scale(0.95);
+}
+
+.control-btn .icon {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.play-pause-btn {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.play-pause-btn:active {
+  transform: scale(0.95);
+}
+
+.play-pause-icon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+/* 更多操作按钮 */
+.more-actions {
+  position: absolute;
+  top: 672px;
+  right: 33px;
+  width: 36px;
+  height: 36px;
+}
+
+.more-btn {
+  width: 30px;
+  height: 30px;
+  background: var(--Schemes-On-Surface, #1D1B20);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+}
+
+/* 触摸反馈 */
+.touch-feedback {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.swipe-indicator {
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 60px;
+  background: rgba(8, 132, 255, 0.6);
+  border-radius: 2px;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.swipe-indicator.left {
+  left: 10px;
+}
+
+.swipe-indicator.right {
+  right: 10px;
+}
+
+.swipe-indicator.active {
+  opacity: 1;
+}
+
+/* 页面切换动画 */
+.page-transition {
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s ease;
+}
+
+.page-slide-left {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.page-slide-right {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.page-slide-in {
+  transform: translateX(0);
+  opacity: 1;
+}

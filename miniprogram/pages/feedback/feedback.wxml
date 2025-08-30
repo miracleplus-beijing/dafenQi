@@ -1,0 +1,62 @@
+<!-- 问题反馈页面 -->
+<view class="feedback-container">
+  <!-- 反馈类型选择 -->
+  <view class="feedback-section">
+    <text class="section-title">反馈类型</text>
+    <view class="feedback-types">
+      <view wx:for="{{feedbackTypes}}" wx:key="id" 
+            class="type-item {{selectedType === item.id ? 'selected' : ''}}"
+            bindtap="selectFeedbackType" data-type="{{item.id}}">
+        <text class="type-text">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 问题描述 -->
+  <view class="feedback-section">
+    <text class="section-title">问题描述</text>
+    <textarea class="feedback-textarea" 
+              placeholder="请详细描述您遇到的问题或建议..."
+              value="{{feedbackContent}}"
+              bindinput="onContentInput"
+              maxlength="500"
+              show-confirm-bar="false">
+    </textarea>
+    <view class="char-count">{{feedbackContent.length}}/500</view>
+  </view>
+
+  <!-- 联系方式 -->
+  <view class="feedback-section">
+    <text class="section-title">联系方式（选填）</text>
+    <input class="feedback-input" 
+           placeholder="手机号或邮箱，方便我们联系您"
+           value="{{contactInfo}}"
+           bindinput="onContactInput"
+           maxlength="50">
+    </input>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-section">
+    <button class="submit-btn {{canSubmit ? '' : 'disabled'}}" 
+            bindtap="submitFeedback" disabled="{{!canSubmit}}">
+      {{isSubmitting ? '提交中...' : '提交反馈'}}
+    </button>
+  </view>
+
+  <!-- 常见问题 -->
+  <view class="faq-section">
+    <text class="section-title">常见问题</text>
+    <view wx:for="{{faqList}}" wx:key="id" class="faq-item" 
+          bindtap="toggleFaq" data-index="{{index}}">
+      <view class="faq-question">
+        <text class="question-text">{{item.question}}</text>
+        <image src="../../images/icons/{{item.expanded ? '收起' : '展开'}}.svg" 
+               class="expand-icon"></image>
+      </view>
+      <view class="faq-answer {{item.expanded ? 'expanded' : ''}}">
+        <text class="answer-text">{{item.answer}}</text>
+      </view>
+    </view>
+  </view>
+</view>
