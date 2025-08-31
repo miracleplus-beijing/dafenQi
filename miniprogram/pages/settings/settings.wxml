@@ -17,7 +17,7 @@
               bindchange="onQualityChange">
         <view class="picker-display">
           <text>{{qualityOptions[qualityIndex]}}</text>
-          <image src="../../images/icons/向右箭头-选择.svg" class="arrow-icon"></image>
+          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/right-arrow.svg" class="arrow-icon"></image>
         </view>
       </picker>
     </view>
@@ -42,7 +42,7 @@
       <text class="setting-label">清除缓存</text>
       <view class="setting-right">
         <text class="cache-size">{{cacheSize}}</text>
-        <image src="../../images/icons/向右箭头-选择.svg" class="arrow-icon"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/right-arrow.svg" class="arrow-icon"></image>
       </view>
     </view>
     
@@ -50,13 +50,13 @@
       <text class="setting-label">检查更新</text>
       <view class="setting-right">
         <text class="version-text">v{{version}}</text>
-        <image src="../../images/icons/向右箭头-选择.svg" class="arrow-icon"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/right-arrow.svg" class="arrow-icon"></image>
       </view>
     </view>
     
     <view class="setting-item" bindtap="showAbout">
       <text class="setting-label">关于我们</text>
-      <image src="../../images/icons/向右箭头-选择.svg" class="arrow-icon"></image>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/right-arrow.svg" class="arrow-icon"></image>
     </view>
   </view>
 </view>

@@ -2,7 +2,7 @@
 <view class="history-container">
   <!-- 空状态 -->
   <view class="empty-state" wx:if="{{historyList.length === 0}}">
-    <image src="../../images/icons/历史.svg" class="empty-icon"></image>
+    <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/history.svg" class="empty-icon"></image>
     <text class="empty-text">暂无播放历史</text>
     <text class="empty-desc">听过的内容会显示在这里</text>
   </view>
@@ -12,10 +12,10 @@
     <view wx:for="{{historyList}}" wx:key="id" class="history-item" 
           bindtap="playHistoryItem" data-item="{{item}}">
       <view class="item-cover">
-        <image src="{{item.cover || '../../images/default-cover.png'}}" 
+        <image src="{{item.cover || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/pictures/default-cover.png'}}" 
                class="cover-image" mode="aspectFill"></image>
         <view class="play-overlay">
-          <image src="../../images/icons/播放-小.svg" class="play-icon"></image>
+          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="play-icon"></image>
         </view>
       </view>
       
@@ -31,7 +31,7 @@
       <view class="item-actions">
         <view class="action-btn" bindtap="removeFromHistory" 
               data-id="{{item.id}}" catchtap="true">
-          <image src="../../images/icons/删除.svg" class="action-icon"></image>
+          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/delete.svg" class="action-icon"></image>
         </view>
       </view>
     </view>

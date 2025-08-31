@@ -5,7 +5,7 @@
     <view class="search-bar">
       <input type="text" class="search-input" placeholder="听你想听的论文" 
              value="{{searchValue}}" bindinput="onSearchInput" />
-      <image src="../../images/icons/搜索.svg" class="search-icon" alt="Search"></image>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/search.svg" class="search-icon" alt="Search"></image>
     </view>
     
     <view class="tab-nav">
@@ -31,12 +31,12 @@
           <view class="ranking-title">{{item.title}}</view>
           <view class="ranking-channel">{{item.channel}}</view>
         </view>
-        <image src="../../images/icons/播放-小.svg" class="ranking-play" alt="Play"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="ranking-play" alt="Play"></image>
       </view>
       
       <view class="view-more" bindtap="viewMoreRankings">
         <text>查看完整榜单</text>
-        <image src="../../images/icons/查看完整榜单-icon.svg" alt="View More"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow-circle.svg" alt="View More"></image>
       </view>
     </view>
     
@@ -76,7 +76,7 @@
       <view class="featured-header">
         <text class="section-title">奇绩精选</text>
         <view class="refresh-btn" bindtap="refreshFeatured">
-          <image src="../../images/icons/换一换 icon.svg" alt="Refresh"></image>
+          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/refresh.svg" alt="Refresh"></image>
           <text>换一换</text>
         </view>
       </view>
@@ -91,7 +91,7 @@
             <text class="highlight">编辑推荐语：</text>{{item.recommendation}}
           </view>
         </view>
-        <image src="../../images/icons/播放-小.svg" class="podcast-play" alt="Play"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="podcast-play" alt="Play"></image>
       </view>
     </view>
   </view>
@@ -109,12 +109,12 @@
           <view class="ranking-title">{{item.title}}</view>
           <view class="ranking-channel">{{item.channel}}</view>
         </view>
-        <image src="../../images/icons/播放-小.svg" class="ranking-play" alt="Play"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="ranking-play" alt="Play"></image>
       </view>
       
       <view class="view-more" bindtap="viewMoreRankings">
         <text>查看完整榜单</text>
-        <image src="../../images/icons/查看完整榜单-icon.svg" alt="View More"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow-circle.svg" alt="View More"></image>
       </view>
     </view>
     
@@ -154,7 +154,7 @@
       <view class="featured-header">
         <text class="section-title">奇绩精选</text>
         <view class="refresh-btn" bindtap="refreshFeatured">
-          <image src="../../images/icons/换一换 icon.svg" alt="Refresh"></image>
+          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/refresh.svg" alt="Refresh"></image>
           <text>换一换</text>
         </view>
       </view>
@@ -169,7 +169,7 @@
             <text class="highlight">编辑推荐语：</text>{{item.recommendation}}
           </view>
         </view>
-        <image src="../../images/icons/播放-小.svg" class="podcast-play" alt="Play"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="podcast-play" alt="Play"></image>
       </view>
     </view>
   </view>
@@ -187,12 +187,12 @@
           <view class="ranking-title">{{item.title}}</view>
           <view class="ranking-channel">{{item.channel}}</view>
         </view>
-        <image src="../../images/icons/播放-小.svg" class="ranking-play" alt="Play"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="ranking-play" alt="Play"></image>
       </view>
       
       <view class="view-more" bindtap="viewMoreRankings">
         <text>查看完整榜单</text>
-        <image src="../../images/icons/查看完整榜单-icon.svg" alt="View More"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow-circle.svg" alt="View More"></image>
       </view>
     </view>
 
@@ -232,7 +232,7 @@
       <view class="featured-header">
         <text class="section-title">奇绩精选</text>
         <view class="refresh-btn" bindtap="refreshFeatured">
-          <image src="../../images/icons/换一换 icon.svg" alt="Refresh"></image>
+          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/refresh.svg" alt="Refresh"></image>
           <text>换一换</text>
         </view>
       </view>
@@ -247,14 +247,14 @@
             <text class="highlight">编辑推荐语：</text>{{item.recommendation}}
           </view>
         </view>
-        <image src="../../images/icons/播放-小.svg" class="podcast-play" alt="Play"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="podcast-play" alt="Play"></image>
       </view>
     </view>
   </view>
 
   <!-- 底部加载区域 -->
   <view class="bottom-loader">
-    <image src="../../images/icons/加载动画.svg" class="loader-icon" alt="加载中"></image>
+    <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/loading.svg" class="loader-icon" alt="加载中"></image>
     <view class="loader-text">从源头最大化驱动创新</view>
   </view>
 

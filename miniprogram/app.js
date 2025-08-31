@@ -10,13 +10,13 @@ App({
     favoriteList: [],
     historyList: [],
     settings: {
-      autoPlay: true,
+      autoPlay: false, // 禁用自动播放
       downloadQuality: 'high',
       theme: 'light'
     },
     // Supabase配置
     supabaseUrl: 'https://gxvfcafgnhzjiauukssj.supabase.co',
-    supabaseAnonKey: 'YOUR_SUPABASE_ANON_KEY' // 替换为您的实际密钥
+    supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmZjYWZnbmh6amlhdXVrc3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0MjY4NjAsImV4cCI6MjA3MTAwMjg2MH0.uxO5eyw0Usyd59UKz-S7bTrmOnNPg9Ld9wJ6pDMIQUA'
   },
 
   onLaunch: function () {

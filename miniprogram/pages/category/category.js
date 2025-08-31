@@ -127,67 +127,37 @@ Page({
       {
         id: 'cs_ai',
         name: 'cs.AI',
-        icon: '../../images/CS.AI Logo - Artificial Intelligence.png'
+        icon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/CS-AI-Logo.png'
       },
       {
         id: 'cs_cl',
         name: 'cs.CL',
-        icon: '../../images/CS.CL Logo - Computational Linguistics.png'
+        icon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/CS-CL-Logo.png'
       },
       {
         id: 'cs_cv',
         name: 'cs.CV',
-        icon: '../../images/CS.CV Logo - Computer Vision.png'
+        icon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/CS-CV-Logo.png'
       },
       {
         id: 'cs_lg',
         name: 'cs.LG',
-        icon: '../../images/CS.LG Logo - Learning.png'
+        icon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/CS-LG-Logo.png'
       },
       {
         id: 'cs_ma',
         name: 'cs.MA',
-        icon: '../../images/CS.MA Logo - Multi-Agent Systems.png'
+        icon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/CS-MA-Logo.png'
       },
       {
         id: 'cs_ro',
         name: 'cs.RO',
-        icon: '../../images/CS.RO Logo - Robotics.png'
+        icon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/CS-RO-Logo.png'
       },
       {
         id: 'cs_sd',
         name: 'cs.SD',
-        icon: '../../images/CS.SD Logo - Sound Processing.png'
-      },
-      {
-        id: 'cs_ni',
-        name: 'cs.NI',
-        icon: '../../images/CS.AI Logo - Artificial Intelligence.png'
-      },
-      {
-        id: 'cs_gt',
-        name: 'cs.GT',
-        icon: '../../images/CS.CL Logo - Computational Linguistics.png'
-      },
-      {
-        id: 'cs_dc',
-        name: 'cs.DC',
-        icon: '../../images/CS.CV Logo - Computer Vision.png'
-      },
-      {
-        id: 'cs_db',
-        name: 'cs.DB',
-        icon: '../../images/CS.LG Logo - Learning.png'
-      },
-      {
-        id: 'cs_se',
-        name: 'cs.SE',
-        icon: '../../images/CS.MA Logo - Multi-Agent Systems.png'
-      },
-      {
-        id: 'cs_cr',
-        name: 'cs.CR',
-        icon: '../../images/CS.RO Logo - Robotics.png'
+        icon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/CS-SD-Logo.png'
       }
     ]
     
@@ -237,11 +207,6 @@ Page({
     this.setData({
       currentTab: tab
     })
-    
-    // 震动反馈
-    wx.vibrateShort({
-      type: 'light'
-    })
   },
 
   // 搜索输入
@@ -280,10 +245,6 @@ Page({
     wx.switchTab({
       url: '/pages/browse/browse'
     })
-    
-    wx.vibrateShort({
-      type: 'medium'
-    })
   },
 
   // 阅读论文
@@ -307,10 +268,6 @@ Page({
       title: `进入${category.name}分类`,
       icon: 'none',
       duration: 1500
-    })
-    
-    wx.vibrateShort({
-      type: 'light'
     })
   },
 
@@ -346,10 +303,6 @@ Page({
       // 重新初始化精选播客数据
       this.initFeaturedPodcasts()
     }, 1000)
-    
-    wx.vibrateShort({
-      type: 'medium'
-    })
   },
 
   // 触摸开始
@@ -474,7 +427,7 @@ Page({
     return {
       title: '达芬Qi说 - 发现精彩的学术内容',
       path: '/pages/category/category',
-      imageUrl: '/images/icons/share-cover.jpg'
+      imageUrl: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/share-cover.jpg'
     }
   },
 
@@ -483,7 +436,7 @@ Page({
     return {
       title: '推荐一个很棒的学术播客平台',
       query: 'share=timeline',
-      imageUrl: '/images/icons/share-cover.jpg'
+      imageUrl: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/share-cover.jpg'
     }
   }
 })

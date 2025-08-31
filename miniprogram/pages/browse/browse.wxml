@@ -1,81 +1,116 @@
 <!-- 漫游页面 -->
-<view class="browse-container">
-  <!-- 播客封面 -->
-  <view class="podcast-cover">
-    <view class="cover-placeholder">播客封面</view>
-    <!-- Loader放置在播客封面正中心 -->
-    <image src="../../images/icons/加载动画.svg" alt="加载中" class="podcast-loader"></image>
+<view class="browse-page">
+  <!-- 主要内容区域 -->
+  <view wx:if="{{!loading && podcastList.length > 0}}">
+    <swiper class="browse-swiper" 
+            vertical="true" 
+            indicator-dots="false"
+            indicator-color="rgba(0,0,0,0)"
+            indicator-active-color="rgba(0,0,0,0)" 
+            autoplay="{{false}}"
+            interval="999999"
+            circular="false"
+            current="{{currentIndex}}"
+            duration="300"
+            easing-function="easeInOutCubic"
+            bindchange="handleSwiperChange"
+            bindtouchstart="handleTouchStart"
+            bindtouchmove="handleTouchMove">
+  <swiper-item wx:for="{{podcastList}}" wx:key="id" class="browse-container">
+    <!-- 播客封面 -->
+    <view class="podcast-cover">
+      <view class="cover-placeholder">
+        <view class="cover-icon">🎵</view>
+        <view class="cover-title">{{item.title}}</view>
+      </view>
+      <!-- Loader在播放时显示 -->
+      <view wx:if="{{index === currentIndex && isPlaying}}" 
+            class="podcast-loader">
+        <view class="loading-spinner"></view>
+      </view>
+    </view>
+
+    <!-- 播客信息 -->
+    <view class="podcast-info">
+      <view class="podcast-title">{{item.title}}</view>
+      <view class="podcast-channel" bindtap="handleChannelClick">{{item.channel_name || '奇绩前沿信号'}}</view>
+    </view>
+
+    <!-- 交互按钮区域 -->
+    <view class="action-buttons">
+      <view class="action-btn" bindtap="handleThumbsUp">
+        <image src="{{item.isThumbsUp ? cdnImages.thumbsUpActiveIcon : cdnImages.thumbsUpIcon}}" 
+               alt="点赞" class="icon"></image>
+      </view>
+      <view class="action-btn" bindtap="handleLike">
+        <image src="{{item.isLiked ? cdnImages.likeActiveIcon : cdnImages.likeIcon}}" 
+               alt="喜欢" class="icon"></image>
+      </view>
+      <view class="action-btn" bindtap="handleFavorite">
+        <image src="{{item.isFavorited ? cdnImages.favoriteActiveIcon : cdnImages.favoriteIcon}}" 
+               alt="收藏" class="icon"></image>
+      </view>
+    </view>
+
+    <!-- progress-bar -->
+    <view class="progress-container">
+      <view class="progress-time-info">
+        <text class="current-time">{{currentTimeFormatted}}</text>
+        <text class="total-time">{{totalTimeFormatted}}</text>
+      </view>
+      <view class="progress-bar" bindtap="handleProgressClick">
+        <view class="progress-fill" style="width: {{currentProgress}}%"></view>
+        <view class="progress-thumb" style="left: {{currentProgress}}%"></view>
+      </view>
+    </view>
+
+    <!-- 播放控制 -->
+    <view class="playback-controls">
+      <!-- 分享按钮 -->
+      <view class="control-btn" bindtap="handleShare">
+        <image src="{{cdnImages.shareIcon}}" alt="分享" class="icon"></image>
+      </view>
+
+      <!-- 后退15秒 -->
+      <view class="control-btn" bindtap="handleRewind">
+        <image src="{{cdnImages.rewindIcon}}" alt="后退15秒" class="icon"></image>
+      </view>
+
+      <!-- 播放/暂停按钮 -->
+      <view class="play-pause-btn" bindtap="handlePlayPause">
+        <image src="{{isPlaying ? cdnImages.pauseIcon : cdnImages.playIcon}}" 
+               alt="{{isPlaying ? '暂停' : '播放'}}" class="play-pause-icon"></image>
+      </view>
+
+      <!-- 前进30秒 -->
+      <view class="control-btn" bindtap="handleFastForward">
+        <image src="{{cdnImages.forwardIcon}}" alt="前进30秒" class="icon"></image>
+      </view>
+
+      <!-- 评论按钮 -->
+      <view class="control-btn" bindtap="handleComment">
+        <image src="{{cdnImages.commentIcon}}" alt="评论" class="icon"></image>
+      </view>
+    </view>
+
+    <!-- 更多操作按钮 -->
+    <view class="more-actions">
+      <view class="more-btn" bindtap="handleMore">
+        <text>⋯</text>
+      </view>
+    </view>
+    </swiper-item>
+    </swiper>
   </view>
 
-  <!-- 播客信息 -->
-  <view class="podcast-info">
-    <view class="podcast-title">{{podcastData.title}}</view>
-    <view class="podcast-channel" bindtap="handleChannelClick">{{podcastData.channel}}</view>
+  <!-- 加载指示器 -->
+  <view wx:if="{{loading}}" class="loading-indicator">
+    <image src="{{cdnImages.loadingIcon}}" class="loading-icon"></image>
+    <text>加载中...</text>
   </view>
 
-  <!-- 交互按钮区域 -->
-  <view class="action-buttons">
-    <view class="action-btn" bindtap="handleThumbsUp">
-      <image src="{{isThumbsUp ? '../../images/icons/点赞-已选择.svg' : '../../images/icons/点赞-未选择.svg'}}" 
-             alt="点赞" class="icon"></image>
-    </view>
-    <view class="action-btn" bindtap="handleLike">
-      <image src="{{isLiked ? '../../images/icons/喜欢-已选择.svg' : '../../images/icons/喜欢-未选择.svg'}}" 
-             alt="喜欢" class="icon"></image>
-    </view>
-    <view class="action-btn" bindtap="handleFavorite">
-      <image src="{{isFavorited ? '../../images/icons/收藏-已选择.svg' : '../../images/icons/收藏-未选择.svg'}}" 
-             alt="收藏" class="icon"></image>
-    </view>
-  </view>
-
-  <!-- 进度条 -->
-  <view class="progress-container">
-    <view class="progress-bar" bindtap="handleProgressClick">
-      <view class="progress-fill" style="width: {{currentProgress}}%"></view>
-      <view class="progress-thumb" style="left: {{currentProgress}}%"></view>
-    </view>
-  </view>
-
-  <!-- 播放控制 -->
-  <view class="playback-controls">
-    <!-- 分享按钮 -->
-    <view class="control-btn" bindtap="handleShare">
-      <image src="../../images/icons/分享.svg" alt="分享" class="icon"></image>
-    </view>
-
-    <!-- 后退15秒 -->
-    <view class="control-btn" bindtap="handleRewind">
-      <image src="../../images/icons/后退15秒.svg" alt="后退15秒" class="icon"></image>
-    </view>
-
-    <!-- 播放/暂停按钮 -->
-    <view class="play-pause-btn" bindtap="handlePlayPause">
-      <image src="{{isPlaying ? '../../images/icons/暂停.svg' : '../../images/icons/播放-大.svg'}}" 
-             alt="{{isPlaying ? '暂停' : '播放'}}" class="play-pause-icon"></image>
-    </view>
-
-    <!-- 前进30秒 -->
-    <view class="control-btn" bindtap="handleFastForward">
-      <image src="../../images/icons/前进30秒.svg" alt="前进30秒" class="icon"></image>
-    </view>
-
-    <!-- 评论按钮 -->
-    <view class="control-btn" bindtap="handleComment">
-      <image src="../../images/icons/评论.svg" alt="评论" class="icon"></image>
-    </view>
-  </view>
-
-  <!-- 更多操作按钮 -->
-  <view class="more-actions">
-    <view class="more-btn" bindtap="handleMore">
-      <text>⋯</text>
-    </view>
-  </view>
-
-  <!-- 触摸反馈 -->
-  <view class="touch-feedback" wx:if="{{showSwipeIndicator}}">
-    <view class="swipe-indicator left {{swipeDirection === 'left' ? 'active' : ''}}"></view>
-    <view class="swipe-indicator right {{swipeDirection === 'right' ? 'active' : ''}}"></view>
+  <!-- 当没有数据时显示的内容 -->
+  <view wx:if="{{!loading && podcastList.length === 0}}" class="no-data-indicator">
+    <text>暂无播客内容</text>
   </view>
 </view>

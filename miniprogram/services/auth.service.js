@@ -6,7 +6,21 @@
 class AuthService {
   constructor() {
     this.supabaseUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co'
-    this.supabaseAnonKey = getApp().globalData.supabaseAnonKey
+    this.supabaseAnonKey = null // 延迟获取
+  }
+  
+  // 获取 supabaseAnonKey
+  getSupabaseAnonKey() {
+    if (!this.supabaseAnonKey) {
+      try {
+        const app = getApp()
+        this.supabaseAnonKey = app && app.globalData ? app.globalData.supabaseAnonKey : 'YOUR_SUPABASE_ANON_KEY'
+      } catch (error) {
+        console.warn('获取 supabaseAnonKey 失败，使用默认值:', error)
+        this.supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY'
+      }
+    }
+    return this.supabaseAnonKey
   }
 
   /**
@@ -41,8 +55,15 @@ class AuthService {
       // 4. 保存用户信息到全局状态
       if (authResult.success) {
         await this.saveUserSession(authResult.user)
-        getApp().globalData.userInfo = authResult.user
-        getApp().globalData.isLoggedIn = true
+        try {
+          const app = getApp()
+          if (app && app.globalData) {
+            app.globalData.userInfo = authResult.user
+            app.globalData.isLoggedIn = true
+          }
+        } catch (error) {
+          console.warn('更新全局状态失败:', error)
+        }
       }
 
       return authResult
@@ -134,9 +155,9 @@ class AuthService {
         url: `${this.supabaseUrl}/rest/v1/rpc/wechat_login`,
         method: 'POST',
         header: {
-          'apikey': this.supabaseAnonKey,
+          'apikey': this.getSupabaseAnonKey(),
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.supabaseAnonKey}`
+          'Authorization': `Bearer ${this.getSupabaseAnonKey()}`
         },
         data: {
           wechat_code: data.code,
@@ -203,8 +224,15 @@ class AuthService {
       wx.removeStorageSync('lastLoginTime')
       
       // 清除全局状态
-      getApp().globalData.userInfo = null
-      getApp().globalData.isLoggedIn = false
+      try {
+        const app = getApp()
+        if (app && app.globalData) {
+          app.globalData.userInfo = null
+          app.globalData.isLoggedIn = false
+        }
+      } catch (error) {
+        console.warn('清除全局状态失败:', error)
+      }
       
       return { success: true }
     } catch (error) {
@@ -219,16 +247,28 @@ class AuthService {
    */
   async checkLoginStatus() {
     // 检查全局状态
-    if (getApp().globalData.isLoggedIn && getApp().globalData.userInfo) {
-      return true
+    try {
+      const app = getApp()
+      if (app && app.globalData && app.globalData.isLoggedIn && app.globalData.userInfo) {
+        return true
+      }
+    } catch (error) {
+      console.warn('检查全局状态失败:', error)
     }
 
     // 检查本地存储
     const localUser = this.getLocalUserSession()
     if (localUser) {
       // 恢复全局状态
-      getApp().globalData.userInfo = localUser
-      getApp().globalData.isLoggedIn = true
+      try {
+        const app = getApp()
+        if (app && app.globalData) {
+          app.globalData.userInfo = localUser
+          app.globalData.isLoggedIn = true
+        }
+      } catch (error) {
+        console.warn('恢复全局状态失败:', error)
+      }
       return true
     }
 
@@ -240,7 +280,13 @@ class AuthService {
    * @returns {Object|null} 用户信息
    */
   getCurrentUser() {
-    return getApp().globalData.userInfo
+    try {
+      const app = getApp()
+      return app && app.globalData ? app.globalData.userInfo : null
+    } catch (error) {
+      console.warn('获取当前用户失败:', error)
+      return null
+    }
   }
 
   /**
@@ -283,7 +329,14 @@ class AuthService {
 
       const updatedUser = { ...currentUser, orcid }
       await this.saveUserSession(updatedUser)
-      getApp().globalData.userInfo = updatedUser
+      try {
+        const app = getApp()
+        if (app && app.globalData) {
+          app.globalData.userInfo = updatedUser
+        }
+      } catch (error) {
+        console.warn('更新全局状态失败:', error)
+      }
 
       return { success: true, user: updatedUser }
     } catch (error) {
@@ -308,7 +361,14 @@ class AuthService {
         academic_field: { fields: academicFields } 
       }
       await this.saveUserSession(updatedUser)
-      getApp().globalData.userInfo = updatedUser
+      try {
+        const app = getApp()
+        if (app && app.globalData) {
+          app.globalData.userInfo = updatedUser
+        }
+      } catch (error) {
+        console.warn('更新全局状态失败:', error)
+      }
 
       return { success: true, user: updatedUser }
     } catch (error) {

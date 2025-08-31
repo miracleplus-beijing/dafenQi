@@ -51,7 +51,7 @@
           bindtap="toggleFaq" data-index="{{index}}">
       <view class="faq-question">
         <text class="question-text">{{item.question}}</text>
-        <image src="../../images/icons/{{item.expanded ? '收起' : '展开'}}.svg" 
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/{{item.expanded ? 'collapse' : 'expand'}}.svg" 
                class="expand-icon"></image>
       </view>
       <view class="faq-answer {{item.expanded ? 'expanded' : ''}}">

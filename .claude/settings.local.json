@@ -47,7 +47,16 @@
       "mcp__supabase__list_extensions",
       "mcp__supabase__apply_migration",
       "mcp__supabase__execute_sql",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "WebFetch(domain:developers.weixin.qq.com)",
+      "WebSearch",
+      "Bash(node:*)",
+      "mcp__supabase__get_anon_key",
+      "Bash(curl:*)",
+      "mcp__supabase__get_logs",
+      "Bash(dir:*)",
+      "Bash(find:*)",
+      "WebFetch(domain:gxvfcafgnhzjiauukssj.supabase.co)"
     ],
     "deny": [],
     "ask": []

@@ -26,20 +26,20 @@
       {
         "pagePath": "pages/browse/browse",
         "text": "漫游",
-        "iconPath": "images/icons/漫游.png",
-        "selectedIconPath": "images/icons/漫游.png"
+        "iconPath": "images/icons/browse.png",
+        "selectedIconPath": "images/icons/browse.png"
       },
       {
         "pagePath": "pages/category/category",
         "text": "分类",
-        "iconPath": "images/icons/分类.png", 
-        "selectedIconPath": "images/icons/分类.png"
+        "iconPath": "images/icons/category.png", 
+        "selectedIconPath": "images/icons/category.png"
       },
       {
         "pagePath": "pages/profile/profile",
         "text": "我的",
-        "iconPath": "images/icons/我的.png",
-        "selectedIconPath": "images/icons/我的.png"
+        "iconPath": "images/icons/user.png",
+        "selectedIconPath": "images/icons/user.png"
       }
     ]
   },

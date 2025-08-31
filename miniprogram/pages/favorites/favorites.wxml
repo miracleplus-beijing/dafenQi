@@ -2,7 +2,7 @@
 <view class="favorites-container">
   <!-- 空状态 -->
   <view class="empty-state" wx:if="{{favoriteList.length === 0}}">
-    <image src="../../images/icons/收藏-未选择.svg" class="empty-icon"></image>
+    <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/favorite-unselected.svg" class="empty-icon"></image>
     <text class="empty-text">暂无收藏内容</text>
     <text class="empty-desc">收藏的内容会显示在这里</text>
   </view>
@@ -12,7 +12,7 @@
     <view wx:for="{{favoriteList}}" wx:key="id" class="favorite-item" 
           bindtap="playFavoriteItem" data-item="{{item}}">
       <view class="item-cover">
-        <image src="{{item.cover || '../../images/default-cover.png'}}" 
+        <image src="{{item.cover || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/pictures/default-cover.png'}}" 
                class="cover-image" mode="aspectFill"></image>
       </view>
       
@@ -25,7 +25,7 @@
       <view class="item-actions">
         <view class="action-btn" bindtap="removeFromFavorites" 
               data-id="{{item.id}}" catchtap="true">
-          <image src="../../images/icons/收藏-已选择.svg" class="action-icon"></image>
+          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/favorite-selected.svg" class="action-icon"></image>
         </view>
       </view>
     </view>

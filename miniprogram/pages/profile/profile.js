@@ -101,10 +101,6 @@ Page({
     wx.navigateTo({
       url: '/pages/login/login'
     })
-    
-    wx.vibrateShort({
-      type: 'light'
-    })
   },
 
   // 处理菜单项点击
@@ -154,10 +150,6 @@ Page({
           duration: 1500
         })
     }
-    
-    wx.vibrateShort({
-      type: 'light'
-    })
   },
 
   // 处理分享
@@ -363,7 +355,7 @@ Page({
     return {
       title: title,
       path: '/pages/browse/browse',
-      imageUrl: '/images/icons/share-cover.jpg'
+      imageUrl: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/share-cover.jpg'
     }
   },
 
@@ -372,7 +364,7 @@ Page({
     return {
       title: '推荐一个很棒的学术播客平台',
       query: 'share=timeline',
-      imageUrl: '/images/icons/share-cover.jpg'
+      imageUrl: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/share-cover.jpg'
     }
   },
 
@@ -445,11 +437,6 @@ Page({
       title: '头像更新成功',
       icon: 'success',
       duration: 1500
-    })
-    
-    // 震动反馈
-    wx.vibrateShort({
-      type: 'medium'
     })
     
     console.log('头像更新成功:', avatarUrl)
@@ -530,11 +517,6 @@ Page({
         title: '用户名更新成功',
         icon: 'success',
         duration: 1500
-      })
-      
-      // 震动反馈
-      wx.vibrateShort({
-        type: 'medium'
       })
       
       console.log('用户名更新成功:', nickName)

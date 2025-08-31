@@ -87,11 +87,11 @@ class StorageService {
   async batchUploadLocalSVGs() {
     const svgFiles = [
       '分类.svg',
-      '漫游.svg',
-      '我的.svg',
-      '搜索.svg',
+      'browse.svg',
+      'user.svg',
+      'search.svg',
       '播放-大.svg',
-      '播放-小.svg',
+      'play-small.svg',
       '暂停.svg',
       '收藏-已选择.svg',
       '收藏-未选择.svg',
@@ -101,12 +101,12 @@ class StorageService {
       '点赞-未选择.svg',
       '前进30秒.svg',
       '后退15秒.svg',
-      '设置.svg',
-      '历史.svg',
-      '返回.svg',
+      'settings.svg',
+      'history.svg',
+      'back.svg',
       '分享.svg',
       '评论.svg',
-      '问题反馈.svg'
+      'feedback.svg'
     ]
 
     const results = []

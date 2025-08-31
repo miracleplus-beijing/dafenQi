@@ -36,10 +36,6 @@ Page({
     this.setData({
       isAgreed: !this.data.isAgreed
     })
-    
-    wx.vibrateShort({
-      type: 'light'
-    })
   },
 
   // 微信登录（新版本，符合微信官方要求）

@@ -158,17 +158,17 @@ class IconManager {
   getLocalIconPath(iconName) {
     // 本地图标映射（备用方案）
     const localIconMap = {
-      'nav-browse': '/images/icons/漫游.svg',
+      'nav-browse': '/images/icons/browse.svg',
       'nav-category': '/images/icons/分类.svg',
-      'nav-profile': '/images/icons/我的.svg',
+      'nav-profile': '/images/icons/user.svg',
       'action-like-active': '/images/icons/点赞-已选择.svg',
       'action-like-inactive': '/images/icons/点赞-未选择.svg',
       'action-favorite-active': '/images/icons/收藏-已选择.svg',
       'action-favorite-inactive': '/images/icons/收藏-未选择.svg',
       'player-play-large': '/images/icons/播放-大.svg',
       'player-pause': '/images/icons/暂停.svg',
-      'ui-back': '/images/icons/返回.svg',
-      'ui-search': '/images/icons/搜索.svg'
+      'ui-back': '/images/icons/back.svg',
+      'ui-search': '/images/icons/search.svg'
     }
     
     return localIconMap[iconName] || ''

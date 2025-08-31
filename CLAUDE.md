@@ -255,9 +255,9 @@ class StorageService {
   async batchUploadLocalSVGs() {
     const svgFiles = [
       '分类.svg',
-      '漫游.svg', 
-      '我的.svg',
-      '搜索.svg',
+      'browse.svg', 
+      'user.svg',
+      'search.svg',
       '播放-大.svg',
       '收藏-已选择.svg',
       // ... 更多 SVG 文件

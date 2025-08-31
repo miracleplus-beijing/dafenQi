@@ -13,7 +13,7 @@
       <view class="user-id">ID: {{userInfo.id || '未设置'}}</view>
     </view>
     <view class="avatar-container" wx:if="{{isLoggedIn}}">
-      <image class="avatar" src="{{userInfo.avatarUrl || '../../images/MiracclePlus头像.png'}}" 
+      <image class="avatar" src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png" 
              alt="用户头像" mode="aspectFill" bindtap="changeAvatar"></image>
       <view class="avatar-edit-hint">点击更换</view>
     </view>
@@ -22,50 +22,50 @@
   <!-- 菜单项区域 -->
   <view class="menu-section" wx:if="{{isLoggedIn}}">
     <view class="menu-item" bindtap="handleMenuClick" data-type="history">
-      <image src="../../images/icons/历史.svg" alt="历史" class="menu-icon"></image>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/history.svg" alt="历史" class="menu-icon"></image>
       <text class="menu-text">我的历史</text>
-      <image src="../../images/icons/向右箭头-选择.svg" alt=">" class="menu-arrow"></image>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" alt=">" class="menu-arrow"></image>
     </view>
     
     <view class="menu-item" bindtap="handleMenuClick" data-type="favorites">
-      <image src="../../images/icons/收藏-已选择.svg" alt="收藏" class="menu-icon"></image>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/favorite-selected.svg" alt="收藏" class="menu-icon"></image>
       <text class="menu-text">我的收藏</text>
-      <image src="../../images/icons/向右箭头-选择.svg" alt=">" class="menu-arrow"></image>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" alt=">" class="menu-arrow"></image>
     </view>
     
     <view class="section-divider"></view>
     
     <view class="menu-item" bindtap="handleMenuClick" data-type="share">
-      <image src="../../images/icons/分享.svg" alt="分享" class="menu-icon"></image>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/share.svg" alt="分享" class="menu-icon"></image>
       <text class="menu-text">分享给朋友</text>
-      <image src="../../images/icons/向右箭头-选择.svg" alt=">" class="menu-arrow"></image>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" alt=">" class="menu-arrow"></image>
     </view>
     
     <view class="menu-item" bindtap="handleMenuClick" data-type="feedback">
-      <image src="../../images/icons/问题反馈.svg" alt="反馈" class="menu-icon"></image>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/feedback.svg" alt="反馈" class="menu-icon"></image>
       <text class="menu-text">问题反馈</text>
-      <image src="../../images/icons/向右箭头-选择.svg" alt=">" class="menu-arrow"></image>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" alt=">" class="menu-arrow"></image>
     </view>
     
     <view class="menu-item" bindtap="handleMenuClick" data-type="settings">
-      <image src="../../images/icons/设置.svg" alt="设置" class="menu-icon"></image>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/settings.svg" alt="设置" class="menu-icon"></image>
       <text class="menu-text">设置</text>
-      <image src="../../images/icons/向右箭头-选择.svg" alt=">" class="menu-arrow"></image>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" alt=">" class="menu-arrow"></image>
     </view>
 
     <view class="section-divider"></view>
     
     <view class="menu-item logout-item" bindtap="handleLogout">
-      <image src="../../images/icons/登出.svg" alt="登出" class="menu-icon"></image>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/logout.svg" alt="登出" class="menu-icon"></image>
       <text class="menu-text logout-text">退出登录</text>
-      <image src="../../images/icons/向右箭头-选择.svg" alt=">" class="menu-arrow"></image>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" alt=">" class="menu-arrow"></image>
     </view>
   </view>
 
   <!-- 未登录提示 -->
   <view class="login-tips" wx:if="{{!isLoggedIn}}">
     <view class="tips-content">
-      <image src="../../images/icons/用户.svg" class="tips-icon"></image>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/user.svg" class="tips-icon"></image>
       <text class="tips-text">登录后享受更多功能</text>
       <view class="tips-list">
         <text class="tip-item">• 同步收藏和历史记录</text>

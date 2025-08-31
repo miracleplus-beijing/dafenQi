@@ -55,15 +55,6 @@ cloudfunctions/
 *.swo
 *~
 
-# macOS 系统文件
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
 # Windows 系统文件
 desktop.ini
 
@@ -127,3 +118,10 @@ NOTES_PRIVATE.md
 # 用户上传内容
 uploads/
 user-data/
+
+# ===============================
+# 其他文件
+# ===============================
+
+# 播客文档
+broadcast/
