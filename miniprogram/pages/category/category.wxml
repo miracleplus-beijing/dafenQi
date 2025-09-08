@@ -24,17 +24,17 @@
     <view class="section">
       <text class="section-title">最热榜 TOP 10</text>
       
-      <view wx:for="{{hotRankings}}" wx:key="id" class="ranking-item" 
-            bindtap="playPodcast" data-item="{{item}}">
-        <view class="ranking-number">{{index + 1}}</view>
+      <view wx:for="{{hotRankings}}" wx:for-index="idx" wx:key="id" wx:if="{{idx < 3}}" class="ranking-item">
+        <view class="ranking-number">{{idx + 1}}</view>
         <view class="ranking-content">
           <view class="ranking-title">{{item.title}}</view>
           <view class="ranking-channel">{{item.channel}}</view>
         </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="ranking-play" alt="Play"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
+               class="ranking-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
       </view>
       
-      <view class="view-more" bindtap="viewMoreRankings">
+      <view class="view-more" bindtap="viewMoreRankings" data-type="hot">
         <text>查看完整榜单</text>
         <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow-circle.svg" alt="View More"></image>
       </view>
@@ -81,8 +81,7 @@
         </view>
       </view>
       
-      <view wx:for="{{featuredPodcasts}}" wx:key="id" class="podcast-item" 
-            bindtap="playPodcast" data-item="{{item}}">
+      <view wx:for="{{featuredPodcasts}}" wx:key="id" class="podcast-item">
         <view class="podcast-cover"></view>
         <view class="podcast-info">
           <view class="podcast-channel">{{item.channel}}</view>
@@ -91,7 +90,8 @@
             <text class="highlight">编辑推荐语：</text>{{item.recommendation}}
           </view>
         </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="podcast-play" alt="Play"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
+               class="podcast-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
       </view>
     </view>
   </view>
@@ -102,17 +102,17 @@
     <view class="section">
       <text class="section-title">最新榜 TOP 10</text>
       
-      <view wx:for="{{newRankings}}" wx:key="id" class="ranking-item" 
-            bindtap="playPodcast" data-item="{{item}}">
-        <view class="ranking-number">{{index + 1}}</view>
+      <view wx:for="{{newRankings}}" wx:for-index="idx" wx:key="id" wx:if="{{idx < 3}}" class="ranking-item">
+        <view class="ranking-number">{{idx + 1}}</view>
         <view class="ranking-content">
           <view class="ranking-title">{{item.title}}</view>
           <view class="ranking-channel">{{item.channel}}</view>
         </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="ranking-play" alt="Play"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
+               class="ranking-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
       </view>
       
-      <view class="view-more" bindtap="viewMoreRankings">
+      <view class="view-more" bindtap="viewMoreRankings" data-type="new">
         <text>查看完整榜单</text>
         <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow-circle.svg" alt="View More"></image>
       </view>
@@ -159,8 +159,7 @@
         </view>
       </view>
       
-      <view wx:for="{{featuredPodcasts}}" wx:key="id" class="podcast-item" 
-            bindtap="playPodcast" data-item="{{item}}">
+      <view wx:for="{{featuredPodcasts}}" wx:key="id" class="podcast-item">
         <view class="podcast-cover"></view>
         <view class="podcast-info">
           <view class="podcast-channel">{{item.channel}}</view>
@@ -169,7 +168,8 @@
             <text class="highlight">编辑推荐语：</text>{{item.recommendation}}
           </view>
         </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="podcast-play" alt="Play"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
+               class="podcast-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
       </view>
     </view>
   </view>
@@ -180,17 +180,17 @@
     <view class="section">
       <text class="section-title">综述榜 TOP 10</text>
       
-      <view wx:for="{{reviewRankings}}" wx:key="id" class="ranking-item" 
-            bindtap="playPodcast" data-item="{{item}}">
-        <view class="ranking-number">{{index + 1}}</view>
+      <view wx:for="{{reviewRankings}}" wx:for-index="idx" wx:key="id" wx:if="{{idx < 3}}" class="ranking-item">
+        <view class="ranking-number">{{idx + 1}}</view>
         <view class="ranking-content">
           <view class="ranking-title">{{item.title}}</view>
           <view class="ranking-channel">{{item.channel}}</view>
         </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="ranking-play" alt="Play"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
+               class="ranking-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
       </view>
       
-      <view class="view-more" bindtap="viewMoreRankings">
+      <view class="view-more" bindtap="viewMoreRankings" data-type="review">
         <text>查看完整榜单</text>
         <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow-circle.svg" alt="View More"></image>
       </view>
@@ -237,8 +237,7 @@
         </view>
       </view>
       
-      <view wx:for="{{featuredPodcasts}}" wx:key="id" class="podcast-item" 
-            bindtap="playPodcast" data-item="{{item}}">
+      <view wx:for="{{featuredPodcasts}}" wx:key="id" class="podcast-item">
         <view class="podcast-cover"></view>
         <view class="podcast-info">
           <view class="podcast-channel">{{item.channel}}</view>
@@ -247,7 +246,8 @@
             <text class="highlight">编辑推荐语：</text>{{item.recommendation}}
           </view>
         </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="podcast-play" alt="Play"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
+               class="podcast-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
       </view>
     </view>
   </view>

@@ -1,0 +1,45 @@
+<!-- 账户注销页面 -->
+<view class="cancel-account-container">
+  <view class="content-section">
+    
+    <view class="warning-section">
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/cancel-account.svg" class="warning-icon"></image>
+      <text class="warning-title">注销账户</text>
+      <text class="warning-desc">注销后将无法恢复您的账户和数据</text>
+    </view>
+
+    <view class="impact-section">
+      <text class="section-title">注销影响</text>
+      <view class="impact-list">
+        <text class="impact-item">• 您的账户信息将被永久删除</text>
+        <text class="impact-item">• 所有收藏和历史记录将被清空</text>
+        <text class="impact-item">• 无法再使用个性化推荐功能</text>
+        <text class="impact-item">• 已下载的内容也将被清除</text>
+      </view>
+    </view>
+
+    <view class="reason-section">
+      <text class="section-title">注销原因</text>
+      <picker mode="selector" range="{{reasons}}" bindchange="onReasonChange">
+        <view class="picker-container">
+          <text class="picker-text">{{selectedReason || '请选择注销原因'}}</text>
+          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" class="picker-arrow"></image>
+        </view>
+      </picker>
+      
+      <textarea class="custom-reason" placeholder="其他原因（可选）" bindinput="onCustomReasonInput" maxlength="200"></textarea>
+    </view>
+
+    <view class="agreement-section">
+      <view class="checkbox-container">
+        <checkbox value="agree" bindchange="onAgreementChange" color="#FF4444"></checkbox>
+        <text class="agreement-text">我已阅读并同意《账户注销协议》，确认要永久注销此账户</text>
+      </view>
+    </view>
+
+  </view>
+  
+  <view class="button-section">
+    <button class="cancel-btn" bindtap="handleSubmit">提交注销申请</button>
+  </view>
+</view>

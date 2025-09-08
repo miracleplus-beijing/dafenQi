@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "privacyPolicyUrl": "https://developers.weixin.qq.com/community/develop/doc/00042e3ef54940ce8520e38db61801",
+  "contactPhone": "",
+  "contactEmail": "",
+  "contactQQ": "",
+  "contactWeChat": "",
+  "extInfo": {},
+  "privacyDesc": {
+    "functionPages": {
+      "pages/login/login": {
+        "functionItems": [
+          {
+            "type": "chooseAvatar",
+            "desc": "用于完善用户个人资料，设置用户头像",
+            "sceneDesc": "在用户登录完善个人信息时，用于选择和设置用户头像"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -4,870 +4,386 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-达芬Qi说 is a WeChat miniprogram for an audio podcast platform. The project includes audio playback, categorization, user favorites, and history tracking. Currently built with native WeChat miniprogram framework with plans to integrate Supabase backend.
+**达芬Qi说** is a WeChat miniprogram for audio podcast platform with Supabase backend integration. Built with native WeChat miniprogram framework (libVersion: 2.20.1).
 
-## Project Structure
+## Architecture
 
-### WeChat Miniprogram Architecture
-- **Framework**: Native WeChat miniprogram (libVersion: 2.20.1)
-- **Component System**: glass-easel componentFramework
-- **Entry Point**: `miniprogram/` (configured in project.config.json)
-- **State Management**: App.globalData for global state
-- **Storage**: wx.getStorageSync/wx.setStorageSync for local persistence
+### Core Structure
+- **Entry**: `miniprogram/app.js` - Global state management
+- **Pages**: `miniprogram/pages/` - Tab-based navigation (browse, category, profile)
+- **Services**: `miniprogram/services/` - Business logic (auth, audio, storage)
+- **Assets**: `miniprogram/images/` - Icons and static resources
+- **Cloud**: `cloudfunctions/` - WeChat cloud functions
 
-### Key Architecture Files
-- `miniprogram/app.js` - Application entry with global data and lifecycle methods
-- `miniprogram/app.json` - App configuration with tabBar and page routes
-- `project.config.json` - WeChat developer tools configuration
-- `cloudfunctions/` - Cloud functions directory (currently has quickstartFunctions)
-
-### Current Global State Structure
+### Global State (app.js:2-19)
 ```javascript
-// miniprogram/app.js - App.globalData
 {
-  userInfo: null,           // User authentication info
+  userInfo: null,           // User authentication
   isLoggedIn: false,        // Login status
-  currentProgress: 0,       // Audio playback progress (0-100)
-  maxProgress: 100,         // Max progress value
-  isPlaying: false,         // Current playback state
-  currentPodcast: null,     // Currently selected podcast
-  favoriteList: [],         // User's favorite podcasts
+  currentProgress: 0,       // Audio playback progress
+  isPlaying: false,         // Playback state
+  currentPodcast: null,     // Active podcast
+  favoriteList: [],         // User favorites
   historyList: [],          // Playback history
   settings: {               // User preferences
-    autoPlay: true,
+    autoPlay: false,
     downloadQuality: 'high',
     theme: 'light'
-  }
-}
-```
-
-### Page Structure (TabBar)
-```
-pages/
-├── browse/        # 漫游 - Main browsing page (default tab)
-├── category/      # 分类 - Category/classification page  
-├── profile/       # 我的 - User profile page
-├── login/         # Login page (not in tabBar)
-├── history/       # User history page
-├── favorites/     # User favorites page
-├── settings/      # Settings page
-└── feedback/      # Feedback page
-```
-
-## 未来技术选型
-
-### 后端服务 - Supabase
-
-#### 1. Supabase 集成架构
-```
-miniprogram/
-├── utils/
-│   ├── supabase.js        # Supabase 客户端配置
-│   ├── auth.js            # 认证服务
-│   ├── database.js        # 数据库操作
-│   └── storage.js         # 文件存储服务
-├── services/
-│   ├── podcast.js         # 播客相关服务
-│   ├── user.js            # 用户相关服务
-│   └── favorites.js       # 收藏服务
-└── config/
-    └── supabase.config.js # 配置文件
-```
-
-#### 2. Supabase 配置示例
-```javascript
-// utils/supabase.js
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = 'YOUR_SUPABASE_URL'
-const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY'
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    storage: {
-      getItem: (key) => wx.getStorageSync(key),
-      setItem: (key, value) => wx.setStorageSync(key, value),
-      removeItem: (key) => wx.removeStorageSync(key)
-    }
-  }
-})
-```
-
-#### 3. 数据库表结构设计
-```sql
--- 用户表
-CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  wechat_openid VARCHAR UNIQUE NOT NULL,
-  nickname VARCHAR,
-  avatar_url VARCHAR,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- 播客表
-CREATE TABLE podcasts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  title VARCHAR NOT NULL,
-  description TEXT,
-  audio_url VARCHAR NOT NULL,
-  cover_image_url VARCHAR,
-  duration INTEGER,
-  category_id UUID REFERENCES categories(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- 用户收藏表
-CREATE TABLE user_favorites (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  podcast_id UUID REFERENCES podcasts(id) ON DELETE CASCADE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(user_id, podcast_id)
-);
-
--- 播放历史表
-CREATE TABLE user_history (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  podcast_id UUID REFERENCES podcasts(id) ON DELETE CASCADE,
-  play_position INTEGER DEFAULT 0,
-  played_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
-
-### 用户认证 - OAuth2 + 微信登录
-
-#### 1. 微信登录流程
-```javascript
-// utils/auth.js
-class AuthService {
-  async loginWithWechat() {
-    try {
-      // 1. 获取微信授权码
-      const { code } = await wx.login()
-      
-      // 2. 发送到后端验证
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: `${code}@wechat.temp`,
-        password: code
-      })
-      
-      if (error) throw error
-      
-      // 3. 更新全局状态
-      getApp().login(data.user)
-      
-      return { success: true, user: data.user }
-    } catch (error) {
-      console.error('微信登录失败:', error)
-      return { success: false, error }
-    }
-  }
-  
-  async logout() {
-    try {
-      await supabase.auth.signOut()
-      getApp().logout()
-      return { success: true }
-    } catch (error) {
-      console.error('登出失败:', error)
-      return { success: false, error }
-    }
-  }
-}
-
-export default new AuthService()
-```
-
-#### 2. 权限管理策略
-```sql
--- Row Level Security (RLS) 策略
-ALTER TABLE user_favorites ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_history ENABLE ROW LEVEL SECURITY;
-
--- 用户只能访问自己的数据
-CREATE POLICY "Users can only access their own favorites"
-  ON user_favorites FOR ALL
-  TO authenticated
-  USING (auth.uid()::text = user_id::text);
-
-CREATE POLICY "Users can only access their own history"
-  ON user_history FOR ALL  
-  TO authenticated
-  USING (auth.uid()::text = user_id::text);
-```
-
-### SVG 云存储方案
-
-#### 1. Supabase Storage 配置
-```javascript
-// utils/storage.js
-class StorageService {
-  constructor() {
-    this.bucket = 'svg-icons'
-  }
-  
-  async uploadSVG(filePath, fileName) {
-    try {
-      // 读取本地 SVG 文件
-      const fileContent = await this.readLocalFile(filePath)
-      
-      // 上传到 Supabase Storage
-      const { data, error } = await supabase.storage
-        .from(this.bucket)
-        .upload(`icons/${fileName}`, fileContent, {
-          contentType: 'image/svg+xml',
-          upsert: true
-        })
-      
-      if (error) throw error
-      
-      // 获取公共 URL
-      const { data: urlData } = supabase.storage
-        .from(this.bucket)
-        .getPublicUrl(`icons/${fileName}`)
-      
-      return {
-        success: true,
-        url: urlData.publicUrl,
-        path: data.path
-      }
-    } catch (error) {
-      console.error('SVG 上传失败:', error)
-      return { success: false, error }
-    }
-  }
-  
-  async readLocalFile(filePath) {
-    return new Promise((resolve, reject) => {
-      wx.getFileSystemManager().readFile({
-        filePath,
-        encoding: 'utf8',
-        success: (res) => resolve(res.data),
-        fail: reject
-      })
-    })
-  }
-  
-  // 批量上传本地 SVG 图标
-  async batchUploadLocalSVGs() {
-    const svgFiles = [
-      '分类.svg',
-      'browse.svg', 
-      'user.svg',
-      'search.svg',
-      '播放-大.svg',
-      '收藏-已选择.svg',
-      // ... 更多 SVG 文件
-    ]
-    
-    const results = []
-    for (const fileName of svgFiles) {
-      const localPath = `images/icons/${fileName}`
-      const result = await this.uploadSVG(localPath, fileName)
-      results.push({ fileName, ...result })
-    }
-    
-    return results
-  }
-}
-
-export default new StorageService()
-```
-
-#### 2. SVG 优化和管理
-```javascript
-// utils/svgOptimizer.js
-class SVGOptimizer {
-  // SVG 压缩优化
-  optimizeSVG(svgContent) {
-    return svgContent
-      .replace(/\s+/g, ' ')              // 压缩空格
-      .replace(/>\s+</g, '><')           // 移除标签间空格
-      .replace(/\s*([\{\}:;,])\s*/g, '$1') // 压缩CSS
-      .trim()
-  }
-  
-  // 添加主题色支持
-  addThemeSupport(svgContent, primaryColor = '#0884FF') {
-    return svgContent.replace(
-      /fill="[^"]*"/g, 
-      `fill="var(--primary-color, ${primaryColor})"`
-    )
-  }
-}
-```
-
-## 开发规范和最佳实践
-
-### 1. 代码规范
-
-#### 目录结构
-```
-miniprogram/
-├── app.js                 # 小程序入口
-├── app.json              # 全局配置
-├── app.wxss              # 全局样式
-├── config/               # 配置文件
-│   ├── api.config.js     # API 配置
-│   └── constants.js      # 常量定义
-├── utils/                # 工具函数
-│   ├── request.js        # 网络请求封装
-│   ├── storage.js        # 存储工具
-│   ├── audio.js          # 音频播放工具
-│   └── format.js         # 格式化工具
-├── services/             # 业务服务层
-│   ├── auth.service.js   # 认证服务
-│   ├── podcast.service.js # 播客服务
-│   └── user.service.js   # 用户服务
-├── components/           # 自定义组件
-│   ├── audio-player/     # 音频播放器组件
-│   ├── podcast-card/     # 播客卡片组件
-│   └── loading/          # 加载组件
-├── pages/                # 页面文件
-└── images/               # 静态资源
-```
-
-#### 命名规范
-- **文件命名**: 使用 kebab-case，如 `audio-player.js`
-- **变量命名**: 使用 camelCase，如 `currentPodcast`
-- **常量命名**: 使用 UPPER_SNAKE_CASE，如 `API_BASE_URL`
-- **组件命名**: 使用 PascalCase，如 `AudioPlayer`
-
-### 2. 状态管理进化
-
-#### 从全局状态到模块化状态
-```javascript
-// store/index.js - 状态管理中心
-class Store {
-  constructor() {
-    this.state = {
-      user: {
-        info: null,
-        isLoggedIn: false
-      },
-      audio: {
-        currentPodcast: null,
-        isPlaying: false,
-        progress: 0,
-        volume: 1
-      },
-      data: {
-        favorites: [],
-        history: [],
-        categories: []
-      },
-      ui: {
-        theme: 'light',
-        settings: {}
-      }
-    }
-    
-    this.listeners = {}
-  }
-  
-  subscribe(key, callback) {
-    if (!this.listeners[key]) {
-      this.listeners[key] = []
-    }
-    this.listeners[key].push(callback)
-  }
-  
-  setState(key, value) {
-    this.state[key] = { ...this.state[key], ...value }
-    this.notify(key)
-  }
-  
-  notify(key) {
-    if (this.listeners[key]) {
-      this.listeners[key].forEach(callback => callback(this.state[key]))
-    }
-  }
-}
-
-export default new Store()
-```
-
-### 3. 网络请求封装
-
-```javascript
-// utils/request.js
-class Request {
-  constructor() {
-    this.baseURL = 'YOUR_SUPABASE_URL'
-    this.timeout = 10000
-  }
-  
-  async request(options) {
-    const {
-      url,
-      method = 'GET',
-      data,
-      header = {}
-    } = options
-    
-    // 添加认证头
-    const token = await this.getAuthToken()
-    if (token) {
-      header['Authorization'] = `Bearer ${token}`
-    }
-    
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: `${this.baseURL}${url}`,
-        method,
-        data,
-        header: {
-          'Content-Type': 'application/json',
-          ...header
-        },
-        timeout: this.timeout,
-        success: (res) => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve(res.data)
-          } else {
-            reject(new Error(`HTTP ${res.statusCode}: ${res.errMsg}`))
-          }
-        },
-        fail: reject
-      })
-    })
-  }
-  
-  async getAuthToken() {
-    const session = await supabase.auth.getSession()
-    return session.data.session?.access_token
-  }
-  
-  get(url, params) {
-    return this.request({ url, method: 'GET', data: params })
-  }
-  
-  post(url, data) {
-    return this.request({ url, method: 'POST', data })
-  }
-  
-  put(url, data) {
-    return this.request({ url, method: 'PUT', data })
-  }
-  
-  delete(url) {
-    return this.request({ url, method: 'DELETE' })
-  }
-}
-
-export default new Request()
-```
-
-### 4. 音频播放管理
-
-```javascript
-// utils/audioManager.js
-class AudioManager {
-  constructor() {
-    this.audioContext = wx.createInnerAudioContext()
-    this.currentPodcast = null
-    this.isPlaying = false
-    
-    this.setupEventListeners()
-  }
-  
-  setupEventListeners() {
-    this.audioContext.onPlay(() => {
-      this.isPlaying = true
-      this.notifyStateChange()
-    })
-    
-    this.audioContext.onPause(() => {
-      this.isPlaying = false
-      this.notifyStateChange()
-    })
-    
-    this.audioContext.onTimeUpdate(() => {
-      const progress = {
-        currentTime: this.audioContext.currentTime,
-        duration: this.audioContext.duration,
-        progress: this.audioContext.currentTime / this.audioContext.duration
-      }
-      this.notifyProgressChange(progress)
-    })
-    
-    this.audioContext.onEnded(() => {
-      this.playNext()
-    })
-  }
-  
-  play(podcast) {
-    if (this.currentPodcast?.id !== podcast.id) {
-      this.audioContext.src = podcast.audioUrl
-      this.currentPodcast = podcast
-      
-      // 添加到播放历史
-      getApp().addToHistory(podcast)
-    }
-    
-    this.audioContext.play()
-  }
-  
-  pause() {
-    this.audioContext.pause()
-  }
-  
-  seek(position) {
-    this.audioContext.seek(position)
-  }
-  
-  notifyStateChange() {
-    getApp().globalData.isPlaying = this.isPlaying
-    getApp().globalData.currentPodcast = this.currentPodcast
-  }
-  
-  notifyProgressChange(progress) {
-    getApp().globalData.currentProgress = progress.progress
-    // 通知页面更新进度
-    wx.publishUpdate('audioProgress', progress)
-  }
-}
-
-export default new AudioManager()
-```
-
-## 性能优化指南
-
-### 1. 图片和资源优化
-
-```javascript
-// utils/imageOptimizer.js
-class ImageOptimizer {
-  // 图片压缩配置
-  getOptimizedImageUrl(originalUrl, options = {}) {
-    const {
-      width = 750,
-      height = 'auto',
-      quality = 80,
-      format = 'webp'
-    } = options
-    
-    // 如果是 Supabase Storage URL，添加变换参数
-    if (originalUrl.includes('supabase')) {
-      return `${originalUrl}?width=${width}&height=${height}&quality=${quality}&format=${format}`
-    }
-    
-    return originalUrl
-  }
-  
-  // 懒加载图片
-  lazyLoadImage(selector) {
-    const observer = wx.createIntersectionObserver()
-    observer.observe(selector, (entries) => {
-      entries.forEach(entry => {
-        if (entry.intersectionRatio > 0) {
-          // 加载图片
-          const dataset = entry.target.dataset
-          if (dataset.src) {
-            entry.target.src = dataset.src
-            observer.unobserve(entry.target)
-          }
-        }
-      })
-    })
-  }
-}
-```
-
-### 2. 缓存策略
-
-```javascript
-// utils/cache.js
-class CacheManager {
-  constructor() {
-    this.cachePrefix = 'dafenqi_'
-    this.maxCacheSize = 50 // MB
-  }
-  
-  async set(key, data, expireTime = 3600000) { // 默认1小时
-    const cacheData = {
-      data,
-      timestamp: Date.now(),
-      expireTime
-    }
-    
-    try {
-      wx.setStorageSync(`${this.cachePrefix}${key}`, cacheData)
-      await this.cleanExpiredCache()
-    } catch (error) {
-      console.error('缓存设置失败:', error)
-    }
-  }
-  
-  get(key) {
-    try {
-      const cacheData = wx.getStorageSync(`${this.cachePrefix}${key}`)
-      if (!cacheData) return null
-      
-      const { data, timestamp, expireTime } = cacheData
-      
-      // 检查是否过期
-      if (Date.now() - timestamp > expireTime) {
-        this.remove(key)
-        return null
-      }
-      
-      return data
-    } catch (error) {
-      console.error('缓存读取失败:', error)
-      return null
-    }
-  }
-  
-  remove(key) {
-    wx.removeStorageSync(`${this.cachePrefix}${key}`)
-  }
-  
-  async cleanExpiredCache() {
-    try {
-      const info = wx.getStorageInfoSync()
-      const keys = info.keys.filter(key => key.startsWith(this.cachePrefix))
-      
-      for (const key of keys) {
-        const cacheData = wx.getStorageSync(key)
-        if (cacheData && Date.now() - cacheData.timestamp > cacheData.expireTime) {
-          wx.removeStorageSync(key)
-        }
-      }
-    } catch (error) {
-      console.error('缓存清理失败:', error)
-    }
-  }
-}
-
-export default new CacheManager()
-```
-
-## 部署和运维
-
-### 1. 环境配置
-
-```javascript
-// config/environment.js
-const environments = {
-  development: {
-    supabaseUrl: 'https://your-dev-project.supabase.co',
-    supabaseKey: 'your-dev-anon-key',
-    apiTimeout: 15000,
-    debugMode: true
   },
-  production: {
-    supabaseUrl: 'https://your-prod-project.supabase.co', 
-    supabaseKey: 'your-prod-anon-key',
-    apiTimeout: 10000,
-    debugMode: false
-  }
+  supabaseUrl: 'https://gxvfcafgnhzjiauukssj.supabase.co',
+  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
 }
-
-const env = process.env.NODE_ENV || 'development'
-export default environments[env]
 ```
 
-### 2. 错误监控和日志
+## Development Commands
 
+### WeChat Developer Tools
+- **Preview**: Use WeChat Developer Tools "Preview" button
+- **Upload**: Use "Upload" for production deployment
+- **Test**: Use "Test" tab for testing on device
+
+### Key Files to Watch
+- `miniprogram/app.js` - Global state & lifecycle
+- `miniprogram/app.json` - Routing & tab configuration  
+- `project.config.json` - WeChat project settings
+
+## Page Structure
+
+### TabBar Navigation (app.json:19-44)
+1. **Browse** (`pages/browse/browse`) - Main podcast browsing
+2. **Category** (`pages/category/category`) - Podcast categories
+3. **Profile** (`pages/profile/profile`) - User account/settings
+
+### Additional Pages
+- Login (`pages/login/login`) - User authentication
+- History (`pages/history/history`) - Playback history
+- Favorites (`pages/favorites/favorites`) - Saved podcasts
+- Settings (`pages/settings/settings`) - App preferences
+- Feedback (`pages/feedback/feedback`) - User feedback
+
+## Key Services
+
+### Authentication (services/auth.service.js)
+Core authentication service handling WeChat OAuth2 integration with Supabase backend:
+- **WeChat Login Flow**: `loginWithWechat()` - Mock OpenID generation and user creation/lookup
+- **User Management**: `findOrCreateUser()`, `updateUserInfo()` - User profiles with WeChat integration
+- **Session Management**: `saveUserSession()`, `getLocalUserSession()` - 7-day session persistence
+- **Avatar Upload**: Private bucket storage with signed URL generation for user avatars
+- **Supabase Integration**: Direct REST API calls for user operations with `supabaseRequest()`
+
+### Storage Service (services/storage.service.js)
+File storage abstraction layer for Supabase Storage:
+- **Private User Files**: `uploadUserFileToPrivateBucket()` - Secure user content storage
+- **Signed URLs**: `generateUserFileSignedUrl()` - Temporary access to private files
+- **File Management**: Upload, delete, and list operations for various file types
+- **Image Processing**: Compression and optimization for WeChat constraints
+
+### API Service (services/api.service.js)  
+Centralized API layer organizing all backend operations:
+- **Podcast Operations**: `podcast.getList()`, `podcast.getDetail()`, `podcast.getRecommended()`
+- **User Operations**: `user.getFavorites()`, `user.addFavorite()`, `user.getHistory()`
+- **Category Management**: `category.getList()`, `category.getPodcasts()`
+- **Search**: `search.podcasts()`, `search.getHotKeywords()`
+- **Statistics**: `stats.recordPlay()`, `stats.getPodcastStats()`
+
+### Profile Service (services/profile.service.js)
+Comprehensive user profile management service integrating storage and data synchronization:
+- **Complete Profile Management**: `getUserCompleteProfile()`, `updateUserProfile()` - Full user profile with storage integration
+- **Avatar Handling**: `handleAvatarUpdate()`, `cleanupOldAvatars()` - Private storage with automatic cleanup
+- **Storage Integration**: `getUserStorageStats()`, `batchGenerateSignedUrls()` - File management and statistics
+- **Global State Sync**: `syncToGlobalState()` - Automatic state synchronization across app
+- **Profile Completeness**: `checkProfileCompleteness()` - Profile validation and completion tracking
+
+### Audio Management (services/audio-preloader.service.js)
+- Audio preloading and caching
+- Playback state management
+- Progress tracking
+
+## Supabase Integration
+
+### Configuration (app.js:18-19)
+- **URL**: `https://gxvfcafgnhzjiauukssj.supabase.co`
+- **Anon Key**: Configured in globalData
+- **Auth**: Uses WeChat login flow
+
+### Database Schema
+
+#### Core Tables
+- **`users`** (35 records) - User profiles with WeChat integration
+  - `id` (UUID) - User unique identifier
+  - `wechat_openid` (VARCHAR, unique) - WeChat OpenID for authentication
+  - `username`, `nickname` - User display names
+  - `avatar_url` - User avatar URL
+  - `orcid` - Academic identifier (optional)
+  - `role` - User role (user/admin)
+  - `academic_field` (JSONB) - Academic field preferences array
+  - `is_active` - Account activation status
+  - `created_at`, `updated_at` - Timestamps
+
+- **`channels`** (6 records) - Podcast channels/shows
+  - `id` (UUID) - Channel unique identifier  
+  - `name` - Channel name (e.g., "达芬Qi官方", "计算机视觉前沿")
+  - `description` - Channel description
+  - `cover_url` - Channel cover image
+  - `creator_id` (UUID) - References users.id
+  - `category` - Academic category (e.g., "CS.AI", "CS.CV", "CS.CL")
+  - `is_official` - Official channel flag
+  - `subscriber_count` - Number of subscribers
+  - `created_at`, `updated_at` - Timestamps
+
+- **`podcasts`** (34 records) - Individual podcast episodes
+  - `id` (UUID) - Episode unique identifier
+  - `title` - Episode title (e.g., "奇绩前沿信号 8.1")
+  - `description` - Episode description
+  - `cover_url` - Episode cover image
+  - `audio_url` - Audio file URL in podcast-audios bucket
+  - `duration` - Audio duration in seconds
+  - `channel_id` (UUID) - References channels.id
+  - Paper metadata: `paper_url`, `paper_title`, `authors` (JSONB), `institution`, `publish_date`, `arxiv_id`, `doi`
+  - Statistics: `play_count`, `like_count`, `favorite_count`, `comment_count`, `share_count`
+  - `status` - Publication status (draft/published/removed)
+  - `created_at`, `updated_at` - Timestamps
+
+#### User Interaction Tables  
+- **`user_favorites`** - User podcast favorites
+  - Links users.id → podcasts.id with created_at timestamp
+
+- **`user_likes`** - User podcast likes
+  - Links users.id → podcasts.id with created_at timestamp
+
+- **`user_play_history`** - Playback history tracking
+  - `user_id`, `podcast_id` - References to users and podcasts
+  - `play_position` - Last playback position in seconds
+  - `play_duration` - Duration played in this session
+  - `completed` - Whether episode was completed
+  - `played_at` - Playback timestamp
+
+#### Content & Interaction Tables
+- **`comments`** - User comments on podcasts
+  - `user_id`, `podcast_id` - References to users and podcasts
+  - `parent_id` - For nested replies (references comments.id)
+  - `content` - Comment text content
+  - `like_count` - Number of likes on comment
+  - `audio_timestamp` - Associated timestamp in audio (seconds)
+  - `is_deleted` - Soft deletion flag
+  - `created_at`, `updated_at` - Timestamps
+
+- **`comment_likes`** - Likes on comments
+  - Links users.id → comments.id with created_at timestamp
+
+- **`insights`** (6 records) - AI-generated podcast insights
+  - `podcast_id` - Associated podcast
+  - `creator_id` - Creator (NULL for system-generated)
+  - `summary`, `detailed_content` - Insight content
+  - `keywords`, `related_papers`, `related_authors` - Related metadata (JSONB)
+  - `audio_timestamp`, `duration` - Time-based segments
+  - `insight_type` - summary/analysis/question/quote/highlight
+  - `source_type` - system/user/ai_generated
+  - `like_count`, `view_count` - Engagement metrics
+
+#### System Tables
+- **`static_assets`** (20 records) - Static resource management
+  - `id` (UUID) - Asset unique identifier
+  - `name` - Internal reference name (e.g., "nav-browse", "nav-category")
+  - `original_name` - Original filename (e.g., "漫游.svg", "分类.svg")
+  - `file_type` - File type (svg, png, etc.)
+  - `file_url` - Public URL to asset
+  - `file_size` - File size in bytes
+  - `usage_type` - Usage category (nav_icon, etc.)
+  - `metadata` (JSONB) - Additional metadata (size, category, etc.)
+  - `created_at`, `updated_at` - Timestamps
+
+- **`research_fields`** (21 records) - Academic field taxonomy with hierarchical structure
+- **`institutions`** (10 records) - Academic institutions with codes and multilingual names
+
+### Storage Buckets
+- **`user_profile`** (Private) - User avatars, profile files, and personal documents
+  - Private bucket requiring signed URLs for access
+  - File path structure: `{userId}/{fileType}/{filename}`
+  - Default signed URL expiration: 24 hours
+  
+- **`static-images`** (Public) - App icons, UI assets, and default images  
+  - Public bucket with direct URL access
+  - Static assets for app interface and branding
+  
+- **`podcast-audios`** (Public) - Podcast audio files
+  - Public bucket for podcast episode audio content
+  - Example URLs: `https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/podcast-audios/2025.8/8.1.mp3`
+
+### Extensions & Infrastructure
+- **Installed Extensions**:
+  - `uuid-ossp` (1.1) - UUID generation functions
+  - `pgcrypto` (1.3) - Cryptographic functions
+  - `pg_graphql` (1.5.11) - GraphQL API support
+  - `pg_stat_statements` (1.11) - SQL performance monitoring
+  - `supabase_vault` (0.3.1) - Secrets management
+  - Over 70+ additional extensions available
+
+- **Migration History**: 26 migrations from 20250830 to 20250907
+  - Initial schema creation (users, channels, podcasts)
+  - User interaction tables (favorites, likes, history, comments)
+  - RLS (Row Level Security) policy setup
+  - WeChat authentication integration
+  - Static assets management
+  - Recent additions: insights system, academic fields, institutions
+
+### Request Pattern
+Services use direct HTTP requests via `wx.request()` with apikey/Bearer authentication:
 ```javascript
-// utils/logger.js
-class Logger {
-  constructor() {
-    this.logs = []
-    this.maxLogs = 100
+// Example from auth.service.js:475
+wx.request({
+  url: `${this.supabaseUrl}/rest/v1/users?wechat_openid=eq.${openId}`,
+  method: 'GET',
+  header: {
+    'apikey': this.supabaseAnonKey,
+    'Authorization': `Bearer ${this.supabaseAnonKey}`,
+    'Content-Type': 'application/json'
   }
-  
-  log(level, message, extra = {}) {
-    const logEntry = {
-      level,
-      message,
-      extra,
-      timestamp: new Date().toISOString(),
-      page: getCurrentPages().pop()?.route || 'unknown'
-    }
-    
-    this.logs.push(logEntry)
-    
-    // 保持日志数量限制
-    if (this.logs.length > this.maxLogs) {
-      this.logs.shift()
-    }
-    
-    // 开发环境输出到控制台
-    if (config.debugMode) {
-      console[level](message, extra)
-    }
-    
-    // 错误级别上报到监控系统
-    if (level === 'error') {
-      this.reportError(logEntry)
-    }
-  }
-  
-  info(message, extra) {
-    this.log('info', message, extra)
-  }
-  
-  warn(message, extra) {
-    this.log('warn', message, extra)
-  }
-  
-  error(message, extra) {
-    this.log('error', message, extra)
-  }
-  
-  async reportError(logEntry) {
-    try {
-      // 上报到 Supabase 或其他错误监控服务
-      await supabase.from('error_logs').insert({
-        level: logEntry.level,
-        message: logEntry.message,
-        extra: logEntry.extra,
-        page: logEntry.page,
-        user_id: getApp().globalData.userInfo?.id,
-        timestamp: logEntry.timestamp
-      })
-    } catch (error) {
-      console.error('错误上报失败:', error)
-    }
-  }
-}
-
-export default new Logger()
-```
-
-## 测试策略
-
-### 1. 单元测试
-```javascript
-// tests/utils/format.test.js
-import { formatDuration, formatFileSize } from '../../utils/format'
-
-describe('Format Utils', () => {
-  test('formatDuration should format seconds correctly', () => {
-    expect(formatDuration(65)).toBe('1:05')
-    expect(formatDuration(3661)).toBe('1:01:01')
-  })
-  
-  test('formatFileSize should format bytes correctly', () => {
-    expect(formatFileSize(1024)).toBe('1 KB')
-    expect(formatFileSize(1048576)).toBe('1 MB')
-  })
 })
 ```
 
-### 2. 集成测试
+## Architecture Patterns
+
+### Service Layer Architecture
+The app uses a service-oriented architecture with clear separation:
+
+1. **UI Layer** (`pages/`) - WeChat miniprogram pages handling user interaction
+2. **Service Layer** (`services/`) - Business logic and external integrations  
+3. **Utility Layer** (`utils/`) - Helper functions and reusable code
+4. **Global State** (`app.js`) - Centralized state management with local storage persistence
+
+### Global State Management
+Central state in `app.js` globalData with automatic persistence:
+- **Authentication State**: `userInfo`, `isLoggedIn`, `isGuestMode`
+- **Playback State**: `currentPodcast`, `isPlaying`, `currentProgress`, `maxProgress`  
+- **User Data**: `favoriteList`, `historyList` (synced to localStorage)
+- **App Settings**: `settings.autoPlay`, `settings.downloadQuality`, `settings.theme`
+
+State is accessed via `getApp().globalData` and automatically persisted via:
+- `loadLocalData()` on app launch (app.js:72)
+- `saveLocalData()` on app hide (app.js:86)
+
+### Error Handling Pattern
+Services return consistent result objects:
 ```javascript
-// tests/services/auth.test.js
-import AuthService from '../../services/auth.service'
-
-describe('Auth Service', () => {
-  test('should login with wechat successfully', async () => {
-    // Mock wx.login
-    wx.login = jest.fn().mockResolvedValue({ code: 'test_code' })
-    
-    const result = await AuthService.loginWithWechat()
-    expect(result.success).toBe(true)
-    expect(result.user).toBeDefined()
-  })
-})
+// Success
+{ success: true, data: responseData }
+// Error  
+{ success: false, error: errorMessage }
 ```
 
-## 安全最佳实践
+### File Upload Architecture
+Two-tier storage system:
+- **Public Buckets**: Static assets, podcast content - direct public URLs
+- **Private Buckets**: User content - signed URLs with expiration (24h default)
 
-### 1. 数据安全
-- 敏感数据加密存储
-- API 请求使用 HTTPS
-- 用户输入验证和过滤
-- SQL 注入防护（Supabase RLS）
+User files follow path structure: `{userId}/{fileType}/{filename}` in `user_profile` bucket
 
-### 2. 权限控制
-```javascript
-// utils/permission.js
-class PermissionManager {
-  async checkUserPermission(action, resource) {
-    const user = getApp().globalData.userInfo
-    if (!user) return false
-    
-    // 检查用户权限
-    const { data } = await supabase
-      .from('user_permissions')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('action', action)
-      .eq('resource', resource)
-      .single()
-    
-    return !!data
-  }
-  
-  async requestPermission(scope) {
-    return new Promise((resolve) => {
-      wx.authorize({
-        scope,
-        success: () => resolve(true),
-        fail: () => resolve(false)
-      })
-    })
-  }
-}
+## Development Workflow
+
+### 1. Setup
+- Open project in WeChat Developer Tools
+- Configure AppID: `wxdfbf85ea64f424da`
+- Check cloud environment settings
+
+### 2. Testing & Debugging
+- Use "Preview" for quick testing
+- Use "Test" tab for device testing
+- Check console logs in Developer Tools
+- Monitor network requests in Network tab
+- Test on both iOS and Android simulators
+
+### 3. Working with Services
+When modifying services, follow these patterns:
+- Import services at page level: `const authService = require('../../services/auth.service.js')`
+- Always handle both success and error cases
+- Check authentication state before making user-specific API calls
+- Use `getApp().globalData` for accessing global state
+- For profile operations, use `profileService` for comprehensive user management with storage integration
+
+### 4. Deployment
+- Use "Upload" in Developer Tools
+- Version in `project.config.json`
+- Submit for WeChat review
+
+## Common Development Tasks
+
+### Adding New Page
+1. Add entry to `app.json` pages array
+2. Create page directory under `miniprogram/pages/` with `.js`, `.wxml`, `.wxss`, `.json`
+3. Add tabBar entry if needed in `app.json` tabBar section
+4. Update navigation in relevant pages using `wx.navigateTo()`
+
+### Working with Authentication
+1. Check login status: `await authService.checkLoginStatus()`
+2. Access current user: `authService.getCurrentUser()`
+3. Handle login flow: `await authService.loginWithWechat()`
+4. Update user info: `await authService.updateUserInfo(userInfo)`
+
+### Working with User Profiles
+1. Get complete profile: `await profileService.getUserCompleteProfile(userId)`
+2. Update profile: `await profileService.updateUserProfile(userId, updateData)`
+3. Check completeness: `profileService.checkProfileCompleteness(user)`
+4. Upload avatar: Include `avatarFile` in updateData for automatic private storage handling
+
+### Adding API Endpoints
+1. Add new methods to appropriate section in `apiService` (podcast/user/category/search/stats)
+2. Follow the existing pattern with success/error objects
+3. Use requestUtil for HTTP operations
+4. Handle Supabase PostgREST query parameters
+
+### File Upload Implementation
+1. For user files: Use `storageService.uploadUserFileToPrivateBucket(userId, fileType, filePath)`
+2. For public files: Use `storageService.uploadFile(bucketName, filePath, fileName)`
+3. Generate signed URLs for private files: `storageService.generateUserFileSignedUrl()`
+
+### Managing Global State
+1. Access: `const app = getApp(); const data = app.globalData.someData`
+2. Update: `app.globalData.someData = newValue`  
+3. Persist changes: Call methods like `app.addToFavorites()`, `app.addToHistory()`
+4. State automatically saved on app hide via `saveLocalData()`
+
+## File Patterns
+
+### Naming Conventions
+- **Pages**: `kebab-case` directories (e.g., `browse/`, `profile/`)
+- **Files**: `.js`, `.wxml`, `.wxss`, `.json` per page
+- **Services**: `service-name.service.js`
+- **Icons**: PNG format for tabBar, SVG for general use
+
+### Directory Structure
+```
+miniprogram/
+├── app.js              # Global app logic
+├── app.json            # App configuration
+├── app.wxss            # Global styles
+├── pages/
+│   ├── browse/         # Main browsing page
+│   ├── category/       # Category page
+│   └── profile/        # User profile
+├── services/           # Business logic
+├── images/             # Static assets
+└── utils/              # Helper utilities
 ```
 
-## 常用命令和工具
+## Environment Notes
 
-### 开发命令
-```bash
-# 启动开发者工具
-npm run dev
+### WeChat Platform Constraints
+- **No npm/node_modules**: Use native WeChat APIs and vanilla JavaScript
+- **Network Whitelist**: External domains must be configured in WeChat backend
+- **Storage Limits**: 10MB per app local storage
+- **File Size Limits**: 2MB per file transfer  
+- **HTTPS Required**: All external API endpoints must use HTTPS
 
-# 构建生产版本  
-npm run build
+### Authentication Flow
+1. Mock WeChat login generates `mock_openid_${code}` (auth.service.js:28)
+2. Lookup existing user or create new user in Supabase `users` table
+3. User profiles are managed directly in the `users` table (no separate user_profile table)
+4. Session persists 7 days in local storage (auth.service.js:626)
+5. Global state updated: `app.globalData.userInfo`, `app.globalData.isLoggedIn`
 
-# 代码检查
-npm run lint
-
-# 运行测试
-npm run test
-
-# 上传 SVG 到云存储
-npm run upload-svg
-```
-
-### Git 提交规范
-```
-feat: 新功能
-fix: 修复 bug
-docs: 文档更新
-style: 代码格式调整
-refactor: 重构代码
-test: 测试相关
-chore: 构建过程或辅助工具的变动
-```
-
-## 未来规划
-
-### 短期目标 (1-2个月)
-- [ ] 完成 Supabase 后端集成
-- [ ] 实现 OAuth2 用户认证
-- [ ] SVG 云存储迁移
-- [ ] 音频播放功能优化
-
-### 中期目标 (3-6个月)  
-- [ ] 推荐算法实现
-- [ ] 社交功能开发
-- [ ] 离线下载功能
-- [ ] 性能监控和优化
-
-### 长期目标 (6个月以上)
-- [ ] AI 智能推荐
-- [ ] 多端同步
-- [ ] 内容创作工具
-- [ ] 商业化功能
-
----
-
-**注意**: 本文档应该随着项目进展持续更新，确保始终反映最新的架构和最佳实践。
+### API Request Security
+All Supabase requests use:
+- **API Key**: Public anon key in Authorization header
+- **Row Level Security**: Database policies control access
+- **HTTPS**: All requests over secure transport

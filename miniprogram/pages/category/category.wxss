@@ -204,7 +204,7 @@
 .category-grid {
   display: flex;
   white-space: nowrap;
-  padding: 0 35px;
+  padding: 0 20px;
 }
 
 .category-item {
@@ -214,6 +214,10 @@
   margin-right: 12px;
   flex-shrink: 0;
   min-width: 72px;
+}
+
+.category-item:first-child {
+  margin-left: 15px;
 }
 
 .category-item:last-child {
@@ -259,6 +263,10 @@
   justify-content: space-between;
   align-items: center;
   margin: 0 35px 15px;
+}
+
+.featured-header .section-title {
+  margin: 0;
 }
 
 .refresh-btn {

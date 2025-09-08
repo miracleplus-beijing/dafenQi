@@ -22,6 +22,9 @@ App({
   onLaunch: function () {
     console.log('达芬Qi说小程序启动')
     
+    // 初始化隐私检查
+    this.initPrivacyCheck()
+    
     // 初始化认证服务
     this.initAuthService()
     
@@ -154,5 +157,97 @@ App({
       ...newSettings
     }
     this.saveLocalData()
+  },
+
+  // 初始化全局隐私检查
+  initPrivacyCheck: function() {
+    // 检查基础库版本
+    const systemInfo = wx.getSystemInfoSync()
+    const SDKVersion = systemInfo.SDKVersion || '1.0.0'
+    
+    // 如果基础库版本过低，跳过隐私检查
+    if (this.compareVersion(SDKVersion, '2.32.3') < 0) {
+      console.warn('基础库版本过低，不支持隐私接口')
+      return
+    }
+
+    try {
+      // 设置全局被动监听隐私授权
+      wx.onNeedPrivacyAuthorization((resolve, eventInfo) => {
+        console.log('全局触发隐私授权事件, 接口:', eventInfo.referrer)
+        
+        // 获取当前页面
+        const pages = getCurrentPages()
+        const currentPage = pages[pages.length - 1]
+        
+        if (currentPage && currentPage.handleGlobalPrivacyAuth) {
+          // 如果当前页面有处理方法，交给页面处理
+          currentPage.handleGlobalPrivacyAuth(resolve, eventInfo)
+        } else {
+          // 否则显示全局隐私弹窗
+          this.showGlobalPrivacyModal(resolve, eventInfo)
+        }
+      })
+    } catch (error) {
+      console.error('全局隐私检查初始化失败:', error)
+    }
+  },
+
+  // 显示全局隐私弹窗
+  showGlobalPrivacyModal: function(resolve, eventInfo) {
+    wx.showModal({
+      title: '隐私保护指引',
+      content: `为了给您提供更好的服务，${eventInfo.referrer ? `"${eventInfo.referrer}"功能` : '该功能'}需要获取您的相关信息。\n\n我们承诺严格保护您的个人隐私，仅用于改善用户体验。`,
+      confirmText: '同意',
+      cancelText: '拒绝',
+      success: (res) => {
+        if (res.confirm) {
+          // 用户同意
+          resolve({ event: 'agree' })
+          
+          wx.showToast({
+            title: '已同意隐私协议',
+            icon: 'success',
+            duration: 1500
+          })
+        } else {
+          // 用户拒绝
+          resolve({ event: 'disagree' })
+          
+          wx.showToast({
+            title: '您拒绝了隐私授权',
+            icon: 'none',
+            duration: 2000
+          })
+        }
+      }
+    })
+  },
+
+  // 版本比较函数
+  compareVersion: function(version1, version2) {
+    const v1 = version1.split('.')
+    const v2 = version2.split('.')
+    const len = Math.max(v1.length, v2.length)
+
+    while (v1.length < len) {
+      v1.push('0')
+    }
+    while (v2.length < len) {
+      v2.push('0')
+    }
+
+    for (let i = 0; i < len; i++) {
+      const num1 = parseInt(v1[i])
+      const num2 = parseInt(v2[i])
+
+      if (num1 > num2) {
+        return 1
+      } else if (num1 < num2) {
+        return -1
+      }
+    }
+
+    return 0
   }
 })

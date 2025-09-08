@@ -1,0 +1,94 @@
+<!-- 个人信息清单页面 -->
+<view class="personal-info-container">
+  <view class="content-section">
+    <view class="personal-info-content">
+      
+<text class="title">个人信息清单</text>
+
+<text class="description">您可以在这里查看和管理达芬Qi说小程序收集和存储的个人信息。</text>
+
+<view class="info-section">
+  <text class="section-title">基本信息</text>
+  <view class="info-card">
+    <view class="info-item">
+      <text class="info-label">微信昵称</text>
+      <text class="info-value">{{userInfo.nickname || '未设置'}}</text>
+      <text class="info-source">来源：微信授权</text>
+    </view>
+    <view class="info-item">
+      <text class="info-label">用户头像</text>
+      <text class="info-value">{{userInfo.avatar_url ? '已设置' : '未设置'}}</text>
+      <text class="info-source">来源：微信授权或用户上传</text>
+    </view>
+    <view class="info-item">
+      <text class="info-label">性别信息</text>
+      <text class="info-value">{{userInfo.gender || '未设置'}}</text>
+      <text class="info-source">来源：微信授权</text>
+    </view>
+    <view class="info-item">
+      <text class="info-label">地区信息</text>
+      <text class="info-value">{{userInfo.location || '未设置'}}</text>
+      <text class="info-source">来源：微信授权</text>
+    </view>
+  </view>
+</view>
+
+<view class="info-section">
+  <text class="section-title">使用数据</text>
+  <view class="info-card">
+    <view class="info-item">
+      <text class="info-label">收藏播客数量</text>
+      <text class="info-value">{{favoriteCount || 0}} 个</text>
+      <text class="info-source">来源：用户操作记录</text>
+    </view>
+    <view class="info-item">
+      <text class="info-label">播放历史记录</text>
+      <text class="info-value">{{historyCount || 0}} 条</text>
+      <text class="info-source">来源：播放行为记录</text>
+    </view>
+    <view class="info-item">
+      <text class="info-label">学术领域偏好</text>
+      <text class="info-value">{{academicFields || '未设置'}}</text>
+      <text class="info-source">来源：用户主动设置</text>
+    </view>
+  </view>
+</view>
+
+<view class="info-section">
+  <text class="section-title">设备信息</text>
+  <view class="info-card">
+    <view class="info-item">
+      <text class="info-label">设备类型</text>
+      <text class="info-value">{{deviceInfo.model || '未知'}}</text>
+      <text class="info-source">来源：系统自动收集</text>
+    </view>
+    <view class="info-item">
+      <text class="info-label">系统版本</text>
+      <text class="info-value">{{deviceInfo.system || '未知'}}</text>
+      <text class="info-source">来源：系统自动收集</text>
+    </view>
+  </view>
+</view>
+
+<view class="action-section">
+  <text class="action-title">数据管理</text>
+  <view class="action-buttons">
+    <button class="action-btn primary" bindtap="exportData">导出个人数据</button>
+    <button class="action-btn secondary" bindtap="clearHistory">清除历史记录</button>
+    <button class="action-btn danger" bindtap="deleteAllData">删除所有数据</button>
+  </view>
+</view>
+
+<view class="notice-section">
+  <text class="notice-title">数据权利说明</text>
+  <text class="notice-text">• 您有权随时查看和更正个人信息</text>
+  <text class="notice-text">• 您可以要求导出个人数据副本</text>
+  <text class="notice-text">• 您可以要求删除不必要的个人信息</text>
+  <text class="notice-text">• 删除操作将不可撤销，请谨慎操作</text>
+</view>
+
+<text class="date-info">最后更新：{{updateTime || '未知'}}</text>
+
+    </view>
+  </view>
+</view>

@@ -1,0 +1,103 @@
+<!-- 数据收集清单页面 -->
+<view class="data-collection-container">
+  <view class="content-section">
+    <view class="data-collection-content">
+      
+<text class="title">数据收集清单</text>
+
+<text class="description">根据相关法律法规要求，我们向您详细说明达芬Qi说小程序收集和使用的数据类型。</text>
+
+<view class="data-category">
+  <text class="category-title">用户信息</text>
+  <view class="data-item">
+    <text class="data-name">微信昵称</text>
+    <text class="data-purpose">用于用户身份识别和个性化服务</text>
+    <text class="data-status required">必需</text>
+  </view>
+  <view class="data-item">
+    <text class="data-name">微信头像</text>
+    <text class="data-purpose">用于用户资料展示</text>
+    <text class="data-status required">必需</text>
+  </view>
+  <view class="data-item">
+    <text class="data-name">性别</text>
+    <text class="data-purpose">用于个性化内容推荐</text>
+    <text class="data-status optional">可选</text>
+  </view>
+  <view class="data-item">
+    <text class="data-name">地区</text>
+    <text class="data-purpose">用于地域化内容推荐</text>
+    <text class="data-status optional">可选</text>
+  </view>
+</view>
+
+<view class="data-category">
+  <text class="category-title">设备信息</text>
+  <view class="data-item">
+    <text class="data-name">设备型号</text>
+    <text class="data-purpose">用于音频播放兼容性优化</text>
+    <text class="data-status required">必需</text>
+  </view>
+  <view class="data-item">
+    <text class="data-name">操作系统版本</text>
+    <text class="data-purpose">用于功能适配和性能优化</text>
+    <text class="data-status required">必需</text>
+  </view>
+  <view class="data-item">
+    <text class="data-name">网络类型</text>
+    <text class="data-purpose">用于音频质量自动调节</text>
+    <text class="data-status required">必需</text>
+  </view>
+</view>
+
+<view class="data-category">
+  <text class="category-title">使用行为数据</text>
+  <view class="data-item">
+    <text class="data-name">播客收听记录</text>
+    <text class="data-purpose">用于播放历史管理和推荐算法</text>
+    <text class="data-status required">必需</text>
+  </view>
+  <view class="data-item">
+    <text class="data-name">收藏记录</text>
+    <text class="data-purpose">用于个人收藏管理</text>
+    <text class="data-status required">必需</text>
+  </view>
+  <view class="data-item">
+    <text class="data-name">播放进度</text>
+    <text class="data-purpose">用于断点续播功能</text>
+    <text class="data-status required">必需</text>
+  </view>
+  <view class="data-item">
+    <text class="data-name">搜索记录</text>
+    <text class="data-purpose">用于搜索历史和个性化推荐</text>
+    <text class="data-status optional">可选</text>
+  </view>
+</view>
+
+<view class="data-category">
+  <text class="category-title">权限数据</text>
+  <view class="data-item">
+    <text class="data-name">相册写入权限</text>
+    <text class="data-purpose">用于保存播客封面和分享内容</text>
+    <text class="data-status optional">可选</text>
+  </view>
+  <view class="data-item">
+    <text class="data-name">选择的文件</text>
+    <text class="data-purpose">用于更新用户头像和个人资料</text>
+    <text class="data-status optional">可选</text>
+  </view>
+</view>
+
+<view class="notice-section">
+  <text class="notice-title">重要提醒</text>
+  <text class="notice-text">• 标记为"必需"的数据是小程序基本功能运行所必需的</text>
+  <text class="notice-text">• 标记为"可选"的数据需要您的明确授权</text>
+  <text class="notice-text">• 您可以随时撤回对可选数据的授权</text>
+  <text class="notice-text">• 我们承诺仅在明确告知的用途范围内使用您的数据</text>
+</view>
+
+<text class="date-info">更新日期：2025-09-05</text>
+
+    </view>
+  </view>
+</view>

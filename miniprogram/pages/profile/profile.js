@@ -60,26 +60,51 @@ Page({
   checkLoginStatus: function() {
     const globalData = app.globalData
     
-    // 从本地存储读取用户信息
+    // 优先检查全局状态
+    let isLoggedIn = globalData.isLoggedIn || false
     let userInfo = globalData.userInfo || {}
-    try {
-      const localUserInfo = wx.getStorageSync('userInfo')
-      if (localUserInfo) {
-        userInfo = { ...userInfo, ...localUserInfo }
-        // 同步到全局数据
-        app.globalData.userInfo = userInfo
+    
+    // 如果全局状态没有，检查本地存储
+    if (!isLoggedIn || !userInfo.id) {
+      try {
+        const localUserInfo = wx.getStorageSync('userInfo')
+        if (localUserInfo && localUserInfo.id) {
+          userInfo = localUserInfo
+          isLoggedIn = true
+          
+          // 同步到全局数据
+          app.globalData.userInfo = userInfo
+          app.globalData.isLoggedIn = true
+        }
+      } catch (e) {
+        console.error('读取本地用户信息失败:', e)
       }
-    } catch (e) {
-      console.error('读取本地用户信息失败:', e)
+    }
+    
+    // 再次检查认证服务
+    if (!isLoggedIn) {
+      const authService = require('../../services/auth.service.js')
+      isLoggedIn = authService.getCurrentUser() !== null
+      if (isLoggedIn && !userInfo.id) {
+        userInfo = authService.getCurrentUser()
+      }
+    }
+    
+    // 格式化用户信息显示
+    const displayUserInfo = {
+      ...userInfo,
+      // 确保使用正确的字段名显示昵称
+      nickName: userInfo.nickname || userInfo.nickName || userInfo.username || '微信用户',
+      avatarUrl: userInfo.avatar_url || userInfo.avatarUrl || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-avatar.png'
     }
     
     this.setData({
-      isLoggedIn: globalData.isLoggedIn,
-      userInfo: userInfo
+      isLoggedIn: isLoggedIn,
+      userInfo: displayUserInfo
     })
     
-    console.log('登录状态:', this.data.isLoggedIn)
-    console.log('用户信息:', userInfo)
+    console.log('登录状态:', isLoggedIn)
+    console.log('用户信息:', displayUserInfo)
   },
 
   // 页面进入动画
@@ -307,27 +332,63 @@ Page({
   },
 
   // 获取用户信息
-  getUserInfo: function(e) {
+  getUserInfo: async function(e) {
     if (e.detail.userInfo) {
       // 用户允许获取用户信息
       const userInfo = e.detail.userInfo
+      const authService = require('../../services/auth.service.js')
       
-      // 更新用户信息
-      this.setData({
-        userInfo: {
+      try {
+        // 使用auth service更新用户信息，包括微信头像
+        const result = await authService.updateUserInfo({
+          nickName: userInfo.nickName,
+          avatarUrl: userInfo.avatarUrl
+        })
+        
+        if (result.success) {
+          // 更新页面数据
+          this.setData({
+            userInfo: result.user
+          })
+          
+          // 更新全局数据
+          app.globalData.userInfo = result.user
+          
+          console.log('微信用户信息更新成功', result.user)
+        } else {
+          // 回退到本地更新
+          const newUserInfo = {
+            ...this.data.userInfo,
+            nickName: userInfo.nickName,
+            avatarUrl: userInfo.avatarUrl
+          }
+          
+          this.setData({
+            userInfo: newUserInfo
+          })
+          
+          app.globalData.userInfo = newUserInfo
+          wx.setStorageSync('userInfo', newUserInfo)
+          
+          console.warn('用户信息更新失败，使用本地更新:', result.error)
+        }
+      } catch (error) {
+        console.error('更新用户信息失败:', error)
+        
+        // 回退到本地更新
+        const newUserInfo = {
           ...this.data.userInfo,
           nickName: userInfo.nickName,
           avatarUrl: userInfo.avatarUrl
         }
-      })
-      
-      // 更新全局数据
-      app.globalData.userInfo = {
-        ...app.globalData.userInfo,
-        ...userInfo
+        
+        this.setData({
+          userInfo: newUserInfo
+        })
+        
+        app.globalData.userInfo = newUserInfo
+        wx.setStorageSync('userInfo', newUserInfo)
       }
-      
-      console.log('获取用户信息成功', userInfo)
     } else {
       console.log('用户拒绝授权用户信息')
     }
@@ -415,31 +476,49 @@ Page({
   },
 
   // 更新头像
-  updateAvatar: function(avatarUrl) {
-    const newUserInfo = {
-      ...this.data.userInfo,
-      avatarUrl: avatarUrl
+  updateAvatar: async function(avatarUrl) {
+    const authService = require('../../services/auth.service.js')
+    
+    try {
+      const result = await authService.updateUserInfo({
+        avatarUrl: avatarUrl
+      })
+      
+      if (result.success) {
+        // 更新页面数据
+        const newUserInfo = result.user
+        this.setData({
+          userInfo: newUserInfo
+        })
+        
+        // 更新全局数据
+        app.globalData.userInfo = newUserInfo
+        
+        wx.hideLoading()
+        wx.showToast({
+          title: '头像更新成功',
+          icon: 'success',
+          duration: 1500
+        })
+        
+        console.log('头像更新成功:', newUserInfo.avatar_url)
+      } else {
+        wx.hideLoading()
+        wx.showToast({
+          title: '头像更新失败: ' + result.error,
+          icon: 'none',
+          duration: 2000
+        })
+      }
+    } catch (error) {
+      wx.hideLoading()
+      wx.showToast({
+        title: '头像更新失败',
+        icon: 'none',
+        duration: 1500
+      })
+      console.error('头像更新失败:', error)
     }
-    
-    // 更新页面数据
-    this.setData({
-      userInfo: newUserInfo
-    })
-    
-    // 更新全局数据
-    app.globalData.userInfo = newUserInfo
-    
-    // 保存到本地存储
-    wx.setStorageSync('userInfo', newUserInfo)
-    
-    wx.hideLoading()
-    wx.showToast({
-      title: '头像更新成功',
-      icon: 'success',
-      duration: 1500
-    })
-    
-    console.log('头像更新成功:', avatarUrl)
   },
 
   // 更换用户名

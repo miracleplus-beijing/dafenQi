@@ -1,0 +1,169 @@
+/* 个人信息清单页面样式 */
+.personal-info-container {
+  width: 100%;
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.content-section {
+  padding: 20px;
+}
+
+.personal-info-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.90);
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.description {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.60);
+  margin-bottom: 25px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.info-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+  margin-bottom: 12px;
+  display: block;
+}
+
+.info-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.80);
+  margin-bottom: 4px;
+}
+
+.info-value {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.90);
+  margin-bottom: 4px;
+}
+
+.info-source {
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.50);
+}
+
+.action-section {
+  margin: 20px 0;
+}
+
+.action-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+  margin-bottom: 15px;
+  display: block;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.action-btn {
+  height: 44px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.action-btn.primary {
+  background: #0884FF;
+  color: white;
+}
+
+.action-btn.primary:active {
+  background: #0666CC;
+}
+
+.action-btn.secondary {
+  background: #f5f5f5;
+  color: rgba(0, 0, 0, 0.70);
+}
+
+.action-btn.secondary:active {
+  background: #e5e5e5;
+}
+
+.action-btn.danger {
+  background: rgba(255, 68, 68, 0.1);
+  color: #FF4444;
+}
+
+.action-btn.danger:active {
+  background: rgba(255, 68, 68, 0.2);
+}
+
+.notice-section {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.notice-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+  margin-bottom: 12px;
+  display: block;
+}
+
+.notice-text {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.65);
+  line-height: 1.5;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.date-info {
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.40);
+  text-align: center;
+  margin-top: 20px;
+}

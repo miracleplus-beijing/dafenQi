@@ -1,0 +1,64 @@
+/* 服务协议页面样式 */
+.agreement-container {
+  width: 100%;
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+.content-section {
+  padding: 20px;
+}
+
+.agreement-content {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.6;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.90);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.paragraph {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.70);
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.list-item {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.65);
+  margin-bottom: 8px;
+  margin-left: 10px;
+  line-height: 1.6;
+}
+
+.contact {
+  font-size: 14px;
+  font-weight: 400;
+  color: #0884FF;
+  margin: 10px 0;
+}
+
+.date-info {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.50);
+  margin-top: 20px;
+  text-align: right;
+}

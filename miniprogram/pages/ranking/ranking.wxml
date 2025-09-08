@@ -1,0 +1,77 @@
+<!-- 榜单详情页面 -->
+<view class="container">
+  <!-- Header -->
+  <view class="header">
+    <view class="search-bar">
+      <input type="text" class="search-input" placeholder="听你想听的论文" 
+             value="{{searchValue}}" bindinput="onSearchInput" />
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/search.svg" class="search-icon" alt="Search"></image>
+    </view>
+    
+    <view class="tab-nav">
+      <view class="tab {{currentTab === 'hot' ? 'active' : ''}}" 
+            data-tab="hot" bindtap="switchTab">最热榜</view>
+      <view class="tab {{currentTab === 'new' ? 'active' : ''}}" 
+            data-tab="new" bindtap="switchTab">最新榜</view>
+      <view class="tab {{currentTab === 'review' ? 'active' : ''}}" 
+            data-tab="review" bindtap="switchTab">综述榜</view>
+    </view>
+  </view>
+
+  <!-- 最热榜内容 -->
+  <view wx:if="{{currentTab === 'hot'}}" class="tab-content">
+    <view class="section">
+      <text class="section-title">最热榜 TOP 10</text>
+      
+      <view wx:for="{{hotRankings}}" wx:key="id" class="ranking-item">
+        <view class="ranking-number">{{index + 1}}</view>
+        <view class="ranking-content">
+          <view class="ranking-title">{{item.title}}</view>
+          <view class="ranking-channel">{{item.channel}}</view>
+        </view>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
+               class="ranking-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
+      </view>
+    </view>
+  </view>
+
+  <!-- 最新榜内容 -->
+  <view wx:elif="{{currentTab === 'new'}}" class="tab-content">
+    <view class="section">
+      <text class="section-title">最新榜 TOP 10</text>
+      
+      <view wx:for="{{newRankings}}" wx:key="id" class="ranking-item">
+        <view class="ranking-number">{{index + 1}}</view>
+        <view class="ranking-content">
+          <view class="ranking-title">{{item.title}}</view>
+          <view class="ranking-channel">{{item.channel}}</view>
+        </view>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
+               class="ranking-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
+      </view>
+    </view>
+  </view>
+
+  <!-- 综述榜内容 -->
+  <view wx:elif="{{currentTab === 'review'}}" class="tab-content">
+    <view class="section">
+      <text class="section-title">综述榜 TOP 10</text>
+      
+      <view wx:for="{{reviewRankings}}" wx:key="id" class="ranking-item">
+        <view class="ranking-number">{{index + 1}}</view>
+        <view class="ranking-content">
+          <view class="ranking-title">{{item.title}}</view>
+          <view class="ranking-channel">{{item.channel}}</view>
+        </view>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
+               class="ranking-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部加载区域 -->
+  <view class="bottom-loader">
+    <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/loading.svg" class="loader-icon" alt="加载中"></image>
+    <view class="loader-text">从源头最大化驱动创新</view>
+  </view>
+</view>

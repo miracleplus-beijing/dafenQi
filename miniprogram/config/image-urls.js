@@ -30,7 +30,7 @@ const imageUrls = {
   
   // 功能图标
   'icons/search.svg': `${SUPABASE_BASE_URL}/icons/search.svg`,
-  'icons/评论.svg': `${SUPABASE_BASE_URL}/icons/comment.svg`,
+  'icons/认知.svg': `${SUPABASE_BASE_URL}/icons/insight.svg`,
   'icons/分享.svg': `${SUPABASE_BASE_URL}/icons/share.svg`,
   'icons/settings.svg': `${SUPABASE_BASE_URL}/icons/settings.svg`,
   'icons/history.svg': `${SUPABASE_BASE_URL}/icons/history.svg`,

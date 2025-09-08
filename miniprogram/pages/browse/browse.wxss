@@ -92,13 +92,9 @@
   border-radius: 50%;
 }
 
-.loading-spinner {
+.loader-icon {
   width: 30px;
   height: 30px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top: 3px solid white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
@@ -194,27 +190,58 @@
   position: relative;
 }
 
+.progress-buffer {
+  height: 6px;
+  background: rgba(8, 132, 255, 0.3);
+  border-radius: 3px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: width 0.5s ease;
+  z-index: 1;
+  overflow: hidden;
+}
+
 .progress-fill {
   height: 6px;
   background: #0884FF;
   border-radius: 3px;
+  position: absolute;
+  top: 0;
+  left: 0;
   transition: width 0.3s ease;
+  z-index: 2;
+  overflow: hidden;
 }
 
 .progress-thumb {
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   background: #0884FF;
   border-radius: 50%;
   position: absolute;
-  top: -3px;
-  transform: translateX(-6px);
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  top: -5px;
+  transform: translateX(-8px);
+  opacity: 1;
+  transition: opacity 0.2s ease, background 0.2s ease;
+  box-shadow: 0 2px 6px rgba(8, 132, 255, 0.3);
+  z-index: 3;
+}
+
+/* 拖拽时移除transform过渡，提升响应速度 */
+.progress-thumb.dragging {
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+
+.progress-thumb:active {
+  transform: translateX(-8px) scale(1.2);
+  background: #0666CC;
+  box-shadow: 0 3px 8px rgba(8, 132, 255, 0.5);
 }
 
 .progress-bar:active .progress-thumb {
   opacity: 1;
+  transform: translateX(-8px) scale(1.1);
 }
 
 /* 播放控制区域 */
@@ -384,4 +411,617 @@
 .no-data-indicator text {
   color: #666;
   font-size: 16px;
+}
+
+/* 自定义音频加载指示器 */
+.custom-audio-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.loading-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.custom-loading-icon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 15px;
+}
+
+.loading-text {
+  color: #333;
+  font-size: 14px;
+  font-weight: 400;
+  text-align: center;
+}
+
+/* ===== 认知提取弹窗样式 ===== */
+
+/* 弹窗基础容器 */
+.insight-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+}
+
+.insight-popup.fullscreen {
+  align-items: stretch;
+}
+
+/* 遮罩层 */
+.insight-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  animation: fadeInMask 0.3s ease forwards;
+}
+
+@keyframes fadeInMask {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 弹窗主体容器 */
+.insight-container {
+  position: relative;
+  width: 100%;
+  max-height: 70vh;
+  background: #ffffff;
+  border-radius: 20px 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  animation: slideUpIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  z-index: 3001;
+}
+
+.insight-container.fullscreen {
+  max-height: 100vh;
+  border-radius: 0;
+  animation: expandToFullScreen 0.3s ease forwards;
+}
+
+@keyframes slideUpIn {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes expandToFullScreen {
+  from { 
+    max-height: 70vh;
+    border-radius: 20px 20px 0 0;
+  }
+  to { 
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}
+
+/* 头部区域 */
+.insight-header {
+  position: sticky;
+  top: 0;
+  background: #ffffff;
+  border-radius: 20px 20px 0 0;
+  padding: 12px 20px 0;
+  z-index: 10;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.insight-container.fullscreen .insight-header {
+  border-radius: 0;
+  padding-top: 44px; /* 适应状态栏高度 */
+  padding-top: max(44px, env(safe-area-inset-top)); /* 安全区域适配 */
+}
+
+/* 拖拽指示条 */
+.drag-indicator {
+  width: 36px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 2px;
+  margin: 0 auto 16px;
+  transition: background 0.2s ease;
+}
+
+.insight-container.fullscreen .drag-indicator {
+  display: none;
+}
+
+/* 标题栏 */
+.insight-title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.insight-title {
+  color: #1a1a1a;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* 关闭按钮 */
+/* 关闭按钮包装器 */
+.close-btn-wrapper {
+  position: relative;
+  z-index: 4000; /* 确保关闭按钮在最高层 */
+  padding: 8px; /* 扩大点击区域 */
+}
+
+.close-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 50%;
+  color: #666;
+  font-size: 20px;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 4001;
+}
+
+.close-btn:active {
+  transform: scale(0.95);
+  background: #e5e5e5;
+}
+
+/* 滚动内容区域 */
+.insight-content {
+  flex: 1;
+  height: 0; /* 重要：给flex子元素设置明确的高度基准 */
+  min-height: 200px; /* 确保最小高度 */
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 全屏模式下的滚动区域调整 */
+.insight-container.fullscreen .insight-content {
+  height: 0; /* 保持flex布局的高度计算 */
+  min-height: 300px;
+}
+
+/* 内容包装容器 */
+.insight-content-wrapper {
+  padding: 0 24px 24px; /* 上下左右的内边距 */
+  min-height: 100%; /* 确保至少占满父容器 */
+}
+
+/* 播客基本信息 */
+.insight-podcast-info {
+  padding: 20px 0;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 24px;
+}
+
+.podcast-title-insight {
+  display: block;
+  color: #1a1a1a;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.4; /* 增加行高 */
+  margin-bottom: 8px;
+  word-wrap: break-word; /* 确保长文本换行 */
+}
+
+.podcast-channel-insight {
+  color: #0884ff;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+/* Insight主内容区域 */
+.insight-main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* 内容Section */
+.insight-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.title-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.title-text {
+  color: #1a1a1a;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* 摘要内容 */
+.summary-content {
+  background: #f8f9ff;
+  padding: 20px;
+  border-radius: 12px;
+  border-left: 4px solid #0884ff;
+  margin: 0; /* 移除额外margin，由父容器gap控制 */
+}
+
+.summary-text {
+  color: #333;
+  font-size: 15px;
+  line-height: 1.6; /* 增加行高提升可读性 */
+  font-weight: 400;
+  word-wrap: break-word;
+  white-space: pre-wrap; /* 保持换行 */
+}
+
+/* 详细内容 */
+.detailed-content {
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 12px;
+  margin: 0;
+}
+
+.detailed-text {
+  color: #555;
+  font-size: 14px;
+  line-height: 1.7; /* 增加行高 */
+  font-weight: 400;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* 关键词容器 */
+.keywords-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.keyword-tag {
+  background: #e6f3ff;
+  color: #0884ff;
+  padding: 6px 12px;
+  border-radius: 16px;
+  border: 1px solid #cce5ff;
+  transition: all 0.2s ease;
+}
+
+.keyword-tag:active {
+  transform: scale(0.98);
+  background: #cce5ff;
+}
+
+.keyword-text {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* 相关论文 */
+.related-papers {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.paper-item {
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.paper-item:active {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.paper-title {
+  display: block;
+  color: #1a1a1a;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+.paper-authors {
+  color: #666;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+/* 相关作者 */
+.related-authors {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.author-item {
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.author-name {
+  color: #1a1a1a;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.author-institution {
+  color: #666;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+/* 互动区域 */
+.insight-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 20px 0;
+  margin-top: 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.action-item:active {
+  transform: scale(0.95);
+  background: #f5f5f5;
+}
+
+.action-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* 新增：SVG图标样式 */
+.action-icon-image {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.action-count,
+.action-text {
+  color: #666;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+/* 加载状态 */
+.insight-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 12px;
+}
+
+.loading-icon-small {
+  width: 32px;
+  height: 32px;
+}
+
+.loading-text-small {
+  color: #666;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* 错误状态 */
+.insight-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 16px;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.error-text {
+  color: #ff4757;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.retry-btn {
+  background: #0884ff;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.retry-btn:active {
+  transform: scale(0.98);
+  background: #0666cc;
+}
+
+/* 防止滚动穿透 */
+.insight-popup {
+  touch-action: none;
+}
+
+/* 响应式调整 */
+@media (max-width: 375px) {
+  .insight-container {
+    max-height: 75vh;
+  }
+  
+  .insight-content-wrapper {
+    padding: 0 20px 20px; /* 小屏设备减少左右padding */
+  }
+  
+  .summary-content,
+  .detailed-content {
+    padding: 16px; /* 小屏设备减少内边距 */
+  }
+  
+  .keywords-container {
+    gap: 6px;
+  }
+  
+  .keyword-tag {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+  
+  .podcast-title-insight {
+    font-size: 16px; /* 小屏设备稍微减小字号 */
+  }
+  
+  .summary-text {
+    font-size: 14px;
+  }
+  
+  .detailed-text {
+    font-size: 13px;
+  }
+}
+
+/* 大屏设备优化 */
+@media (min-width: 414px) {
+  .insight-content-wrapper {
+    padding: 0 28px 28px; /* 大屏设备增加padding */
+  }
+  
+  .summary-content,
+  .detailed-content {
+    padding: 24px; /* 大屏设备增加内边距 */
+  }
+}
+
+/* 超大屏设备（如iPad）*/
+@media (min-width: 768px) {
+  .insight-content-wrapper {
+    padding: 0 32px 32px;
+    max-width: 600px; /* 限制最大宽度提升阅读体验 */
+    margin: 0 auto; /* 居中显示 */
+  }
+}
+
+/* 无障碍优化 */
+.close-btn:focus,
+.action-item:focus,
+.retry-btn:focus {
+  outline: 2px solid #0884ff;
+  outline-offset: 2px;
+}
+
+/* 暗黑模式适配（如果需要） */
+@media (prefers-color-scheme: dark) {
+  .insight-container {
+    background: #1a1a1a;
+    color: #ffffff;
+  }
+  
+  .insight-header {
+    background: #1a1a1a;
+    border-bottom-color: #333;
+  }
+  
+  .summary-content {
+    background: #2a2a2a;
+    color: #ffffff;
+  }
+  
+  .detailed-content {
+    background: #252525;
+    color: #e5e5e5;
+  }
+  
+  .keyword-tag {
+    background: #1a3a5c;
+    color: #6bb6ff;
+    border-color: #2a4a6c;
+  }
+  
+  .paper-item {
+    background: #2a2a2a;
+    border-color: #444;
+  }
 }

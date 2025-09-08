@@ -33,9 +33,9 @@ class AudioService {
       const offset = (page - 1) * limit
       let url = `${this.supabaseUrl}/rest/v1/podcasts`
       
-      // 手动构建查询参数（兼容微信小程序）
+      // 手动构建查询参数（兼容微信小程序）- 包含频道关联查询
       const queryParams = [
-        `select=id,title,description,cover_url,audio_url,duration,channel_id,play_count,like_count,favorite_count,created_at`,
+        `select=id,title,description,cover_url,audio_url,duration,channel_id,play_count,like_count,favorite_count,created_at,channels(name)`,
         `order=${order_by}.${order_direction}`,
         `limit=${limit}`,
         `offset=${offset}`,

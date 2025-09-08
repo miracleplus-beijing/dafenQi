@@ -8,7 +8,7 @@ class AudioPreloaderService {
     this.preloadedAudios = new Map() // 预加载的音频实例
     this.downloadQueue = new Map()   // 下载队列
     this.cacheManager = new Map()    // 缓存管理器
-    this.maxPreloadCount = 3         // 最大预加载数量
+    this.maxPreloadCount = 2         // 方案A：最大预加载2条（后续2条）
     this.preloadTriggerProgress = 0.7 // 播放到70%时触发预加载
     this.isPreloading = false
   }
@@ -33,7 +33,7 @@ class AudioPreloaderService {
   }
 
   /**
-   * 预加载相邻音频
+   * 预加载相邻音频 - 方案A：仅预加载后续2条
    */
   async preloadAdjacent() {
     if (this.isPreloading || !this.podcastList) return
@@ -43,22 +43,21 @@ class AudioPreloaderService {
     
     const toPreload = []
     
-    // 预加载下一个音频（优先级最高）
-    if (currentIndex + 1 < podcastList.length) {
-      toPreload.push(currentIndex + 1)
-    }
-    
-    // 预加载上一个音频
-    if (currentIndex - 1 >= 0) {
+    // 双向预加载：前1条 + 后2条
+    // 预加载前面1条（用户可能上划）
+    if (currentIndex > 0) {
       toPreload.push(currentIndex - 1)
     }
     
-    // 预加载下下个音频
-    if (currentIndex + 2 < podcastList.length) {
-      toPreload.push(currentIndex + 2)
+    // 预加载后面2条（用户可能下划）
+    for (let i = 1; i <= this.maxPreloadCount; i++) {
+      const nextIndex = currentIndex + i
+      if (nextIndex < podcastList.length) {
+        toPreload.push(nextIndex)
+      }
     }
     
-    console.log('开始预加载音频:', toPreload.map(i => podcastList[i]?.title))
+    console.log('双向预加载 - 开始预加载音频:', toPreload.map(i => podcastList[i]?.title))
     
     // 并行预加载
     const preloadPromises = toPreload.map(index => 
@@ -67,9 +66,9 @@ class AudioPreloaderService {
     
     try {
       await Promise.all(preloadPromises)
-      console.log('✅ 相邻音频预加载完成')
+      console.log('✅ 方案A预加载完成')
     } catch (error) {
-      console.warn('部分音频预加载失败:', error)
+      console.warn('方案A部分音频预加载失败:', error)
     } finally {
       this.isPreloading = false
     }
@@ -280,6 +279,53 @@ class AudioPreloaderService {
       isPreloading: this.isPreloading,
       preloadedTitles: Array.from(this.preloadedAudios.values()).map(cached => cached.podcast.title)
     }
+  }
+
+  /**
+   * 获取当前音频的真实缓冲进度
+   * @param {string} audioUrl - 音频URL
+   * @param {number} currentTime - 当前播放时间
+   * @param {number} duration - 音频总时长
+   * @param {Object} audioContext - 音频上下文对象
+   * @returns {number} 缓冲进度百分比 (0-100)
+   */
+  getBufferProgress(audioUrl, currentTime = 0, duration = 0, audioContext = null) {
+    if (!duration) return 0
+    
+    // 优先级1: 检查是否有预加载的音频（完全缓存）
+    const cached = this.preloadedAudios.get(audioUrl)
+    if (cached) {
+      console.log('🎯 音频已完全预加载，缓冲进度: 100%')
+      return 100
+    }
+    
+    // 优先级2: 使用真实的buffered属性（如果可用）
+    if (audioContext && typeof audioContext.buffered === 'number') {
+      // buffered通常是以秒为单位的已缓冲时间
+      const bufferedSeconds = audioContext.buffered
+      const realBufferProgress = (bufferedSeconds / duration) * 100
+      console.log(`🔥 真实缓冲进度: ${bufferedSeconds.toFixed(1)}s / ${duration.toFixed(1)}s (${realBufferProgress.toFixed(1)}%)`)
+      return Math.min(100, Math.max(0, realBufferProgress))
+    }
+    
+    // 优先级3: 智能估算缓冲（基于播放行为）
+    const playedRatio = currentTime / duration
+    let estimatedBufferAhead = 45 // 基础45秒缓冲
+    
+    // 根据播放进度调整缓冲估算
+    if (playedRatio < 0.1) {
+      // 开始阶段，缓冲更保守
+      estimatedBufferAhead = 30
+    } else if (playedRatio > 0.8) {
+      // 接近结尾，可能已缓冲到结束
+      estimatedBufferAhead = duration - currentTime + 10
+    }
+    
+    const estimatedBufferTime = Math.min(duration, currentTime + estimatedBufferAhead)
+    const estimatedProgress = (estimatedBufferTime / duration) * 100
+    
+    console.log(`📊 估算缓冲进度: ${estimatedBufferTime.toFixed(1)}s / ${duration.toFixed(1)}s (${estimatedProgress.toFixed(1)}%)`)
+    return Math.min(100, Math.max(0, estimatedProgress))
   }
 }
 

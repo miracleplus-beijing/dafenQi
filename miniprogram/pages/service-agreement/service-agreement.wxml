@@ -1,0 +1,59 @@
+<!-- 服务协议页面 -->
+<view class="agreement-container">
+  <view class="content-section">
+    <view class="agreement-content">
+      
+<text class="title">达芬Qi说用户服务协议</text>
+
+<text class="paragraph">欢迎使用达芬Qi说！在您使用我们的服务前，请仔细阅读并同意以下服务协议条款。</text>
+
+<text class="section-title">1. 服务内容</text>
+<text class="paragraph">达芬Qi说是一款专注于学术播客的音频平台，为用户提供优质的学术内容播放、收藏、历史记录等服务。</text>
+
+<text class="paragraph">我们致力于为用户提供稳定、安全的播客收听体验，包括但不限于：</text>
+<text class="list-item">• 学术播客内容播放服务</text>
+<text class="list-item">• 个性化内容推荐</text>
+<text class="list-item">• 收藏和历史记录管理</text>
+<text class="list-item">• 用户账户管理</text>
+
+<text class="section-title">2. 用户权利与义务</text>
+<text class="paragraph">用户享有以下权利：</text>
+<text class="list-item">• 免费使用基本播客收听功能</text>
+<text class="list-item">• 管理个人账户信息</text>
+<text class="list-item">• 收藏喜爱的播客内容</text>
+<text class="list-item">• 查看播放历史记录</text>
+
+<text class="paragraph">用户应履行以下义务：</text>
+<text class="list-item">• 遵守相关法律法规</text>
+<text class="list-item">• 不得传播违法有害信息</text>
+<text class="list-item">• 保护个人账户安全</text>
+<text class="list-item">• 尊重知识产权</text>
+
+<text class="section-title">3. 知识产权</text>
+<text class="paragraph">达芬Qi说平台上的所有内容，包括但不限于播客音频、文字、图片、界面设计等，均受知识产权法保护。</text>
+
+<text class="paragraph">用户仅可在个人非商业用途范围内使用平台内容，不得进行复制、传播或商业利用。</text>
+
+<text class="section-title">4. 免责声明</text>
+<text class="paragraph">我们将尽力确保服务的稳定性和安全性，但不对以下情况承担责任：</text>
+<text class="list-item">• 因网络故障导致的服务中断</text>
+<text class="list-item">• 第三方内容的准确性</text>
+<text class="list-item">• 用户设备兼容性问题</text>
+<text class="list-item">• 不可抗力因素造成的损失</text>
+
+<text class="section-title">5. 协议变更</text>
+<text class="paragraph">我们保留随时修改本协议的权利。协议变更后，我们将通过小程序内通知的方式告知用户。</text>
+
+<text class="paragraph">继续使用服务即视为同意修改后的协议条款。</text>
+
+<text class="section-title">6. 联系我们</text>
+<text class="paragraph">如您对本协议有任何疑问，请通过以下方式联系我们：</text>
+
+<text class="contact">邮箱： product@miracleplus.com</text>
+
+<text class="date-info">更新日期：2025-09-05</text>
+<text class="date-info">生效日期：2025-09-05</text>
+
+    </view>
+  </view>
+</view>

@@ -5,6 +5,16 @@ const { STORAGE_BUCKETS } = require('../config/supabase.config.js')
 class StorageService {
   constructor() {
     this.buckets = STORAGE_BUCKETS
+    this.supabaseUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co'
+    this.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmZjYWZnbmh6amlhdXVrc3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0MjY4NjAsImV4cCI6MjA3MTAwMjg2MH0.uxO5eyw0Usyd59UKz-S7bTrmOnNPg9Ld9wJ6pDMIQUA'
+    this.userProfileBucket = 'user_profile'
+    
+    // 文件类型配置
+    this.fileTypes = {
+      avatar: 'avatars',
+      cover: 'covers', 
+      document: 'documents'
+    }
   }
 
   // 上传文件到指定桶
@@ -74,12 +84,11 @@ class StorageService {
     })
   }
 
-  // 上传用户头像
+  // 上传用户头像到private bucket
   async uploadAvatar(filePath, userId) {
     const fileName = `avatar_${userId}_${Date.now()}.jpg`
-    return this.uploadFile(this.buckets.USER_AVATARS, filePath, fileName, {
-      contentType: 'image/jpeg',
-      upsert: true
+    return this.uploadUserFileToPrivateBucket(userId, 'avatar', filePath, {
+      contentType: 'image/jpeg'
     })
   }
 
@@ -220,6 +229,257 @@ class StorageService {
         error: error.message
       }
     }
+  }
+
+  /**
+   * 上传文件到user_profile private bucket
+   * @param {string} userId - 用户ID
+   * @param {string} fileType - 文件类型 (avatar, cover, document)
+   * @param {string} tempFilePath - 微信临时文件路径
+   * @param {Object} options - 上传选项
+   * @returns {Promise<Object>} 上传结果
+   */
+  async uploadUserFileToPrivateBucket(userId, fileType, tempFilePath, options = {}) {
+    try {
+      // 验证文件类型
+      if (!this.fileTypes[fileType]) {
+        throw new Error(`不支持的文件类型: ${fileType}`)
+      }
+      
+      // 读取临时文件
+      const fileData = await this.readTempFile(tempFilePath)
+      
+      // 生成文件名
+      const timestamp = Date.now()
+      const fileExtension = this.getFileExtension(tempFilePath) || 'jpg'
+      const fileName = `${userId}/${this.fileTypes[fileType]}/${fileType}_${timestamp}.${fileExtension}`
+      
+      console.log('准备上传文件到private bucket:', fileName)
+      
+      // 上传到Supabase Storage
+      const uploadResponse = await this.supabaseStorageRequest({
+        method: 'POST',
+        path: fileName,
+        file: fileData,
+        options: {
+          contentType: options.contentType || 'image/jpeg',
+          upsert: true
+        }
+      })
+      
+      if (uploadResponse.error) {
+        throw new Error(uploadResponse.error.message || '文件上传失败')
+      }
+      
+      console.log('文件上传成功:', uploadResponse)
+      
+      return {
+        success: true,
+        path: fileName,
+        bucket: this.userProfileBucket,
+        fullPath: `${this.userProfileBucket}/${fileName}`,
+        uploadResponse
+      }
+      
+    } catch (error) {
+      console.error('文件上传失败:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  /**
+   * 为private bucket文件生成签名URL
+   * @param {string} filePath - 文件路径
+   * @param {number} expiresIn - 过期时间(秒)，默认24小时
+   * @returns {Promise<Object>} 签名URL结果
+   */
+  async generateUserFileSignedUrl(filePath, expiresIn = 86400) {
+    try {
+      const response = await this.supabaseRequest({
+        url: `/storage/v1/object/sign/${this.userProfileBucket}/${filePath}`,
+        method: 'POST',
+        data: {
+          expiresIn: expiresIn
+        }
+      })
+      
+      if (response.error) {
+        throw new Error(response.error.message)
+      }
+      
+      const signedUrl = `${this.supabaseUrl}${response.signedURL}`
+      
+      return {
+        success: true,
+        signedUrl: signedUrl,
+        expiresIn: expiresIn,
+        expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString()
+      }
+      
+    } catch (error) {
+      console.error('生成签名URL失败:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  /**
+   * 删除用户private bucket文件
+   * @param {string} filePath - 文件路径
+   * @returns {Promise<Object>} 删除结果
+   */
+  async deleteUserFile(filePath) {
+    try {
+      const response = await this.supabaseRequest({
+        url: `/storage/v1/object/${this.userProfileBucket}/${filePath}`,
+        method: 'DELETE'
+      })
+      
+      return {
+        success: true,
+        deletedPath: filePath
+      }
+      
+    } catch (error) {
+      console.error('删除文件失败:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  /**
+   * 获取用户文件列表
+   * @param {string} userId - 用户ID
+   * @param {string} fileType - 文件类型，可选
+   * @returns {Promise<Object>} 文件列表
+   */
+  async getUserFiles(userId, fileType = null) {
+    try {
+      const prefix = fileType ? `${userId}/${this.fileTypes[fileType]}/` : `${userId}/`
+      
+      const response = await this.supabaseRequest({
+        url: `/storage/v1/object/list/${this.userProfileBucket}`,
+        method: 'POST',
+        data: {
+          prefix: prefix,
+          limit: 100,
+          offset: 0
+        }
+      })
+      
+      return {
+        success: true,
+        files: response || [],
+        count: response ? response.length : 0
+      }
+      
+    } catch (error) {
+      console.error('获取文件列表失败:', error)
+      return {
+        success: false,
+        error: error.message,
+        files: []
+      }
+    }
+  }
+
+  /**
+   * 读取微信临时文件
+   * @param {string} tempFilePath - 临时文件路径
+   * @returns {Promise<ArrayBuffer>} 文件数据
+   */
+  async readTempFile(tempFilePath) {
+    return new Promise((resolve, reject) => {
+      wx.getFileSystemManager().readFile({
+        filePath: tempFilePath,
+        success: (res) => resolve(res.data),
+        fail: reject
+      })
+    })
+  }
+
+  /**
+   * 获取文件扩展名
+   * @param {string} filePath - 文件路径
+   * @returns {string} 扩展名
+   */
+  getFileExtension(filePath) {
+    const parts = filePath.split('.')
+    return parts.length > 1 ? parts.pop().toLowerCase() : null
+  }
+
+  /**
+   * Supabase Storage API请求封装(用于private bucket)
+   * @param {Object} options - 请求选项
+   * @returns {Promise<Object>} 响应数据
+   */
+  async supabaseStorageRequest(options) {
+    const { method = 'POST', path, file, options: uploadOptions = {} } = options
+    
+    return new Promise((resolve, reject) => {
+      wx.request({
+        url: `${this.supabaseUrl}/storage/v1/object/${this.userProfileBucket}/${path}`,
+        method: method,
+        data: file,
+        header: {
+          'apikey': this.supabaseAnonKey,
+          'Authorization': `Bearer ${this.supabaseAnonKey}`,
+          'Content-Type': uploadOptions.contentType || 'application/octet-stream',
+          ...(uploadOptions.upsert && { 'x-upsert': 'true' })
+        },
+        success: (res) => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve({ data: res.data, error: null })
+          } else {
+            resolve({ 
+              data: null, 
+              error: { 
+                message: `HTTP ${res.statusCode}: ${JSON.stringify(res.data)}` 
+              } 
+            })
+          }
+        },
+        fail: (error) => resolve({ data: null, error })
+      })
+    })
+  }
+
+  /**
+   * Supabase REST API请求封装
+   * @param {Object} options - 请求选项
+   * @returns {Promise<Object>} 响应数据
+   */
+  async supabaseRequest(options) {
+    const { url, method = 'GET', data, headers = {} } = options
+    
+    return new Promise((resolve, reject) => {
+      wx.request({
+        url: `${this.supabaseUrl}${url}`,
+        method,
+        data,
+        header: {
+          'apikey': this.supabaseAnonKey,
+          'Authorization': `Bearer ${this.supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+          ...headers
+        },
+        success: (res) => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(res.data)
+          } else {
+            reject(new Error(`HTTP ${res.statusCode}: ${JSON.stringify(res.data)}`))
+          }
+        },
+        fail: reject
+      })
+    })
   }
 
   // 读取本地文件（用于上传前的文件处理）

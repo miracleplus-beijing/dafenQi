@@ -1,62 +1,37 @@
 <!-- 设置页面 -->
 <view class="settings-container">
-  <!-- 播放设置 -->
-  <view class="setting-section">
-    <text class="section-title">播放设置</text>
-    
-    <view class="setting-item">
-      <text class="setting-label">自动播放下一集</text>
-      <switch class="setting-switch" checked="{{settings.autoPlay}}" 
-              bindchange="onAutoPlayChange" color="#0884FF"></switch>
+  <!-- 隐私与安全 -->
+  <view class="menu-section">
+    <view class="menu-item" bindtap="handleMenuClick" data-type="privacy-policy">
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/privacy-policy.svg" alt="隐私政策" class="menu-icon"></image>
+      <text class="menu-text">隐私政策</text>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" alt=">" class="menu-arrow"></image>
     </view>
     
-    <view class="setting-item">
-      <text class="setting-label">下载画质</text>
-      <picker class="setting-picker" mode="selector" 
-              range="{{qualityOptions}}" value="{{qualityIndex}}"
-              bindchange="onQualityChange">
-        <view class="picker-display">
-          <text>{{qualityOptions[qualityIndex]}}</text>
-          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/right-arrow.svg" class="arrow-icon"></image>
-        </view>
-      </picker>
+    <view class="menu-item" bindtap="handleMenuClick" data-type="service-agreement">
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/service-agreement.svg" alt="服务协议" class="menu-icon"></image>
+      <text class="menu-text">服务协议</text>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" alt=">" class="menu-arrow"></image>
     </view>
-  </view>
+    
+    <view class="menu-item" bindtap="handleMenuClick" data-type="data-collection">
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/data-collection-checklist.svg" alt="数据收集清单" class="menu-icon"></image>
+      <text class="menu-text">数据收集清单</text>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" alt=">" class="menu-arrow"></image>
+    </view>
+    
+    <view class="menu-item" bindtap="handleMenuClick" data-type="personal-info">
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/personal-information-checklist.svg" alt="个人信息清单" class="menu-icon"></image>
+      <text class="menu-text">个人信息清单</text>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" alt=">" class="menu-arrow"></image>
+    </view>
 
-  <!-- 通知设置 -->
-  <view class="setting-section">
-    <text class="section-title">通知设置</text>
+    <view class="section-divider"></view>
     
-    <view class="setting-item">
-      <text class="setting-label">新内容推送</text>
-      <switch class="setting-switch" checked="{{settings.pushNotification}}" 
-              bindchange="onPushChange" color="#0884FF"></switch>
-    </view>
-  </view>
-
-  <!-- 其他设置 -->
-  <view class="setting-section">
-    <text class="section-title">其他</text>
-    
-    <view class="setting-item" bindtap="clearCache">
-      <text class="setting-label">清除缓存</text>
-      <view class="setting-right">
-        <text class="cache-size">{{cacheSize}}</text>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/right-arrow.svg" class="arrow-icon"></image>
-      </view>
-    </view>
-    
-    <view class="setting-item" bindtap="checkUpdate">
-      <text class="setting-label">检查更新</text>
-      <view class="setting-right">
-        <text class="version-text">v{{version}}</text>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/right-arrow.svg" class="arrow-icon"></image>
-      </view>
-    </view>
-    
-    <view class="setting-item" bindtap="showAbout">
-      <text class="setting-label">关于我们</text>
-      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/right-arrow.svg" class="arrow-icon"></image>
+    <view class="menu-item cancel-item" bindtap="handleMenuClick" data-type="cancel-account">
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/cancel-account.svg" alt="注销账户" class="menu-icon"></image>
+      <text class="menu-text cancel-text">注销账户</text>
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" alt=">" class="menu-arrow"></image>
     </view>
   </view>
 </view>

@@ -23,10 +23,10 @@
         <view class="cover-icon">🎵</view>
         <view class="cover-title">{{item.title}}</view>
       </view>
-      <!-- Loader在播放时显示 -->
-      <view wx:if="{{index === currentIndex && isPlaying}}" 
+      <!-- 加载指示器 - 只在音频加载时显示 -->
+      <view wx:if="{{index === currentIndex && isPlaying && audioLoading}}" 
             class="podcast-loader">
-        <view class="loading-spinner"></view>
+        <image src="{{cdnImages.loadingIcon}}" class="loader-icon" alt="加载中"></image>
       </view>
     </view>
 
@@ -59,8 +59,17 @@
         <text class="total-time">{{totalTimeFormatted}}</text>
       </view>
       <view class="progress-bar" bindtap="handleProgressClick">
+        <!-- 预加载灰度条（缓冲进度） -->
+        <view class="progress-buffer" style="width: {{bufferProgress}}%"></view>
+        <!-- 播放进度条 -->
         <view class="progress-fill" style="width: {{currentProgress}}%"></view>
-        <view class="progress-thumb" style="left: {{currentProgress}}%"></view>
+        <!-- 拖拽手柄 -->
+        <view class="progress-thumb {{isDraggingThumb ? 'dragging' : ''}}" 
+              style="left: {{currentProgress}}%" 
+              catchtouchstart="handleThumbTouchStart"
+              catchtouchmove="handleThumbMove"
+              catchtouchend="handleThumbEnd">
+        </view>
       </view>
     </view>
 
@@ -87,9 +96,9 @@
         <image src="{{cdnImages.forwardIcon}}" alt="前进30秒" class="icon"></image>
       </view>
 
-      <!-- 评论按钮 -->
-      <view class="control-btn" bindtap="handleComment">
-        <image src="{{cdnImages.commentIcon}}" alt="评论" class="icon"></image>
+      <!-- 认知提取按钮 -->
+      <view class="control-btn" bindtap="handleInsight">
+        <image src="{{cdnImages.insightIcon}}" alt="认知提取" class="icon"></image>
       </view>
     </view>
 
@@ -112,5 +121,156 @@
   <!-- 当没有数据时显示的内容 -->
   <view wx:if="{{!loading && podcastList.length === 0}}" class="no-data-indicator">
     <text>暂无播客内容</text>
+  </view>
+
+  <!-- 自定义音频加载指示器 -->
+  <view wx:if="{{audioLoadingVisible}}" class="custom-audio-loading">
+    <view class="loading-overlay"></view>
+    <view class="loading-content">
+      <image src="{{cdnImages.loadingIcon}}" class="custom-loading-icon" alt="加载中"></image>
+      <text class="loading-text">{{audioLoadingText}}</text>
+    </view>
+  </view>
+
+  <!-- 认知提取弹窗 -->
+  <view wx:if="{{insightVisible}}" class="insight-popup {{insightFullScreen ? 'fullscreen' : ''}}" 
+        catchtouchmove="preventScroll">
+    <!-- 遮罩层 -->
+    <view class="insight-mask" bindtap="handleInsightClose"></view>
+    
+    <!-- 弹窗内容容器 -->
+    <view class="insight-container {{insightFullScreen ? 'fullscreen' : ''}}" 
+          catchtouchmove="preventScroll">
+      
+      <!-- 拖拽指示条和头部 - 负责全屏切换手势 -->
+      <view class="insight-header"
+            catchtouchstart="handleDragStart"
+            catchtouchmove="handleDragMove"
+            catchtouchend="handleDragEnd">
+        <view class="drag-indicator"></view>
+        <view class="insight-title-bar">
+          <text class="insight-title">认知提取</text>
+          <view class="close-btn-wrapper">
+            <view class="close-btn" data-action="close" catchtap="handleInsightClose">
+              <text>×</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 滚动内容区域 - 负责关闭手势 -->
+      <scroll-view class="insight-content" 
+                   scroll-y="{{true}}"
+                   catchtouchstart="handleContentTouchStart"
+                   catchtouchmove="handleContentTouchMove" 
+                   catchtouchend="handleContentTouchEnd">
+        <!-- 内容包装容器 -->
+        <view class="insight-content-wrapper">
+        <!-- 播客基本信息 -->
+        <view class="insight-podcast-info">
+          <text class="podcast-title-insight">{{podcastList[currentIndex].title}}</text>
+          <text class="podcast-channel-insight">{{podcastList[currentIndex].channel_name || '奇绩前沿信号'}}</text>
+        </view>
+        
+        <!-- Insight内容区域 -->
+        <view wx:if="{{currentInsightData}}" class="insight-main-content">
+          <!-- 核心总结 -->
+          <view class="insight-section">
+            <view class="section-title">
+              <text class="title-icon">💡</text>
+              <text class="title-text">核心洞察</text>
+            </view>
+            <view class="summary-content">
+              <text class="summary-text">{{currentInsightData.summary}}</text>
+            </view>
+          </view>
+          
+          <!-- 详细内容 -->
+          <view wx:if="{{currentInsightData.detailed_content}}" class="insight-section">
+            <view class="section-title">
+              <text class="title-icon">📄</text>
+              <text class="title-text">详细分析</text>
+            </view>
+            <view class="detailed-content">
+              <text class="detailed-text">{{currentInsightData.detailed_content}}</text>
+            </view>
+          </view>
+          
+          <!-- 关键词标签 -->
+          <view wx:if="{{currentInsightData.keywords && currentInsightData.keywords.length > 0}}" class="insight-section">
+            <view class="section-title">
+              <text class="title-icon">🏷️</text>
+              <text class="title-text">关键词</text>
+            </view>
+            <view class="keywords-container">
+              <view wx:for="{{currentInsightData.keywords}}" wx:key="*this" class="keyword-tag">
+                <text class="keyword-text">{{item}}</text>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 相关论文 -->
+          <view wx:if="{{currentInsightData.related_papers && currentInsightData.related_papers.length > 0}}" class="insight-section">
+            <view class="section-title">
+              <text class="title-icon">📚</text>
+              <text class="title-text">相关论文</text>
+            </view>
+            <view class="related-papers">
+              <view wx:for="{{currentInsightData.related_papers}}" wx:key="title" class="paper-item">
+                <text class="paper-title">{{item.title}}</text>
+                <text class="paper-authors">{{item.authors.join(', ')}}</text>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 相关作者 -->
+          <view wx:if="{{currentInsightData.related_authors && currentInsightData.related_authors.length > 0}}" class="insight-section">
+            <view class="section-title">
+              <text class="title-icon">👥</text>
+              <text class="title-text">相关作者</text>
+            </view>
+            <view class="related-authors">
+              <view wx:for="{{currentInsightData.related_authors}}" wx:key="name" class="author-item">
+                <text class="author-name">{{item.name}}</text>
+                <text class="author-institution">{{item.institution}}</text>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 互动区域 -->
+          <view class="insight-actions">
+            <view class="action-item" bindtap="handleInsightLike">
+              <image src="{{currentInsightData.isLiked ? cdnImages.likeActiveIcon : cdnImages.likeIcon}}" 
+                     class="action-icon-image" alt="点赞"></image>
+              <text class="action-count">{{currentInsightData.like_count || 0}}</text>
+            </view>
+            <view class="action-item" bindtap="handleInsightBookmark">
+              <image src="{{cdnImages.favoriteIcon}}" class="action-icon-image" alt="收藏"></image>
+              <text class="action-text">收藏</text>
+            </view>
+            <view class="action-item" bindtap="handleInsightShare">
+              <image src="{{cdnImages.shareGrayIcon}}" class="action-icon-image" alt="分享"></image>
+              <text class="action-text">分享</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 加载状态 -->
+        <view wx:if="{{insightLoading}}" class="insight-loading">
+          <image src="{{cdnImages.loadingIcon}}" class="loading-icon-small"></image>
+          <text class="loading-text-small">正在加载认知提取...</text>
+        </view>
+        
+        <!-- 错误状态 -->
+        <view wx:if="{{insightError}}" class="insight-error">
+          <text class="error-icon">⚠️</text>
+          <text class="error-text">{{insightError}}</text>
+          <view class="retry-btn" bindtap="handleInsightRetry">
+            <text>重试</text>
+          </view>
+        </view>
+        </view> <!-- 结束 insight-content-wrapper -->
+      </scroll-view>
+    </view>
   </view>
 </view>

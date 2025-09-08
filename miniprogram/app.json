@@ -7,7 +7,12 @@
     "pages/history/history",
     "pages/favorites/favorites",
     "pages/settings/settings",
-    "pages/feedback/feedback"
+    "pages/feedback/feedback",
+    "pages/ranking/ranking",
+    "pages/privacy-policy/privacy-policy",
+    "pages/service-agreement/service-agreement",
+    "pages/data-collection/data-collection",
+    "pages/personal-info/personal-info"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -46,5 +51,6 @@
   "sitemapLocation": "sitemap.json",
   "style": "v2",
   "componentFramework": "glass-easel",
-  "lazyCodeLoading": "requiredComponents"
+  "lazyCodeLoading": "requiredComponents",
+  "__usePrivacyCheck__": true
 }
