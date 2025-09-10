@@ -2,7 +2,7 @@
 class InsightService {
   constructor() {
     this.supabaseUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co'
-    this.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmZjYWZnbmh6amlhdXVrc3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjQ5MjgzMjMsImV4cCI6MjA0MDUwNDMyM30.wJc2OU0M9SshPrHPr_kBcV2fzl8DuG3Ov6xLZjNJFbA'
+    this.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmZjYWZnbmh6amlhdXVrc3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0MjY4NjAsImV4cCI6MjA3MTAwMjg2MH0.uxO5eyw0Usyd59UKz-S7bTrmOnNPg9Ld9wJ6pDMIQUA'
   }
 
   // 通用的Supabase请求方法

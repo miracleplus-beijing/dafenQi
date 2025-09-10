@@ -1,0 +1,133 @@
+<!-- 搜索页面 -->
+<view class="search-page">
+  <!-- 搜索头部 -->
+  <view class="search-header">
+    <!-- 搜索输入框 -->
+    <view class="search-input-container">
+      <view class="search-input-wrapper">
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/search.svg" class="search-icon" alt="搜索"></image>
+        <input class="search-input" 
+               placeholder="听你想听的论文" 
+               value="{{searchQuery}}" 
+               bindinput="onSearchInput"
+               bindconfirm="onSearchConfirm"
+               focus="{{inputFocused}}"
+               confirm-type="search" />
+        <view wx:if="{{searchQuery}}" class="clear-btn" bindtap="onClearSearch">
+          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/close.svg" class="clear-icon" alt="清除"></image>
+        </view>
+      </view>
+    </view>
+    <!-- 取消按钮 -->
+    <view class="cancel-btn" bindtap="onCancel">
+      <text>取消</text>
+    </view>
+  </view>
+
+  <!-- 搜索内容区域 -->
+  <view class="search-content">
+    <!-- 搜索结果 -->
+    <view wx:if="{{searchResults.length > 0}}" class="search-results">
+      <!-- 播客结果区域 -->
+      <view wx:if="{{podcastResults.length > 0}}" class="results-section">
+        <view class="section-header">
+          <text class="section-label">播客</text>
+        </view>
+        <view class="results-list">
+          <view wx:for="{{podcastResults}}" 
+                wx:key="id" 
+                class="result-item podcast-item" 
+                bindtap="onPodcastTap"
+                data-podcast="{{item}}">
+            <!-- 播客封面 -->
+            <view class="podcast-cover">
+              <image wx:if="{{item.cover_url}}" 
+                     src="{{item.cover_url}}" 
+                     class="cover-image" 
+                     mode="aspectFill" 
+                     alt="播客封面"></image>
+              <view wx:else class="default-cover">
+                <text class="cover-text">{{item.title.substr(0,2)}}</text>
+              </view>
+            </view>
+            <!-- 播客信息 -->
+            <view class="podcast-info">
+              <view class="podcast-channel">{{item.channel_name || '奇绩前沿信号'}}</view>
+              <view class="podcast-title">
+                <rich-text nodes="{{item.highlightedTitle || item.title}}"></rich-text>
+              </view>
+              <view wx:if="{{item.description}}" class="podcast-description">{{item.description}}</view>
+              <view wx:if="{{item.duration}}" class="podcast-duration">{{item.duration}}分钟</view>
+            </view>
+            <!-- 播放按钮 -->
+            <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/player-play-small.svg" 
+                   class="podcast-play" alt="播放"></image>
+          </view>
+        </view>
+      </view>
+
+      <!-- 频道结果区域 -->
+      <view wx:if="{{channelResults.length > 0}}" class="results-section">
+        <view class="section-header">
+          <text class="section-label">频道</text>
+        </view>
+        <view class="results-list">
+          <view wx:for="{{channelResults}}" 
+                wx:key="id" 
+                class="result-item channel-item" 
+                bindtap="onChannelTap"
+                data-channel="{{item}}">
+            <view class="item-content">
+              <view class="item-title">
+                <rich-text nodes="{{item.highlightedName}}"></rich-text>
+              </view>
+              <view class="item-subtitle">
+                <text class="subscriber-count">{{item.subscriber_count}}人订阅</text>
+              </view>
+            </view>
+            <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow-circle.svg" class="arrow-icon" alt="进入"></image>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 加载状态 -->
+    <view wx:if="{{loading}}" class="loading-state">
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/loading.svg" class="loading-icon"></image>
+      <text class="loading-text">搜索中...</text>
+    </view>
+
+    <!-- 空搜索状态 -->
+    <view wx:if="{{!loading && !hasSearched}}" class="empty-state">
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/search.svg" class="empty-icon" alt="开始搜索"></image>
+      <text class="empty-text">输入关键词搜索播客和频道</text>
+    </view>
+
+    <!-- 无结果状态 -->
+    <view wx:if="{{!loading && hasSearched && searchResults.length === 0}}" class="no-results-state">
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/search.svg" class="empty-icon" alt="无结果"></image>
+      <text class="empty-text">未找到相关内容</text>
+      <text class="empty-subtext">试试其他关键词吧</text>
+    </view>
+
+    <!-- 搜索历史（可选功能） -->
+    <view wx:if="{{!loading && !hasSearched && searchHistory.length > 0}}" class="search-history">
+      <view class="section-header">
+        <text class="section-label">搜索历史</text>
+        <view class="clear-history-btn" bindtap="onClearHistory">
+          <text>清空</text>
+        </view>
+      </view>
+      <view class="history-list">
+        <view wx:for="{{searchHistory}}" 
+              wx:key="*this" 
+              class="history-item" 
+              bindtap="onHistoryTap"
+              data-query="{{item}}">
+          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/search.svg" class="history-icon" alt="历史"></image>
+          <text class="history-text">{{item}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

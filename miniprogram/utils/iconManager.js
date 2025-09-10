@@ -33,7 +33,7 @@ class IconManager {
       
       // 界面控制类图标
       'ui-back': 'ui-back.svg',
-      'ui-search': 'ui-search.svg',
+      'ui-search': 'search.svg',
       'ui-settings': 'ui-settings.svg',
       'ui-arrow-right': 'ui-arrow-right.svg',
       'ui-refresh': 'ui-refresh.svg',

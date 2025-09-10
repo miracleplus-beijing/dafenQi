@@ -162,13 +162,29 @@ App({
   // 初始化全局隐私检查
   initPrivacyCheck: function() {
     // 检查基础库版本
-    const systemInfo = wx.getSystemInfoSync()
-    const SDKVersion = systemInfo.SDKVersion || '1.0.0'
-    
-    // 如果基础库版本过低，跳过隐私检查
-    if (this.compareVersion(SDKVersion, '2.32.3') < 0) {
-      console.warn('基础库版本过低，不支持隐私接口')
-      return
+    try {
+      const appBaseInfo = wx.getAppBaseInfo()
+      const SDKVersion = appBaseInfo.SDKVersion || '1.0.0'
+      
+      // 如果基础库版本过低，跳过隐私检查
+      if (this.compareVersion(SDKVersion, '2.32.3') < 0) {
+        console.warn('基础库版本过低，不支持隐私接口')
+        return
+      }
+    } catch (error) {
+      console.warn('获取基础库版本失败，使用兼容模式:', error)
+      // 如果新API不可用，回退到旧API
+      try {
+        const systemInfo = wx.getSystemInfoSync()
+        const SDKVersion = systemInfo.SDKVersion || '1.0.0'
+        if (this.compareVersion(SDKVersion, '2.32.3') < 0) {
+          console.warn('基础库版本过低，不支持隐私接口')
+          return
+        }
+      } catch (fallbackError) {
+        console.warn('获取系统信息失败，跳过隐私检查:', fallbackError)
+        return
+      }
     }
 
     try {

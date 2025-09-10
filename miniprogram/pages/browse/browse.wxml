@@ -19,7 +19,12 @@
   <swiper-item wx:for="{{podcastList}}" wx:key="id" class="browse-container">
     <!-- 播客封面 -->
     <view class="podcast-cover">
-      <view class="cover-placeholder">
+      <image wx:if="{{item.cover_url}}" 
+             src="{{item.cover_url}}" 
+             class="cover-image" 
+             mode="aspectFill" 
+             alt="{{item.title}}" />
+      <view wx:else class="cover-placeholder">
         <view class="cover-icon">🎵</view>
         <view class="cover-title">{{item.title}}</view>
       </view>
@@ -32,8 +37,15 @@
 
     <!-- 播客信息 -->
     <view class="podcast-info">
-      <view class="podcast-title">{{item.title}}</view>
-      <view class="podcast-channel" bindtap="handleChannelClick">{{item.channel_name || '奇绩前沿信号'}}</view>
+      <view class="podcast-title-container">
+        <view class="title-scroll-wrapper {{item.title.length > 12 ? 'scrolling' : ''}}" 
+              data-title="{{item.title}}" 
+              style="{{item.title.length > 12 ? 'animation-duration: ' + (item.title.length > 20 ? '5s' : item.title.length > 16 ? '4s' : item.title.length > 12 ? '3.5s' : '3s') : ''}}">
+          <view class="title-item">{{item.title}}</view>
+          <view class="title-item" wx:if="{{item.title.length > 12}}">{{item.title}}</view>
+        </view>
+      </view>
+      <view class="podcast-channel" bindtap="handleChannelClick">{{item.channel_name}}</view>
     </view>
 
     <!-- 交互按钮区域 -->
@@ -52,17 +64,35 @@
       </view>
     </view>
 
-    <!-- progress-bar -->
+    <!-- 智能分块缓冲进度条 -->
     <view class="progress-container">
       <view class="progress-time-info">
         <text class="current-time">{{currentTimeFormatted}}</text>
+        <!-- 网络状态指示器 -->
+        <view class="network-indicator {{networkStatus.isSlowNetwork ? 'slow' : 'fast'}}">
+        </view>
         <text class="total-time">{{totalTimeFormatted}}</text>
       </view>
+      
       <view class="progress-bar" bindtap="handleProgressClick">
-        <!-- 预加载灰度条（缓冲进度） -->
-        <view class="progress-buffer" style="width: {{bufferProgress}}%"></view>
-        <!-- 播放进度条 -->
+        <!-- 背景轨道 -->
+        <view class="progress-track"></view>
+        
+        <!-- 分块缓冲显示层 -->
+        <view class="chunk-buffer-layer">
+          <view wx:for="{{chunkDistribution}}" wx:key="index" 
+                class="chunk-segment {{item.cached ? 'cached' : ''}} {{item.loading ? 'loading' : ''}}"
+                style="left: {{item.left}}%; width: {{item.width}}%;">
+          </view>
+        </view>
+        
+        <!-- 传统缓冲进度条(作为备选显示) -->
+        <view class="progress-buffer {{chunkDistribution.length > 0 ? 'hidden' : ''}}" 
+              style="width: {{bufferProgress}}%"></view>
+        
+        <!-- 当前播放进度条 -->
         <view class="progress-fill" style="width: {{currentProgress}}%"></view>
+        
         <!-- 拖拽手柄 -->
         <view class="progress-thumb {{isDraggingThumb ? 'dragging' : ''}}" 
               style="left: {{currentProgress}}%" 
@@ -140,6 +170,7 @@
     
     <!-- 弹窗内容容器 -->
     <view class="insight-container {{insightFullScreen ? 'fullscreen' : ''}}" 
+          style="transform: translateY({{insightTranslateY}}px);"
           catchtouchmove="preventScroll">
       
       <!-- 拖拽指示条和头部 - 负责全屏切换手势 -->
@@ -150,17 +181,13 @@
         <view class="drag-indicator"></view>
         <view class="insight-title-bar">
           <text class="insight-title">认知提取</text>
-          <view class="close-btn-wrapper">
-            <view class="close-btn" data-action="close" catchtap="handleInsightClose">
-              <text>×</text>
-            </view>
-          </view>
         </view>
       </view>
       
       <!-- 滚动内容区域 - 负责关闭手势 -->
       <scroll-view class="insight-content" 
                    scroll-y="{{true}}"
+                   enable-flex="{{true}}"
                    catchtouchstart="handleContentTouchStart"
                    catchtouchmove="handleContentTouchMove" 
                    catchtouchend="handleContentTouchEnd">

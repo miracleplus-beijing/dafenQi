@@ -2,12 +2,14 @@
 const authService = require('./auth.service.js')
 const storageService = require('./storage.service.js')
 const requestUtil = require('../utils/request.js')
+const recommendationService = require('./recommendation/index.js')
 
 class ApiService {
   constructor() {
     this.auth = authService
     this.storage = storageService
     this.request = requestUtil
+    this.recommendation = recommendationService
   }
 
   // 播客相关 API
@@ -300,16 +302,16 @@ class ApiService {
     podcasts: async (query, params = {}) => {
       try {
         const {
-          page = 1,
           limit = 20
         } = params
 
-        const result = await requestUtil.get('/rest/v1/podcasts', {
-          or: `title.ilike.%${query}%,description.ilike.%${query}%`,
-          page,
-          limit,
+        const queryParams = {
+          or: `(title.ilike.*${query}*,description.ilike.*${query}*)`,
+          limit: limit,
           order: 'created_at.desc'
-        })
+        }
+
+        const result = await requestUtil.get('/rest/v1/podcasts', queryParams)
 
         return {
           success: true,
@@ -324,6 +326,141 @@ class ApiService {
       }
     },
 
+    // 搜索播客（包含频道信息）- 先搜索播客，然后手动获取频道信息
+    podcastsWithChannel: async (query, params = {}) => {
+      try {
+        const {
+          limit = 20
+        } = params
+
+        console.log('开始搜索播客，关键词:', query)
+
+        // 首先搜索播客
+        const queryParams = {
+          or: `(title.ilike.*${query}*,description.ilike.*${query}*)`,
+          limit: limit,
+          order: 'created_at.desc'
+        }
+
+        const podcasts = await requestUtil.get('/rest/v1/podcasts', queryParams)
+        
+        console.log('播客搜索结果:', podcasts)
+
+        if (!podcasts || podcasts.length === 0) {
+          return {
+            success: true,
+            data: []
+          }
+        }
+
+        // 获取所有用到的频道ID
+        const channelIds = [...new Set(podcasts.map(p => p.channel_id).filter(id => id))]
+        console.log('需要查询的频道IDs:', channelIds)
+        
+        let channelsMap = {}
+        if (channelIds.length > 0) {
+          try {
+            // 批量获取频道信息 - 使用PostgREST的IN语法
+            const channelQueryString = channelIds.map(id => `"${id}"`).join(',')
+            const channelQuery = {
+              id: `in.(${channelQueryString})`
+            }
+            console.log('频道查询参数:', channelQuery)
+            
+            const channels = await requestUtil.get('/rest/v1/channels', channelQuery)
+            console.log('频道查询结果:', channels)
+            
+            // 创建频道映射
+            channels.forEach(channel => {
+              channelsMap[channel.id] = channel
+            })
+          } catch (channelError) {
+            console.error('获取频道信息失败，使用默认频道名称:', channelError)
+            // 如果获取频道失败，不影响播客搜索结果
+          }
+        }
+
+        // 合并播客和频道信息
+        const formattedResult = podcasts.map(podcast => ({
+          ...podcast,
+          channel_name: channelsMap[podcast.channel_id]?.name || '奇绩前沿信号'
+        }))
+
+        console.log('最终格式化结果:', formattedResult)
+
+        return {
+          success: true,
+          data: formattedResult
+        }
+      } catch (error) {
+        console.error('搜索播客（含频道信息）失败:', error)
+        return {
+          success: false,
+          error: error.message
+        }
+      }
+    },
+
+    // 搜索频道
+    channels: async (query, params = {}) => {
+      try {
+        const {
+          limit = 10
+        } = params
+
+        const queryParams = {
+          or: `(name.ilike.*${query}*,description.ilike.*${query}*)`,
+          limit: limit,
+          order: 'subscriber_count.desc,created_at.desc'
+        }
+
+        const result = await requestUtil.get('/rest/v1/channels', queryParams)
+
+        return {
+          success: true,
+          data: result
+        }
+      } catch (error) {
+        console.error('搜索频道失败:', error)
+        return {
+          success: false,
+          error: error.message
+        }
+      }
+    },
+
+    // 综合搜索（播客 + 频道）
+    all: async (query, params = {}) => {
+      try {
+        const {
+          podcastLimit = 5,
+          channelLimit = 3
+        } = params
+
+        // 并行搜索播客和频道
+        const [podcastResult, channelResult] = await Promise.all([
+          this.search.podcastsWithChannel(query, { limit: podcastLimit }),
+          this.search.channels(query, { limit: channelLimit })
+        ])
+
+        return {
+          success: true,
+          data: {
+            podcasts: podcastResult.success ? podcastResult.data : [],
+            channels: channelResult.success ? channelResult.data : [],
+            total: (podcastResult.success ? podcastResult.data.length : 0) + 
+                   (channelResult.success ? channelResult.data.length : 0)
+          }
+        }
+      } catch (error) {
+        console.error('综合搜索失败:', error)
+        return {
+          success: false,
+          error: error.message
+        }
+      }
+    },
+
     // 获取热门搜索词
     getHotKeywords: async () => {
       try {
@@ -331,7 +468,7 @@ class ApiService {
         // 暂时返回模拟数据
         return {
           success: true,
-          data: ['AI', '机器学习', '科技', '创业', '心理学']
+          data: ['AI', '机器学习', '计算机视觉', '深度学习', '自然语言处理', '数据科学']
         }
       } catch (error) {
         console.error('获取热门搜索词失败:', error)
@@ -380,6 +517,133 @@ class ApiService {
         return {
           success: false,
           error: error.message
+        }
+      }
+    }
+  }
+
+  // 推荐相关 API
+  recommendation = {
+    // 获取个性化推荐
+    getPersonalized: async (userId, options = {}) => {
+      try {
+        const result = await recommendationService.getPersonalizedRecommendations(userId, options)
+        return result
+      } catch (error) {
+        console.error('获取个性化推荐失败:', error)
+        return {
+          success: false,
+          error: error.message,
+          data: []
+        }
+      }
+    },
+
+    // 获取热门推荐
+    getPopular: async (limit = 10) => {
+      try {
+        const result = await recommendationService.getPopularRecommendations(limit)
+        return result
+      } catch (error) {
+        console.error('获取热门推荐失败:', error)
+        return {
+          success: false,
+          error: error.message,
+          data: []
+        }
+      }
+    },
+
+    // 获取推荐统计信息
+    getStats: async (userId) => {
+      try {
+        const stats = await recommendationService.getRecommendationStats(userId)
+        return stats
+      } catch (error) {
+        console.error('获取推荐统计失败:', error)
+        return {
+          success: false,
+          error: error.message,
+          data: null
+        }
+      }
+    },
+
+    // 清理推荐缓存
+    clearCache: async () => {
+      try {
+        const result = await recommendationService.clearAllCache()
+        return result
+      } catch (error) {
+        console.error('清理推荐缓存失败:', error)
+        return {
+          success: false,
+          error: error.message
+        }
+      }
+    },
+
+    // 记录推荐点击行为
+    recordClick: async (userId, podcastId, recommendationId, position, algorithm) => {
+      try {
+        const result = await recommendationService.recordRecommendationClick(
+          userId, podcastId, recommendationId, position, algorithm
+        )
+        return result
+      } catch (error) {
+        console.error('记录推荐点击失败:', error)
+        return {
+          success: false,
+          error: error.message
+        }
+      }
+    },
+
+    // 记录用户转化行为
+    recordConversion: async (userId, podcastId, action, recommendationId, algorithm) => {
+      try {
+        const result = await recommendationService.recordUserConversion(
+          userId, podcastId, action, recommendationId, algorithm
+        )
+        return result
+      } catch (error) {
+        console.error('记录用户转化失败:', error)
+        return {
+          success: false,
+          error: error.message
+        }
+      }
+    },
+
+    // 获取推荐系统性能报告
+    getPerformanceReport: async () => {
+      try {
+        const report = await recommendationService.getPerformanceReport()
+        return report
+      } catch (error) {
+        console.error('获取性能报告失败:', error)
+        return {
+          success: false,
+          error: error.message,
+          data: null
+        }
+      }
+    },
+
+    // 获取推荐服务状态
+    getServiceStatus: async () => {
+      try {
+        const status = recommendationService.getServiceStatus()
+        return {
+          success: true,
+          data: status
+        }
+      } catch (error) {
+        console.error('获取服务状态失败:', error)
+        return {
+          success: false,
+          error: error.message,
+          data: null
         }
       }
     }

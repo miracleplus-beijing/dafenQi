@@ -1,16 +1,30 @@
 /**
- * 音频智能预加载服务
- * 提供音频预加载、缓存管理和播放优化
+ * 音频智能分块预加载服务
+ * 纯分块预加载实现，不再支持传统完整文件预加载
  */
+
+// 导入分块预加载组件
+const smartPreloadController = require('./smart-preload-controller.service.js')
+const lruCache = require('./lru-cache.service.js')
+const audioChunkManager = require('./audio-chunk-manager.service.js')
 
 class AudioPreloaderService {
   constructor() {
-    this.preloadedAudios = new Map() // 预加载的音频实例
-    this.downloadQueue = new Map()   // 下载队列
-    this.cacheManager = new Map()    // 缓存管理器
-    this.maxPreloadCount = 2         // 方案A：最大预加载2条（后续2条）
-    this.preloadTriggerProgress = 0.7 // 播放到70%时触发预加载
+    // 当前播放状态
+    this.podcastList = []
+    this.currentIndex = 0
+    this.currentPlayingAudio = null
+    
+    // 分块预加载配置
+    this.preloadRange = 3           // 预加载范围(块数量)
+    this.preloadTriggerProgress = 0.7 // 播放到70%时触发下一音频预加载
     this.isPreloading = false
+    
+    // 播放进度监控
+    this.playbackProgressInterval = null
+    this.lastProgressUpdate = 0
+    
+    console.log('音频智能分块预加载服务初始化 - 纯分块模式')
   }
 
   /**
@@ -18,160 +32,100 @@ class AudioPreloaderService {
    * @param {Array} podcastList - 播客列表
    * @param {number} currentIndex - 当前播放索引
    */
-  initialize(podcastList, currentIndex = 0) {
+  async initialize(podcastList, currentIndex = 0) {
     this.podcastList = podcastList
     this.currentIndex = currentIndex
     
-    console.log('音频预加载服务初始化:', {
+    console.log('音频分块预加载服务初始化:', {
       totalPodcasts: podcastList.length,
       currentIndex,
-      maxPreload: this.maxPreloadCount
+      preloadRange: this.preloadRange
     })
     
-    // 立即预加载当前和相邻的音频
-    this.preloadAdjacent()
-  }
-
-  /**
-   * 预加载相邻音频 - 方案A：仅预加载后续2条
-   */
-  async preloadAdjacent() {
-    if (this.isPreloading || !this.podcastList) return
-    
-    this.isPreloading = true
-    const { currentIndex, podcastList } = this
-    
-    const toPreload = []
-    
-    // 双向预加载：前1条 + 后2条
-    // 预加载前面1条（用户可能上划）
-    if (currentIndex > 0) {
-      toPreload.push(currentIndex - 1)
-    }
-    
-    // 预加载后面2条（用户可能下划）
-    for (let i = 1; i <= this.maxPreloadCount; i++) {
-      const nextIndex = currentIndex + i
-      if (nextIndex < podcastList.length) {
-        toPreload.push(nextIndex)
+    // 初始化当前音频的分块预加载
+    if (podcastList[currentIndex]) {
+      const currentPodcast = podcastList[currentIndex]
+      if (currentPodcast && currentPodcast.audio_url) {
+        this.currentPlayingAudio = currentPodcast
+        console.log('初始化音频分块预加载:', currentPodcast.title)
+        
+        try {
+          await smartPreloadController.initialize(currentPodcast.audio_url, currentPodcast.duration || 0)
+        } catch (error) {
+          console.error('初始化分块预加载失败:', error)
+        }
       }
     }
-    
-    console.log('双向预加载 - 开始预加载音频:', toPreload.map(i => podcastList[i]?.title))
-    
-    // 并行预加载
-    const preloadPromises = toPreload.map(index => 
-      this.preloadAudio(podcastList[index], index)
-    )
-    
-    try {
-      await Promise.all(preloadPromises)
-      console.log('✅ 方案A预加载完成')
-    } catch (error) {
-      console.warn('方案A部分音频预加载失败:', error)
-    } finally {
-      this.isPreloading = false
-    }
   }
 
   /**
-   * 预加载单个音频
-   * @param {Object} podcast - 播客对象
-   * @param {number} index - 索引
-   */
-  async preloadAudio(podcast, index) {
-    if (!podcast || !podcast.audio_url) return
-    
-    const audioUrl = podcast.audio_url
-    
-    // 检查是否已经预加载
-    if (this.preloadedAudios.has(audioUrl)) {
-      console.log('音频已预加载:', podcast.title)
-      return this.preloadedAudios.get(audioUrl)
-    }
-    
-    return new Promise((resolve, reject) => {
-      console.log('开始预加载音频:', podcast.title)
-      
-      // 创建音频实例进行预加载
-      const audioContext = wx.createInnerAudioContext()
-      
-      // 设置音频源
-      audioContext.src = audioUrl
-      
-      // 监听加载事件
-      audioContext.onCanplay(() => {
-        console.log('✅ 音频预加载完成:', podcast.title)
-        
-        // 缓存音频实例
-        this.preloadedAudios.set(audioUrl, {
-          audioContext,
-          podcast,
-          index,
-          preloadedAt: Date.now()
-        })
-        
-        // 清理过期缓存
-        this.cleanExpiredCache()
-        
-        resolve(audioContext)
-      })
-      
-      audioContext.onError((error) => {
-        console.warn('❌ 音频预加载失败:', podcast.title, error)
-        audioContext.destroy()
-        reject(error)
-      })
-      
-      // 设置超时
-      setTimeout(() => {
-        if (!this.preloadedAudios.has(audioUrl)) {
-          console.warn('⏰ 音频预加载超时:', podcast.title)
-          audioContext.destroy()
-          reject(new Error('预加载超时'))
-        }
-      }, 10000) // 10秒超时
-    })
-  }
-
-  /**
-   * 获取预加载的音频实例
+   * 获取预加载的音频实例 (分块预加载版本)
+   * 检查是否有分块预加载数据可用
    * @param {string} audioUrl - 音频URL
-   * @returns {Object|null} 预加载的音频数据
+   * @returns {Object|null} 音频上下文或null
    */
   getPreloadedAudio(audioUrl) {
-    const cached = this.preloadedAudios.get(audioUrl)
-    
-    if (cached) {
-      console.log('🚀 使用预加载音频:', cached.podcast.title)
-      
-      // 从缓存中移除（避免重复使用）
-      this.preloadedAudios.delete(audioUrl)
-      
-      return cached.audioContext
+    // 检查是否有分块预加载数据
+    if (this.hasChunkData(audioUrl)) {
+      console.log('🚀 使用分块预加载音频:', audioUrl)
+      return this.createAudioContextWithChunks(audioUrl)
     }
     
     console.log('📱 音频未预加载，使用标准加载:', audioUrl)
     return null
   }
-
+  
   /**
-   * 触发进度预加载
-   * @param {number} currentProgress - 当前播放进度 (0-1)
-   * @param {number} currentIndex - 当前索引
+   * 检查是否有分块预加载数据
+   * @param {string} audioUrl - 音频URL
+   * @returns {boolean} 是否有缓存的分块数据
    */
-  onProgressUpdate(currentProgress, currentIndex) {
-    // 当播放到70%时，预加载下一个音频
-    if (currentProgress >= this.preloadTriggerProgress) {
-      this.triggerNextPreload(currentIndex)
-    }
+  hasChunkData(audioUrl) {
+    // 检查是否至少有第一个块（播放起始块）
+    return lruCache.has(audioUrl, 0)
+  }
+  
+  /**
+   * 创建带分块数据的音频上下文
+   * @param {string} audioUrl - 音频URL
+   * @returns {Object} 音频上下文对象
+   */
+  createAudioContextWithChunks(audioUrl) {
+    const audioContext = wx.createInnerAudioContext()
+    audioContext.src = audioUrl
+    
+    // 添加分块预加载标记
+    audioContext._hasChunkPreload = true
+    audioContext._preloadReady = true
+    
+    return audioContext
   }
 
   /**
-   * 触发下一个音频预加载
+   * 触发进度预加载 (分块预加载版本)
+   * @param {number} currentProgress - 当前播放进度 (0-1)
+   * @param {number} currentIndex - 当前索引
+   * @param {number} currentTime - 当前播放时间(秒)
+   */
+  onProgressUpdate(currentProgress, currentIndex, currentTime = 0) {
+    // 实时更新分块预加载控制器
+    if (this.currentPlayingAudio) {
+      smartPreloadController.onPlaybackProgress(currentTime)
+    }
+    
+    // 当播放到70%时，开始预加载下一个音频
+    if (currentProgress >= this.preloadTriggerProgress) {
+      this.triggerNextAudioPreload(currentIndex)
+    }
+    
+    this.lastProgressUpdate = Date.now()
+  }
+
+  /**
+   * 触发下一个音频的预加载
    * @param {number} currentIndex - 当前播放索引
    */
-  async triggerNextPreload(currentIndex) {
+  async triggerNextAudioPreload(currentIndex) {
     if (!this.podcastList || this.isPreloading) return
     
     const nextIndex = currentIndex + 1
@@ -180,109 +134,99 @@ class AudioPreloaderService {
     const nextPodcast = this.podcastList[nextIndex]
     if (!nextPodcast) return
     
-    // 检查是否已预加载
-    if (this.preloadedAudios.has(nextPodcast.audio_url)) return
+    // 检查下一个音频是否已有分块数据
+    if (this.hasChunkData(nextPodcast.audio_url)) {
+      console.log('下一个音频已有分块预加载数据:', nextPodcast.title)
+      return
+    }
     
-    console.log('🔮 触发下一个音频预加载:', nextPodcast.title)
+    console.log('🔮 开始预加载下一个音频的分块数据:', nextPodcast.title)
     
     try {
-      await this.preloadAudio(nextPodcast, nextIndex)
+      this.isPreloading = true
+      
+      // 分析下一个音频文件并开始预加载初始块
+      await audioChunkManager.analyzeAudioFile(nextPodcast.audio_url, nextPodcast.duration || 0)
+      
+      // 预加载下一个音频的前几个块
+      const initialChunks = audioChunkManager.getPreloadChunks(nextPodcast.audio_url, 0, 2) // 预加载前2块
+      
+      for (const chunkIndex of initialChunks) {
+        smartPreloadController.enqueuePreload(nextPodcast.audio_url, chunkIndex, 'low') // 低优先级
+      }
+      
     } catch (error) {
       console.warn('下一个音频预加载失败:', error)
+    } finally {
+      this.isPreloading = false
     }
   }
 
   /**
-   * 更新当前播放位置
+   * 更新当前播放位置 (分块预加载版本)
    * @param {number} newIndex - 新的播放索引
    */
-  updateCurrentIndex(newIndex) {
+  async updateCurrentIndex(newIndex) {
+    const oldIndex = this.currentIndex
     this.currentIndex = newIndex
     
-    // 清理过远的预加载音频
-    this.cleanDistantPreloads(newIndex)
+    console.log(`切换音频: ${oldIndex} -> ${newIndex}`)
     
-    // 预加载新的相邻音频
-    setTimeout(() => {
-      this.preloadAdjacent()
-    }, 1000) // 延迟1秒避免干扰当前播放
+    // 切换到新音频的分块预加载
+    if (this.podcastList && this.podcastList[newIndex]) {
+      const newPodcast = this.podcastList[newIndex]
+      if (newPodcast && newPodcast.audio_url) {
+        // 如果切换到不同音频，更新智能预加载控制器
+        if (!this.currentPlayingAudio || this.currentPlayingAudio.audio_url !== newPodcast.audio_url) {
+          this.currentPlayingAudio = newPodcast
+          console.log('切换到新音频，启用分块预加载:', newPodcast.title)
+          
+          try {
+            await smartPreloadController.switchAudio(newPodcast.audio_url, newPodcast.duration || 0)
+          } catch (error) {
+            console.error('切换音频分块预加载失败:', error)
+          }
+        }
+      }
+    }
+    
+    // 清理距离太远的音频缓存（保持内存使用合理）
+    this.cleanDistantAudioCache(newIndex)
   }
 
   /**
-   * 清理距离当前位置过远的预加载音频
+   * 清理距离当前位置过远的音频缓存
    * @param {number} currentIndex - 当前索引
    */
-  cleanDistantPreloads(currentIndex) {
-    for (const [audioUrl, cached] of this.preloadedAudios.entries()) {
-      const distance = Math.abs(cached.index - currentIndex)
+  cleanDistantAudioCache(currentIndex) {
+    if (!this.podcastList) return
+    
+    const maxDistance = 3 // 最大保留距离
+    
+    // 获取所有缓存的音频URL
+    const allCacheKeys = lruCache.getAllKeys()
+    const audioUrls = [...new Set(allCacheKeys.map(item => item.audioUrl))]
+    
+    audioUrls.forEach(audioUrl => {
+      // 找到这个音频在播客列表中的位置
+      const audioIndex = this.podcastList.findIndex(podcast => podcast.audio_url === audioUrl)
       
-      // 清理距离超过5的预加载音频
-      if (distance > 5) {
-        console.log('🧹 清理过远预加载音频:', cached.podcast.title)
-        cached.audioContext.destroy()
-        this.preloadedAudios.delete(audioUrl)
+      if (audioIndex >= 0) {
+        const distance = Math.abs(audioIndex - currentIndex)
+        
+        // 如果距离超过最大距离，清理这个音频的缓存
+        if (distance > maxDistance) {
+          const removedCount = lruCache.removeAudio(audioUrl)
+          if (removedCount > 0) {
+            console.log(`🧹 清理过远音频缓存: 索引${audioIndex}, 距离${distance}, 清理${removedCount}个块`)
+          }
+        }
       }
-    }
+    })
   }
 
   /**
-   * 清理过期缓存
-   */
-  cleanExpiredCache() {
-    const now = Date.now()
-    const expireTime = 10 * 60 * 1000 // 10分钟过期
-    
-    for (const [audioUrl, cached] of this.preloadedAudios.entries()) {
-      if (now - cached.preloadedAt > expireTime) {
-        console.log('🕐 清理过期预加载音频:', cached.podcast.title)
-        cached.audioContext.destroy()
-        this.preloadedAudios.delete(audioUrl)
-      }
-    }
-    
-    // 限制最大缓存数量
-    if (this.preloadedAudios.size > this.maxPreloadCount) {
-      // 删除最旧的预加载音频
-      const oldestKey = this.preloadedAudios.keys().next().value
-      const oldest = this.preloadedAudios.get(oldestKey)
-      
-      console.log('📦 缓存已满，清理最旧音频:', oldest.podcast.title)
-      oldest.audioContext.destroy()
-      this.preloadedAudios.delete(oldestKey)
-    }
-  }
-
-  /**
-   * 销毁所有预加载音频
-   */
-  destroyAll() {
-    console.log('🗑️ 销毁所有预加载音频')
-    
-    for (const [audioUrl, cached] of this.preloadedAudios.entries()) {
-      cached.audioContext.destroy()
-    }
-    
-    this.preloadedAudios.clear()
-    this.downloadQueue.clear()
-    this.cacheManager.clear()
-  }
-
-  /**
-   * 获取预加载统计信息
-   * @returns {Object} 统计信息
-   */
-  getStats() {
-    return {
-      preloadedCount: this.preloadedAudios.size,
-      maxPreloadCount: this.maxPreloadCount,
-      currentIndex: this.currentIndex,
-      isPreloading: this.isPreloading,
-      preloadedTitles: Array.from(this.preloadedAudios.values()).map(cached => cached.podcast.title)
-    }
-  }
-
-  /**
-   * 获取当前音频的真实缓冲进度
+   * 获取当前音频的缓冲进度 (分块预加载版本)
    * @param {string} audioUrl - 音频URL
    * @param {number} currentTime - 当前播放时间
    * @param {number} duration - 音频总时长
@@ -292,40 +236,176 @@ class AudioPreloaderService {
   getBufferProgress(audioUrl, currentTime = 0, duration = 0, audioContext = null) {
     if (!duration) return 0
     
-    // 优先级1: 检查是否有预加载的音频（完全缓存）
-    const cached = this.preloadedAudios.get(audioUrl)
-    if (cached) {
-      console.log('🎯 音频已完全预加载，缓冲进度: 100%')
-      return 100
+    // 使用分块预加载数据计算精确缓冲进度
+    const chunkBufferProgress = this.calculateChunkBufferProgress(audioUrl, currentTime, duration)
+    if (chunkBufferProgress >= 0) {
+      return chunkBufferProgress
     }
     
-    // 优先级2: 使用真实的buffered属性（如果可用）
+    // 如果无法使用分块数据，使用微信音频上下文的buffered属性
     if (audioContext && typeof audioContext.buffered === 'number') {
-      // buffered通常是以秒为单位的已缓冲时间
       const bufferedSeconds = audioContext.buffered
       const realBufferProgress = (bufferedSeconds / duration) * 100
-      console.log(`🔥 真实缓冲进度: ${bufferedSeconds.toFixed(1)}s / ${duration.toFixed(1)}s (${realBufferProgress.toFixed(1)}%)`)
       return Math.min(100, Math.max(0, realBufferProgress))
     }
     
-    // 优先级3: 智能估算缓冲（基于播放行为）
+    // 最后的备选方案：基于播放行为的智能估算
     const playedRatio = currentTime / duration
-    let estimatedBufferAhead = 45 // 基础45秒缓冲
+    let estimatedBufferAhead = 30 // 基础30秒缓冲
     
-    // 根据播放进度调整缓冲估算
     if (playedRatio < 0.1) {
-      // 开始阶段，缓冲更保守
-      estimatedBufferAhead = 30
+      estimatedBufferAhead = 20 // 开始阶段保守估算
     } else if (playedRatio > 0.8) {
-      // 接近结尾，可能已缓冲到结束
-      estimatedBufferAhead = duration - currentTime + 10
+      estimatedBufferAhead = duration - currentTime + 5 // 接近结尾
     }
     
     const estimatedBufferTime = Math.min(duration, currentTime + estimatedBufferAhead)
     const estimatedProgress = (estimatedBufferTime / duration) * 100
     
-    console.log(`📊 估算缓冲进度: ${estimatedBufferTime.toFixed(1)}s / ${duration.toFixed(1)}s (${estimatedProgress.toFixed(1)}%)`)
     return Math.min(100, Math.max(0, estimatedProgress))
+  }
+  
+  /**
+   * 基于分块预加载数据计算缓冲进度
+   * @param {string} audioUrl - 音频URL
+   * @param {number} currentTime - 当前播放时间(秒)
+   * @param {number} duration - 音频总时长(秒)
+   * @returns {number} 缓冲进度百分比，-1表示无法计算
+   */
+  calculateChunkBufferProgress(audioUrl, currentTime, duration) {
+    try {
+      // 获取音频文件信息
+      const audioInfo = audioChunkManager.audioFileInfo.get(audioUrl)
+      if (!audioInfo) {
+        return -1 // 无法获取文件信息
+      }
+      
+      const { totalChunks, chunkSize, fileSize } = audioInfo
+      let bufferedBytes = 0
+      
+      // 统计已缓存的字节数
+      for (let i = 0; i < totalChunks; i++) {
+        if (lruCache.has(audioUrl, i)) {
+          // 计算这个块的实际大小
+          const { start, end } = audioChunkManager.getChunkByteRange(audioUrl, i)
+          bufferedBytes += (end - start + 1)
+        }
+      }
+      
+      // 计算缓冲百分比
+      const bufferPercentage = (bufferedBytes / fileSize) * 100
+      
+      return Math.min(100, Math.max(0, bufferPercentage))
+      
+    } catch (error) {
+      console.warn('计算分块缓冲进度失败:', error)
+      return -1
+    }
+  }
+
+  /**
+   * 获取分块缓存分布信息 (新增)
+   * 用于进度条可视化显示
+   * @param {string} audioUrl - 音频URL
+   * @returns {Array} 缓存块分布数组
+   */
+  getChunkDistribution(audioUrl) {
+    try {
+      const audioInfo = audioChunkManager.audioFileInfo.get(audioUrl)
+      if (!audioInfo) {
+        return []
+      }
+      
+      const { totalChunks } = audioInfo
+      const distribution = []
+      
+      for (let i = 0; i < totalChunks; i++) {
+        distribution.push({
+          index: i,
+          cached: lruCache.has(audioUrl, i),
+          loading: smartPreloadController.isChunkLoading(audioUrl, i)
+        })
+      }
+      
+      return distribution
+      
+    } catch (error) {
+      console.warn('获取分块分布失败:', error)
+      return []
+    }
+  }
+
+  /**
+   * 暂停分块预加载
+   */
+  pausePreload() {
+    smartPreloadController.pausePreload()
+    console.log('已暂停分块预加载')
+  }
+  
+  /**
+   * 恢复分块预加载
+   */
+  resumePreload() {
+    smartPreloadController.resumePreload()
+    console.log('已恢复分块预加载')
+  }
+
+  /**
+   * 获取预加载统计信息 (分块预加载版本)
+   * @returns {Object} 统计信息
+   */
+  getStats() {
+    const controllerStats = smartPreloadController.getStats()
+    const cacheStats = lruCache.getStats()
+    const chunkStats = audioChunkManager.getStats()
+    
+    return {
+      mode: 'chunk-only',
+      currentIndex: this.currentIndex,
+      currentPlayingAudio: this.currentPlayingAudio ? this.currentPlayingAudio.title : null,
+      isPreloading: this.isPreloading,
+      
+      // 缓存信息
+      totalMemoryUsage: `${cacheStats.currentSizeMB}MB`,
+      cacheHitRate: cacheStats.hitRate,
+      cacheNodeCount: cacheStats.nodeCount,
+      
+      // 网络和性能
+      networkAdaptive: controllerStats.adaptiveConfig,
+      loadingStats: controllerStats.loadingStats,
+      
+      // 分块信息
+      chunkStats: chunkStats,
+      
+      // 控制器状态
+      activeLoads: controllerStats.activeLoads,
+      queueSize: controllerStats.queueSize,
+      preloadRange: this.preloadRange
+    }
+  }
+
+  /**
+   * 销毁所有预加载资源
+   */
+  destroyAll() {
+    console.log('🗑️ 销毁所有分块预加载资源')
+    
+    // 清理分块预加载资源
+    smartPreloadController.destroy()
+    lruCache.clear()
+    audioChunkManager.cleanExpiredInfo(0) // 立即清理所有缓存
+    
+    // 重置状态
+    this.currentPlayingAudio = null
+    this.isPreloading = false
+    
+    if (this.playbackProgressInterval) {
+      clearInterval(this.playbackProgressInterval)
+      this.playbackProgressInterval = null
+    }
+    
+    console.log('✅ 所有分块预加载资源已清理完成')
   }
 }
 

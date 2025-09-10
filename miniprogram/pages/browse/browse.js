@@ -1,5 +1,6 @@
 // 漫游页面逻辑
 const app = getApp()
+const apiService = require('../../services/api.service.js')
 const audioPreloader = require('../../services/audio-preloader.service.js')
 const insightService = require('../../services/insight.service.js')
 const { getImageUrl } = require('../../config/image-urls.js')
@@ -45,9 +46,17 @@ Page({
     autoPlayOnSwipe: true, // 控制下滑后是否自动播放
     userGestureActive: false, // 是否有用户手势正在进行
     
-    // 进度条拖拽优化
+    // 智能分块缓冲进度条数据
     progressBarRect: null, // 缓存进度条位置信息
-    bufferProgress: 0, // 预加载进度（百分比）
+    chunkDistribution: [], // 分块分布数据
+    
+    // 网络状态指示器（仅用于视觉指示，不显示文字）
+    networkStatus: {
+      networkType: 'wifi',
+      isSlowNetwork: false
+    },
+    
+    // 节流控制
     lastThrottleTime: 0, // 节流时间戳
     throttleInterval: 16, // 约60fps的节流间隔
     
@@ -76,6 +85,7 @@ Page({
     insightLoading: false, // 加载状态
     insightError: '', // 错误信息
     currentInsightData: null, // 当前显示的insight数据
+    insightTranslateY: 0, // 弹窗Y轴位移（用于拖拽动画）
     
     // 拖拽手势相关（用于全屏切换）
     insightTouchStartY: 0, // 手势开始位置
@@ -85,7 +95,12 @@ Page({
     // 内容手势相关（用于关闭手势）
     contentTouchStartY: 0, // 内容区手势开始位置
     contentTouchMoveY: 0, // 内容区手势移动位置
-    contentTouchStartTime: 0 // 内容区手势开始时间
+    contentTouchStartTime: 0, // 内容区手势开始时间
+    
+    // 个性化推荐相关
+    personalizedRecommendations: [], // 个性化推荐列表
+    recommendationsLoading: false, // 推荐加载状态
+    recommendationMode: 'personalized' // 固定为个性化推荐模式
   },
 
   onLoad: function (options) {
@@ -94,8 +109,188 @@ Page({
     // 初始化音频上下文
     this.initAudioContext()
     
-    // 加载播客数据
-    this.loadPodcastData()
+    // 获取用户个性化推荐
+    this.loadPersonalizedRecommendations()
+    
+    // 处理来自搜索页面的播客跳转
+    if (options.podcastId) {
+      console.log('接收到搜索跳转播客ID:', options.podcastId)
+      this.handlePodcastFromSearch(options.podcastId, options.autoPlay === 'true')
+    } else {
+      // 正常加载播客数据
+      this.loadPodcastData()
+    }
+  },
+
+  // 加载个性化推荐（固定模式）
+  async loadPersonalizedRecommendations() {
+    try {
+      const userInfo = app.globalData.userInfo
+      this.setData({ recommendationsLoading: true })
+
+      // 固定使用个性化推荐
+      const result = userInfo && userInfo.id 
+        ? await apiService.recommendation.getPersonalized(userInfo.id, {
+            algorithm: 'hybrid',
+            count: 20,
+            includeReasons: true
+          })
+        : await apiService.recommendation.getPopular(20)
+
+      if (result.success && result.data) {
+        this.setData({
+          personalizedRecommendations: result.data,
+          recommendationsLoading: false
+        })
+      }
+    } catch (error) {
+      console.error('加载个性化推荐失败:', error)
+      this.setData({ recommendationsLoading: false })
+    }
+  },
+
+
+  // 处理推荐点击
+  handleRecommendationClick: async function(e) {
+    const podcast = e.currentTarget.dataset.podcast
+    console.log('点击推荐播客:', podcast.title)
+    
+    // 跳转到对应的播客
+    const targetIndex = this.data.podcastList.findIndex(item => item.id === podcast.id)
+    
+    if (targetIndex >= 0) {
+      // 播客在当前列表中，直接跳转
+      this.setData({ currentIndex: targetIndex })
+    } else {
+      // 播客不在当前列表中，插入到当前位置
+      const currentList = [...this.data.podcastList]
+      const currentIndex = this.data.currentIndex
+      
+      // 在当前位置后插入推荐播客
+      currentList.splice(currentIndex + 1, 0, podcast)
+      
+      this.setData({
+        podcastList: currentList,
+        currentIndex: currentIndex + 1,
+        loadedPodcastIds: [...this.data.loadedPodcastIds, podcast.id]
+      })
+      
+      // 自动播放插入的播客
+      setTimeout(() => {
+        this.startAutoPlay()
+      }, 500)
+    }
+    
+    // 记录推荐点击行为，用于优化推荐算法
+    if (app.globalData.userInfo && app.globalData.userInfo.id) {
+      try {
+        await apiService.recommendation.recordClick(
+          app.globalData.userInfo.id,
+          podcast.id,
+          null, // recommendationId
+          null, // position
+          podcast.algorithm || 'unknown'
+        )
+        console.log('推荐点击行为已记录:', podcast.id)
+      } catch (error) {
+        console.error('记录推荐点击失败:', error)
+      }
+    }
+  },
+
+  // 处理来自搜索页面的播客
+  async handlePodcastFromSearch(podcastId, shouldAutoPlay = false) {
+    console.log('处理搜索跳转播客:', podcastId, '自动播放:', shouldAutoPlay)
+    
+    try {
+      // 显示加载状态
+      this.setData({ 
+        loading: true,
+        audioLoadingVisible: true,
+        audioLoadingText: '正在加载播客...'
+      })
+
+      // 先加载正常的播客列表
+      await this.loadPodcastData()
+
+      // 查找指定的播客
+      const targetIndex = this.data.podcastList.findIndex(podcast => podcast.id === podcastId)
+      
+      if (targetIndex >= 0) {
+        // 播客在列表中，直接跳转
+        console.log('播客在列表中，跳转到索引:', targetIndex)
+        this.setData({
+          currentIndex: targetIndex,
+          loading: false,
+          audioLoadingVisible: false
+        })
+        
+        // 如果需要自动播放
+        if (shouldAutoPlay) {
+          setTimeout(() => {
+            console.log('开始自动播放搜索的播客')
+            this.startAutoPlay()
+          }, 500)
+        }
+      } else {
+        // 播客不在列表中，需要单独获取并插入
+        console.log('播客不在当前列表中，获取播客详情')
+        await this.fetchAndInsertPodcast(podcastId, shouldAutoPlay)
+      }
+      
+    } catch (error) {
+      console.error('处理搜索跳转播客失败:', error)
+      this.setData({ 
+        loading: false,
+        audioLoadingVisible: false
+      })
+      wx.showToast({
+        title: '播客加载失败',
+        icon: 'none',
+        duration: 2000
+      })
+      
+      // 失败时仍然加载正常列表
+      this.loadPodcastData()
+    }
+  },
+
+  // 获取并插入特定播客到列表
+  async fetchAndInsertPodcast(podcastId, shouldAutoPlay = false) {
+    try {
+      const apiService = require('../../services/api.service.js')
+      const result = await apiService.podcast.getDetail(podcastId)
+      
+      if (result.success && result.data) {
+        const podcast = result.data
+        console.log('获取到播客详情:', podcast.title)
+        
+        // 将播客插入到列表开头
+        const updatedList = [podcast, ...this.data.podcastList]
+        const updatedIds = [podcast.id, ...this.data.loadedPodcastIds]
+        
+        this.setData({
+          podcastList: updatedList,
+          loadedPodcastIds: updatedIds,
+          currentIndex: 0,  // 设置为第一个
+          loading: false,
+          audioLoadingVisible: false
+        })
+        
+        // 如果需要自动播放
+        if (shouldAutoPlay) {
+          setTimeout(() => {
+            console.log('开始自动播放插入的播客')
+            this.startAutoPlay()
+          }, 500)
+        }
+      } else {
+        throw new Error('获取播客详情失败')
+      }
+    } catch (error) {
+      console.error('获取播客详情失败:', error)
+      throw error
+    }
   },
 
   onShow: function () {
@@ -103,6 +298,9 @@ Page({
     
     // 页面进入动画
     this.enterAnimation()
+    
+    // 初始化网络状态监听
+    this.initNetworkStatusMonitoring()
     
     // 预缓存进度条位置信息
     setTimeout(() => {
@@ -116,6 +314,38 @@ Page({
     setTimeout(() => {
       this.checkGlobalPodcastState()
     }, 200)
+  },
+
+  // 检测标题是否需要滚动
+  checkTitleScrolling() {
+    // 纯CSS方案，无需JavaScript干预
+    // 滚动逻辑已在WXML和WXSS中实现
+  },
+  debugTitleWidth() {
+    const { podcastList, currentIndex } = this.data
+    if (!podcastList.length || currentIndex < 0) return
+    
+    const currentPodcast = podcastList[currentIndex]
+    if (!currentPodcast) return
+    
+    const query = this.createSelectorQuery()
+    query.select('.podcast-title').boundingClientRect()
+    query.select('.podcast-title-container').boundingClientRect()
+    query.exec((res) => {
+      if (res[0] && res[1]) {
+        console.log('=== 标题宽度调试信息 ===')
+        console.log('标题实际宽度:', res[0].width, 'px')
+        console.log('容器宽度:', res[1].width, 'px')
+        console.log('超出宽度:', res[0].width - res[1].width, 'px')
+        console.log('当前播客:', currentPodcast.title)
+        console.log('标题长度:', currentPodcast.title?.length)
+        console.log('是否需要滚动:', res[0].width > res[1].width)
+        console.log('当前是否有滚动类:', currentPodcast.title?.length > 15)
+        console.log('========================')
+      } else {
+        console.log('无法获取标题宽度信息')
+      }
+    })
   },
 
   // 检查全局播客状态
@@ -148,12 +378,14 @@ Page({
         console.log('播客不在当前列表中，插入到列表开头')
         
         // 确保播客数据格式正确
+        const channelName = globalData.currentPodcast.channel_name || '奇绩前沿信号'
         const formattedPodcast = {
           ...globalData.currentPodcast,
           isFavorited: false,
           isLiked: false,
           isThumbsUp: false,
-          cover_url: globalData.currentPodcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-cover.png'
+          cover_url: this.getPodcastCoverUrl(channelName, globalData.currentPodcast.cover_url),
+          channel_name: channelName
         }
         
         console.log('格式化的播客数据:', formattedPodcast)
@@ -215,6 +447,49 @@ Page({
     audioPreloader.destroyAll()
   },
 
+  // 获取当前用户ID
+  getCurrentUserId() {
+    try {
+      const app = getApp()
+      if (app && app.globalData && app.globalData.userInfo && app.globalData.userInfo.id) {
+        return app.globalData.userInfo.id
+      }
+      
+      // 如果全局状态没有，尝试从本地存储获取
+      const userInfo = wx.getStorageSync('userInfo')
+      if (userInfo && userInfo.id) {
+        return userInfo.id
+      }
+      
+      return null
+    } catch (error) {
+      console.error('获取用户ID失败:', error)
+      return null
+    }
+  },
+
+  // 根据频道名称获取对应的封面URL
+  getPodcastCoverUrl: function(channelName, originalCoverUrl) {
+    // 如果已经有完整的URL，且不是默认封面，则直接使用
+    if (originalCoverUrl && 
+        originalCoverUrl.startsWith('https://') && 
+        !originalCoverUrl.includes('default-cover')) {
+      return originalCoverUrl
+    }
+    
+    // 根据频道名称映射对应的PNG封面
+    const baseUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/'
+    
+    if (channelName && channelName.includes('奇绩前沿信号')) {
+      return baseUrl + 'miracleplus_signal.png'
+    } else if (channelName && channelName.includes('经典论文解读')) {
+      return baseUrl + 'classic_paper_interpretation.png'
+    } else {
+      // 默认使用奇绩前沿信号封面
+      return baseUrl + 'miracleplus_signal.png'
+    }
+  },
+
   // 初始化音频上下文
   initAudioContext: function() {
     const audioContext = wx.createInnerAudioContext()
@@ -260,20 +535,19 @@ Page({
         const progress = (currentTime / duration) * 100
         const progressRatio = currentTime / duration
         
-        // 获取预加载进度
-        const bufferProgress = this.getBufferProgress(audioContext)
+        // 更新分块缓冲进度条数据（仅可视化，不显示文字）
+        this.updateChunkBufferData(audioContext)
         
         this.setData({
           currentProgress: Math.min(100, Math.max(0, progress)),
           audioPosition: currentTime,
           audioDuration: duration,
           currentTimeFormatted: this.formatTime(currentTime),
-          totalTimeFormatted: this.formatTime(duration),
-          bufferProgress: bufferProgress
+          totalTimeFormatted: this.formatTime(duration)
         })
         
-        // 触发预加载检查
-        audioPreloader.onProgressUpdate(progressRatio, this.data.currentIndex)
+        // 触发预加载检查（增强版：支持分块预加载）
+        audioPreloader.onProgressUpdate(progressRatio, this.data.currentIndex, currentTime)
       }
     })
     
@@ -342,18 +616,21 @@ Page({
         )
         
         // 转换数据格式
-        const newPodcastList = newPodcasts.map(podcast => ({
-          id: podcast.id,
-          title: podcast.title,
-          description: podcast.description,
-          audio_url: podcast.audio_url,
-          cover_url: podcast.cover_url || '',
-          channel_name: podcast.channels ? podcast.channels.name : (podcast.channel_name || '奇绩前沿信号'),
-          duration: podcast.duration || 0,
-          isLiked: false,
-          isFavorited: false,
-          isThumbsUp: false
-        }))
+        const newPodcastList = newPodcasts.map(podcast => {
+          const channelName = podcast.channels ? podcast.channels.name : (podcast.channel_name || '奇绩前沿信号')
+          return {
+            id: podcast.id,
+            title: podcast.title,
+            description: podcast.description,
+            audio_url: podcast.audio_url,
+            cover_url: this.getPodcastCoverUrl(channelName, podcast.cover_url),
+            channel_name: channelName,
+            duration: podcast.duration || 0,
+            isLiked: false,
+            isFavorited: false,
+            isThumbsUp: false
+          }
+        })
         
         // 更新已加载的播客ID数组
         const updatedIds = [...this.data.loadedPodcastIds]
@@ -389,6 +666,20 @@ Page({
         
         // 首次加载时，加载第一个播客的播放进度
         if (!loadMore) {
+          // 获取第一个播客的时长信息用于初始化
+          const firstPodcast = finalPodcastList[0]
+          const initialDuration = firstPodcast?.duration || 0
+          
+          // 确保在加载进度前先重置所有播放状态
+          this.setData({
+            currentProgress: 0,
+            audioPosition: 0,
+            currentTimeFormatted: '0:00',
+            totalTimeFormatted: initialDuration > 0 ? this.formatTime(initialDuration) : '0:00',
+            audioDuration: initialDuration,
+            isPlaying: false
+          })
+          
           this.loadPlayProgress(0)
           
           // 初始化音频预加载服务
@@ -548,14 +839,17 @@ Page({
     }
     
     // 更新当前索引并重置播放状态（但不清空音频源）
+    const currentPodcast = podcastList[currentIndex]
+    const podcastDuration = currentPodcast?.duration || 0
+    
     this.setData({
       currentIndex,
       isPlaying: false,
       currentProgress: 0,
       audioPosition: 0,
-      audioDuration: 0,
+      audioDuration: podcastDuration,
       currentTimeFormatted: '0:00',
-      totalTimeFormatted: '0:00',
+      totalTimeFormatted: podcastDuration > 0 ? this.formatTime(podcastDuration) : '0:00',
       userGestureActive: false // 重置手势状态
     })
     
@@ -566,6 +860,9 @@ Page({
     setTimeout(() => {
       this.loadPlayProgress(currentIndex)
     }, 100)
+    
+    // 标题滚动现在使用纯CSS实现，无需JavaScript干预
+    // 持续向左滚动效果已在WXML和WXSS中实现
     
     // 自动播放新播客（仅在启用自动播放时）
     if (this.data.autoPlayOnSwipe && podcastList[currentIndex]) {
@@ -962,11 +1259,34 @@ Page({
       setTimeout(async () => {
         try {
           const audioService = require('../../services/audio.service.js')
+          const userId = this.getCurrentUserId()
+          
+          if (!userId) {
+            console.warn('用户未登录，无法操作收藏')
+            this.rollbackFavoriteState(podcastId)
+            return
+          }
           
           if (isFavorited) {
-            await audioService.addToFavorites('default-user-id', podcastId)
+            await audioService.addToFavorites(userId, podcastId)
+            
+            // 记录推荐转化行为
+            const currentPodcast = this.data.podcastList[this.data.currentIndex]
+            if (currentPodcast) {
+              try {
+                await apiService.recommendation.recordConversion(
+                  userId,
+                  podcastId,
+                  'favorite',
+                  null,
+                  currentPodcast.algorithm || 'unknown'
+                )
+              } catch (error) {
+                console.error('记录收藏转化失败:', error)
+              }
+            }
           } else {
-            await audioService.removeFromFavorites('default-user-id', podcastId)
+            await audioService.removeFromFavorites(userId, podcastId)
           }
           
           console.log('收藏状态更新成功:', { podcastId, isFavorited })
@@ -1017,7 +1337,8 @@ Page({
       insightVisible: true,
       insightLoading: true,
       insightError: '',
-      insightFullScreen: false
+      insightFullScreen: false,
+      insightTranslateY: 0 // 重置弹窗位置
     })
     
     // 模拟加载数据（后续替换为真实API调用）
@@ -1056,16 +1377,7 @@ Page({
   
   // 关闭认知提取弹窗
   handleInsightClose: function(e) {
-    console.log('关闭认知提取弹窗被触发')
-    
-    // 检查是否是有效的关闭操作
-    if (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.action === 'close') {
-      console.log('确认为关闭按钮操作')
-    } else if (e && e.target && e.target.dataset && e.target.dataset.action === 'close') {
-      console.log('确认为关闭按钮操作 (通过target)')
-    } else {
-      console.log('关闭操作来源:', e.type || 'unknown')
-    }
+    console.log('关闭认知提取弹窗')
     
     // 强制停止任何正在进行的拖拽操作
     this.stopAllDragOperations()
@@ -1077,6 +1389,7 @@ Page({
       currentInsightData: null,
       insightLoading: false,
       insightError: '',
+      insightTranslateY: 0, // 重置弹窗位置
       // 重置所有手势相关状态
       insightTouchStartY: 0,
       insightTouchMoveY: 0,
@@ -1089,9 +1402,87 @@ Page({
     console.log('弹窗已关闭')
   },
   
+  // 动画关闭弹窗（平滑下滑消失）
+  animateClose: function() {
+    console.log('开始关闭动画')
+    
+    // 获取弹窗高度，用于计算滑出距离
+    let windowHeight = 700 // 默认高度
+    try {
+      const windowInfo = wx.getWindowInfo()
+      windowHeight = windowInfo.windowHeight || 700
+    } catch (error) {
+      console.warn('获取窗口高度失败:', error)
+    }
+    
+    // 使用定时器实现平滑滑动动画
+    let currentY = this.data.insightTranslateY || 0
+    const targetY = windowHeight // 滑动到屏幕外
+    const duration = 250 // 动画时长250ms
+    const frames = 15 // 动画帧数
+    const step = (targetY - currentY) / frames
+    
+    let frame = 0
+    const animate = () => {
+      if (frame >= frames) {
+        // 动画完成，真正关闭弹窗
+        this.handleInsightClose()
+        return
+      }
+      
+      currentY += step
+      this.setData({
+        insightTranslateY: Math.max(0, currentY)
+      })
+      
+      frame++
+      setTimeout(animate, duration / frames)
+    }
+    
+    animate()
+  },
+  
+  // 回弹动画（未达到关闭条件时回弹到原位置）
+  animateBounceBack: function() {
+    console.log('开始回弹动画')
+    
+    const currentY = this.data.insightTranslateY || 0
+    if (currentY <= 5) {
+      // 已经接近原位置，直接重置
+      this.setData({ insightTranslateY: 0 })
+      return
+    }
+    
+    // 使用弹性动画效果
+    const duration = 300 // 动画时长300ms
+    const frames = 20 // 动画帧数
+    let frame = 0
+    
+    const animate = () => {
+      if (frame >= frames) {
+        // 动画完成，确保完全回到原位置
+        this.setData({ insightTranslateY: 0 })
+        return
+      }
+      
+      // 使用缓动函数实现回弹效果
+      const progress = frame / frames
+      const easeOut = 1 - Math.pow(1 - progress, 3) // cubic-out 缓动
+      const translateY = currentY * (1 - easeOut)
+      
+      this.setData({
+        insightTranslateY: Math.max(0, translateY)
+      })
+      
+      frame++
+      setTimeout(animate, duration / frames)
+    }
+    
+    animate()
+  },
+  
   // 停止所有拖拽操作
   stopAllDragOperations: function() {
-    this.closeButtonTouching = false
     this.isDragging = false
     
     // 清除所有可能的定时器
@@ -1101,19 +1492,6 @@ Page({
     }
   },
   
-  // 处理关闭按钮的触摸开始事件（阻止拖拽手势干扰）
-  handleCloseButtonTouchStart: function(e) {
-    console.log('关闭按钮触摸开始，阻止拖拽事件传播')
-    e.stopPropagation() // 阻止事件冒泡到父级的拖拽处理
-    // 立即标记这是关闭按钮操作，防止拖拽手势干扰
-    this.closeButtonTouching = true
-    
-    // 200ms后清除标记（足够处理tap事件）
-    setTimeout(() => {
-      this.closeButtonTouching = false
-    }, 200)
-  },
-  
   // 防止滚动穿透
   preventScroll: function(e) {
     return false
@@ -1121,24 +1499,7 @@ Page({
   
   // 处理拖拽手势开始（拖拽指示条区域）
   handleDragStart: function(e) {
-    // 检查触摸点是否在关闭按钮区域
     const touch = e.touches[0]
-    const touchX = touch.clientX
-    const touchY = touch.clientY
-    
-    // 获取关闭按钮的位置信息来判断是否点击在关闭按钮上
-    // 如果点击在右上角区域，可能是关闭按钮，忽略拖拽
-    const windowWidth = wx.getSystemInfoSync().windowWidth
-    if (touchX > windowWidth - 100 && touchY < 150) {
-      console.log('触摸点可能在关闭按钮区域，忽略拖拽手势')
-      return
-    }
-    
-    // 如果正在触摸关闭按钮，忽略拖拽手势
-    if (this.closeButtonTouching) {
-      console.log('忽略拖拽手势 - 正在操作关闭按钮')
-      return
-    }
     
     this.setData({
       insightTouchStartY: touch.clientY,
@@ -1149,23 +1510,21 @@ Page({
   
   // 处理拖拽手势移动（拖拽指示条区域）
   handleDragMove: function(e) {
-    // 如果正在触摸关闭按钮，忽略拖拽手势
-    if (this.closeButtonTouching) {
-      return
-    }
-    
     const touch = e.touches[0]
     const { insightTouchStartY, insightFullScreen } = this.data
     const moveY = touch.clientY - insightTouchStartY
     
     this.setData({
-      insightTouchMoveY: moveY
+      insightTouchMoveY: moveY,
+      // 实时更新弹窗位置，但只允许向下拖拽
+      insightTranslateY: Math.max(0, moveY)
     })
     
     // 在非全屏状态下，如果上划超过50px，则进入全屏模式
     if (!insightFullScreen && moveY < -50) {
       this.setData({
-        insightFullScreen: true
+        insightFullScreen: true,
+        insightTranslateY: 0 // 全屏模式重置位移
       })
       console.log('进入全屏模式')
     }
@@ -1180,11 +1539,6 @@ Page({
   
   // 处理拖拽手势结束（拖拽指示条区域）
   handleDragEnd: function(e) {
-    // 如果正在触摸关闭按钮，忽略拖拽手势
-    if (this.closeButtonTouching) {
-      return
-    }
-    
     const { insightTouchMoveY, insightTouchStartTime } = this.data
     const touchDuration = Date.now() - insightTouchStartTime
     
@@ -1192,6 +1546,19 @@ Page({
       moveY: insightTouchMoveY,
       duration: touchDuration
     })
+    
+    // 头部区域下滑关闭：下划超过100px或速度较快时关闭
+    const dragVelocity = Math.abs(insightTouchMoveY) / touchDuration
+    const shouldClose = (insightTouchMoveY > 100) || (insightTouchMoveY > 50 && dragVelocity > 0.2)
+    
+    if (shouldClose && touchDuration < 1000) {
+      console.log('通过头部区域下划关闭弹窗')
+      this.animateClose()
+      return
+    }
+    
+    // 未达到关闭条件，回弹到原位置
+    this.animateBounceBack()
     
     // 重置手势数据
     this.setData({
@@ -1216,11 +1583,13 @@ Page({
     const contentMoveY = touch.clientY - (this.data.contentTouchStartY || 0)
     
     this.setData({
-      contentTouchMoveY: contentMoveY
+      contentTouchMoveY: contentMoveY,
+      // 实时更新弹窗位置，只允许向下拖拽
+      insightTranslateY: Math.max(0, contentMoveY)
     })
   },
   
-  // 处理内容区域手势结束（只在非全屏模式下允许关闭）
+  // 处理内容区域手势结束（支持下滑关闭）
   handleContentTouchEnd: function(e) {
     const { contentTouchMoveY, contentTouchStartTime, insightFullScreen } = this.data
     const touchDuration = Date.now() - (contentTouchStartTime || 0)
@@ -1231,10 +1600,25 @@ Page({
       fullScreen: insightFullScreen
     })
     
-    // 只在非全屏模式下，且下划超过120px且手势时间较短时才关闭
-    if (!insightFullScreen && (contentTouchMoveY || 0) > 120 && touchDuration < 800) {
+    // 计算下滑速度
+    const dragVelocity = Math.abs(contentTouchMoveY) / (touchDuration || 1)
+    
+    // 下滑关闭条件判断
+    let shouldClose = false
+    if (!insightFullScreen) {
+      // 非全屏模式：下划超过80px或速度较快时关闭
+      shouldClose = (contentTouchMoveY > 80) || (contentTouchMoveY > 40 && dragVelocity > 0.15)
+    } else {
+      // 全屏模式：需要更大的滑动距离或更快的速度
+      shouldClose = (contentTouchMoveY > 150) || (contentTouchMoveY > 80 && dragVelocity > 0.25)
+    }
+    
+    if (shouldClose && touchDuration < 1200) {
       console.log('通过内容区域下划关闭弹窗')
-      this.handleInsightClose()
+      this.animateClose()
+    } else {
+      // 未达到关闭条件，回弹到原位置
+      this.animateBounceBack()
     }
     
     // 重置手势数据
@@ -1437,11 +1821,23 @@ Page({
       const progress = wx.getStorageSync(progressKey)
       
       if (progress && progress.position > 0) {
+        // 获取当前播客的时长信息
+        const currentPodcast = podcastList[index]
+        const duration = currentPodcast?.duration || this.data.audioDuration || 0
+        
+        // 只有在有有效时长时才计算进度百分比，否则保持为0
+        let progressPercentage = 0
+        if (duration > 0) {
+          progressPercentage = (progress.position / duration) * 100
+        }
+        
         // 更新UI显示的播放进度，但不立即seek音频
         this.setData({
           audioPosition: progress.position,
-          currentProgress: (progress.position / (this.data.audioDuration || 1)) * 100,
-          currentTimeFormatted: this.formatTime(progress.position)
+          currentProgress: progressPercentage,
+          currentTimeFormatted: this.formatTime(progress.position),
+          // 如果当前播客有duration信息，同时更新audioDuration
+          ...(currentPodcast?.duration ? { audioDuration: currentPodcast.duration } : {})
         })
         
         // 保存进度信息，供播放时使用
@@ -1466,13 +1862,14 @@ Page({
           })
         }
       } else {
-        // 没有保存的进度，重置状态
+        // 没有保存的进度，确保完全重置状态
         this.setData({
           audioPosition: 0,
           currentProgress: 0,
           currentTimeFormatted: '0:00'
         })
         this.savedProgress = 0
+        console.log('没有保存的播放进度，重置为初始状态:', podcast.title)
       }
     } catch (error) {
       console.error('加载播放进度失败:', error)
@@ -1572,7 +1969,14 @@ Page({
   async recordPlayStart(podcast) {
     try {
       const audioService = require('../../services/audio.service.js')
-      await audioService.recordPlayHistory('default-user-id', podcast.id, 0, 0)
+      const userId = this.getCurrentUserId()
+      
+      if (!userId) {
+        console.warn('用户未登录，跳过播放历史记录')
+        return
+      }
+      
+      await audioService.recordPlayHistory(userId, podcast.id, 0, 0)
       console.log('播放历史记录成功')
     } catch (error) {
       console.error('记录播放历史失败:', error)
@@ -1600,7 +2004,7 @@ Page({
     audioPreloader.cleanDistantPreloads(this.data.currentIndex)
   },
 
-  // 获取音频缓冲进度
+  // 获取音频缓冲进度 (增强版)
   getBufferProgress(audioContext) {
     if (!audioContext || !audioContext.duration) return 0
     
@@ -1611,13 +2015,84 @@ Page({
       
       if (duration === 0) return 0
       
-      // 使用预加载服务获取真实的缓冲进度，传入audioContext以获取buffered属性
+      // 使用分块预加载服务获取精确的缓冲进度
       return audioPreloader.getBufferProgress(audioUrl, currentTime, duration, audioContext)
       
     } catch (error) {
       console.error('获取缓冲进度失败:', error)
       return 0
     }
+  },
+
+  // 更新分块缓冲进度条数据 (新增)
+  updateChunkBufferData(audioContext) {
+    if (!audioContext || !audioContext.src) return
+    
+    try {
+      const audioUrl = audioContext.src
+      const currentTime = audioContext.currentTime || 0
+      const duration = audioContext.duration || 0
+      
+      // 获取分块分布数据
+      const chunkDistribution = audioPreloader.getChunkDistribution(audioUrl)
+      
+      if (chunkDistribution.length > 0) {
+        // 计算每个分块在进度条上的位置和宽度
+        const totalChunks = chunkDistribution.length
+        const chunkWidth = 100 / totalChunks // 每个分块的宽度百分比
+        
+        const processedDistribution = chunkDistribution.map((chunk, index) => ({
+          ...chunk,
+          left: index * chunkWidth,
+          width: chunkWidth
+        }))
+        
+        // 计算统计信息
+        const cachedChunks = chunkDistribution.filter(chunk => chunk.cached).length
+        const loadingChunks = chunkDistribution.filter(chunk => chunk.loading).length
+        
+        // 获取预加载统计信息
+        const stats = audioPreloader.getStats()
+        
+        this.setData({
+          chunkDistribution: processedDistribution,
+          networkStatus: {
+            networkType: stats.networkAdaptive?.networkSpeed || 'wifi',
+            isSlowNetwork: stats.networkAdaptive?.isSlowNetwork || false
+          }
+        })
+      }
+      
+    } catch (error) {
+      console.warn('更新分块缓冲数据失败:', error)
+    }
+  },
+
+  // 初始化网络状态监听（仅用于视觉指示）
+  initNetworkStatusMonitoring() {
+    // 获取当前网络类型
+    wx.getNetworkType({
+      success: (res) => {
+        const isSlowNetwork = ['2g', 'slow-2g', '3g'].includes(res.networkType)
+        this.setData({
+          networkStatus: {
+            networkType: 'wifi', // 统一显示为wifi，不显示具体网络类型
+            isSlowNetwork
+          }
+        })
+      }
+    })
+
+    // 监听网络状态变化
+    wx.onNetworkStatusChange((res) => {
+      const isSlowNetwork = ['2g', 'slow-2g', '3g'].includes(res.networkType)
+      this.setData({
+        networkStatus: {
+          networkType: 'wifi', // 统一显示为wifi，不显示具体网络类型
+          isSlowNetwork
+        }
+      })
+    })
   },
 
   // 更新进度条位置信息 - 异步版本
@@ -1636,7 +2111,20 @@ Page({
     // 如果没有缓存的位置信息，使用估算值
     if (!this.progressBarRect) {
       // 基于屏幕宽度和padding的估算
-      const screenWidth = wx.getSystemInfoSync().screenWidth
+      let screenWidth = 375 // 默认值，用于兜底
+      try {
+        const windowInfo = wx.getWindowInfo()
+        screenWidth = windowInfo.screenWidth || windowInfo.windowWidth
+      } catch (error) {
+        console.warn('获取窗口信息失败，使用默认宽度:', error)
+        // 兼容模式：如果新API不可用，使用旧API
+        try {
+          screenWidth = wx.getSystemInfoSync().screenWidth
+        } catch (fallbackError) {
+          console.warn('获取屏幕宽度失败，使用默认值375:', fallbackError)
+        }
+      }
+      
       const paddingHorizontal = 32 // 16px * 2
       return {
         left: paddingHorizontal,

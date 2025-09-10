@@ -1,8 +1,9 @@
 {
   "pages": [
     "pages/browse/browse",
-    "pages/category/category", 
+    "pages/category/category",
     "pages/profile/profile",
+    "pages/search/search",
     "pages/login/login",
     "pages/history/history",
     "pages/favorites/favorites",
@@ -37,7 +38,7 @@
       {
         "pagePath": "pages/category/category",
         "text": "分类",
-        "iconPath": "images/icons/category.png", 
+        "iconPath": "images/icons/category.png",
         "selectedIconPath": "images/icons/category.png"
       },
       {
@@ -52,5 +53,8 @@
   "style": "v2",
   "componentFramework": "glass-easel",
   "lazyCodeLoading": "requiredComponents",
-  "__usePrivacyCheck__": true
+  "__usePrivacyCheck__": true,
+  "useExtendedLib": {
+    "weui": true
+  }
 }

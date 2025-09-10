@@ -1,13 +1,9 @@
-<!-- 登录页面 -->
-<view class="login-container">
+<!-- 登录页面 - 全新设计 -->
+<view class="content">
+  <!-- 背景装饰 -->
+  <view class="bg"></view>
+  <view class="bg2"></view>
   
-  <!-- 顶部背景装饰 -->
-  <view class="bg-decoration">
-    <view class="circle circle-1"></view>
-    <view class="circle circle-2"></view>
-    <view class="circle circle-3"></view>
-  </view>
-
   <!-- Logo区域 -->
   <view class="logo-section">
     <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/logo.png" class="app-logo" mode="aspectFit"></image>
@@ -15,229 +11,46 @@
     <text class="app-slogan">听见学术的声音</text>
   </view>
 
-  <!-- 登录内容区域 -->
-  <view class="login-content">
+  <!-- 登录标题区域 -->
+  <view class="tips">
+    <text class="title">登录</text>
+    <text class="subtitle">听见学术的声音</text>
+  </view>
+  
+  <!-- 表单区域 -->
+  <view class="form-box">
     <!-- 微信登录按钮 -->
-    <button 
-      wx:if="{{!showUserInfoForm}}"
-      class="login-btn wechat-login {{isAgreed ? '' : 'disabled'}}" 
-      bindtap="handleWechatLogin"
-      disabled="{{!isAgreed}}"
-      loading="{{isLogging}}"
-    >
-      <image src="{{isAgreed ? 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/wechat-white.svg' : 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/wechat.svg'}}" class="login-icon"></image>
-      <text class="login-text">{{isLogging ? '登录中...' : '微信登录'}}</text>
-    </button>
-
-    <!-- 用户信息完善表单（使用微信官方规范） -->
-    <scroll-view wx:if="{{showUserInfoForm}}" class="user-info-form" scroll-y="true">
-      <view class="form-container">
-        <view class="form-title">完善个人信息</view>
-        <view class="form-subtitle">设置您的基础信息和学术背景，让其他用户更好地认识您</view>
-        
-        <!-- 头像选择组件 -->
-        <view class="avatar-section">
-          <button 
-            wx:if="{{isChooseAvatarSupported}}"
-            class="avatar-wrapper" 
-            open-type="chooseAvatar" 
-            bind:chooseavatar="onChooseAvatar"
-            id="privacy-auth-button"
-          >
-            <image 
-              class="avatar" 
-              src="{{avatarUrl || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/nav-profile.svg'}}" 
-              mode="aspectFill"
-            ></image>
-          </button>
-          <!-- 降级方案：版本不支持时显示普通图片 -->
-          <view wx:else class="avatar-wrapper disabled">
-            <image 
-              class="avatar" 
-              src="{{avatarUrl || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/nav-profile.svg'}}" 
-              mode="aspectFill"
-            ></image>
-          </view>
-          <text class="avatar-tip">{{isChooseAvatarSupported ? '点击选择头像' : '当前微信版本不支持头像选择'}}</text>
-        </view>
-      
-      <!-- 基础信息区域 -->
-      <view class="basic-info-section">
-        <!-- 用户名输入（使用微信官方最新规范） -->
-        <view class="input-section">
-          <view class="input-label">用户名</view>
-          <input 
-            type="nickname" 
-            class="form-input" 
-            placeholder="请输入您的用户名" 
-            value="{{userName}}"
-            bindinput="bindUserNameInput"
-            bindfocus="onUserNameFocus"
-            bindnickname="bindNicknameInput"
-            maxlength="20"
-          />
-          <text class="input-tip">用户名将作为您在平台上的显示名称，如果已获取微信信息将自动填写</text>
-        </view>
-      </view>
-
-      <!-- 学术信息区域（可选） -->
-      <view class="academic-info-section">
-        <view class="section-header">
-          <text class="section-title">学术信息</text>
-          <text class="optional-text">（可选）</text>
-        </view>
-        
-        <!-- 单位机构选择 -->
-        <view class="input-section">
-          <view class="input-label">单位机构</view>
-          <picker 
-            bindchange="bindInstitutionChange" 
-            value="{{institutionIndex}}" 
-            range="{{institutionOptions}}" 
-            range-key="name_zh"
-            class="picker"
-          >
-            <view class="picker-input">
-              <text class="picker-text">{{institutionOptions[institutionIndex].name_zh || '请选择单位机构'}}</text>
-              <image src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQgNkw4IDEwTDEyIDYiIHN0cm9rZT0iIzk5OTk5OSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K" class="picker-arrow"></image>
-            </view>
-          </picker>
-          
-          <!-- 自定义机构输入（当选择"其他"时显示） -->
-          <input 
-            wx:if="{{showCustomInstitution}}"
-            type="text" 
-            class="form-input custom-input" 
-            placeholder="请输入您的单位机构" 
-            value="{{institutionCustom}}"
-            bindinput="bindInstitutionCustomInput"
-            maxlength="100"
-          />
-          <text class="input-tip">选择您所在的单位机构或研究院所</text>
-        </view>
-        
-        <!-- 研究领域选择（二级联动） -->
-        <view class="input-section">
-          <view class="input-label">研究领域</view>
-          <picker 
-            mode="multiSelector" 
-            bindchange="bindResearchFieldChange"
-            bindcolumnchange="bindResearchFieldColumnChange"
-            value="{{researchFieldIndexes}}" 
-            range="{{researchFieldColumns}}"
-            range-key="name_zh"
-            class="picker"
-          >
-            <view class="picker-input">
-              <text class="picker-text">{{selectedResearchFieldsText || '请选择研究领域'}}</text>
-              <image src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQgNkw4IDEwTDEyIDYiIHN0cm9rZT0iIzk5OTk5OSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K" class="picker-arrow"></image>
-            </view>
-          </picker>
-          <text class="input-tip">选择您的主要研究领域，可选择多个二级领域</text>
-        </view>
-        
-        <!-- 邮箱地址 -->
-        <view class="input-section">
-          <view class="input-label">邮箱地址</view>
-          <input 
-            type="text" 
-            class="form-input" 
-            placeholder="请输入邮箱地址" 
-            value="{{email}}"
-            bindinput="bindEmailInput"
-            bindblur="validateEmailFormat"
-          />
-          <text class="input-tip {{emailError ? 'error' : ''}}">{{emailError || '用于学术交流和重要通知'}}</text>
-        </view>
-        
-        <!-- ORCID输入（去掉前缀显示） -->
-        <view class="input-section">
-          <view class="input-label">ORCID</view>
-          <input 
-            type="text" 
-            class="form-input" 
-            placeholder="0000-0000-0000-0000" 
-            value="{{orcid}}"
-            bindinput="bindOrcidInput"
-            bindblur="validateOrcidFormat"
-            maxlength="19"
-          />
-          <text class="input-tip {{orcidError ? 'error' : ''}}">{{orcidError || 'ORCID是全球学术身份识别码，完整展示格式如：0000-0000-0000-0000'}}</text>
-        </view>
-        
-        <!-- GitHub网址（可选） -->
-        <view class="input-section">
-          <view class="input-label">
-            <text>GitHub网址</text>
-            <text class="optional-text">（可选）</text>
-          </view>
-          <input 
-            type="text" 
-            class="form-input" 
-            placeholder="https://github.com/username" 
-            value="{{githubUrl}}"
-            bindinput="bindGithubUrlInput"
-            bindblur="validateGithubUrlFormat"
-          />
-          <text class="input-tip {{githubUrlError ? 'error' : ''}}">{{githubUrlError || '展示您的开源项目和代码贡献'}}</text>
-        </view>
-        
-        <!-- 个人或实验室主页（可选） -->
-        <view class="input-section">
-          <view class="input-label">
-            <text>个人/实验室主页</text>
-            <text class="optional-text">（可选）</text>
-          </view>
-          <input 
-            type="text" 
-            class="form-input" 
-            placeholder="https://yourwebsite.com" 
-            value="{{personalWebsite}}"
-            bindinput="bindPersonalWebsiteInput"
-            bindblur="validateWebsiteUrlFormat"
-          />
-          <text class="input-tip {{websiteUrlError ? 'error' : ''}}">{{websiteUrlError || '您的个人主页或实验室官网'}}</text>
-        </view>
-      </view>
-        
-        <!-- 操作按钮 -->
-        <view class="form-actions">
-          <button class="complete-btn" bindtap="completeUserInfo">完成设置</button>
-          <button class="skip-btn" bindtap="skipUserInfo">跳过</button>
-        </view>
-      </view>
-    </scroll-view>
-
-    <!-- 其他登录方式 -->
-    <view wx:if="{{!showUserInfoForm}}" class="other-login">
-      <text class="divider-text">其他登录方式</text>
-      
-      <view class="login-options">
-        <!-- 手机号快速验证（已登录用户绑定手机号） -->
-        <button 
-          wx:if="{{app.globalData.isLoggedIn}}"
-          class="phone-login-btn"
-          open-type="getPhoneNumber" 
-          bindgetphonenumber="getPhoneNumber"
-        >
-          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/phone.svg" class="option-icon"></image>
-          <text class="option-text">绑定手机号</text>
-        </button>
-        
-        <!-- 未登录时显示提示 -->
-        <view wx:else class="login-option disabled">
-          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/phone.svg" class="option-icon"></image>
-          <text class="option-text">请先微信登录</text>
-        </view>
-        
-        <view class="login-option" bindtap="handleEmailLogin">
-          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/email.svg" class="option-icon"></image>
-          <text class="option-text">邮箱登录</text>
-        </view>
-      </view>
+    <view wx:if="{{!showUserInfoForm}}" class="login-btn" bindtap="handleWechatLogin">
+      <image class="login-icon" src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/wechat.svg"></image>
+      <text class="login-text">微信登录</text>
     </view>
 
-    <!-- 同意协议 -->
+    <!-- 用户信息设置表单 -->
+    <view wx:if="{{showUserInfoForm}}" class="user-info-section">
+      <view class="form-title">完善个人信息</view>
+      
+      <!-- 头像选择 - 完全复刻avatar_nickname -->
+      <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+        <image class="avatar" src="{{avatarUrl}}"></image>
+      </button>
+      
+      <!-- 昵称输入 - 完全复刻avatar_nickname -->
+      <view class="nickname-section">
+        <text class="nickname-label">昵称</text>
+        <input type="nickname" class="nickname-input" placeholder="请输入昵称"/>
+      </view>
+      
+      <!-- 完成按钮 -->
+      <button class="complete-btn" bindtap="completeUserInfo">完成设置</button>
+    </view>
+
+    <!-- 其他操作 -->
+    <view wx:if="{{!showUserInfoForm}}" class="other-actions">
+      <text bindtap="handleGuestMode">游客浏览</text>
+      <text class="register-link" bindtap="handleRegister">快速注册</text>
+    </view>
+
+    <!-- 协议同意 -->
     <view wx:if="{{!showUserInfoForm}}" class="agreement-section">
       <view class="agreement-checkbox" bindtap="toggleAgreement">
         <image 
@@ -247,13 +60,8 @@
         <text class="agreement-text">登录即同意<text class="link-text" catchtap="showUserAgreement">《用户协议》</text>和<text class="link-text" catchtap="showPrivacyPolicy">《隐私政策》</text></text>
       </view>
     </view>
-
-    <!-- 游客模式 -->
-    <view wx:if="{{!showUserInfoForm}}" class="guest-mode" bindtap="handleGuestMode">
-      <text class="guest-text">暂不登录，以游客身份浏览</text>
-    </view>
   </view>
-
+  
   <!-- 底部装饰 -->
   <view class="bottom-decoration">
     <text class="copyright">© 2024 达芬Qi说 版权所有</text>

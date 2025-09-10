@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**达芬Qi说** is a WeChat miniprogram for audio podcast platform with Supabase backend integration. Built with native WeChat miniprogram framework (libVersion: 2.20.1).
+**达芬Qi说** is a WeChat miniprogram for audio podcast platform with Supabase backend integration. Built with native WeChat miniprogram framework (libVersion: 2.20.1), using glass-easel component framework and WeUI extended library for enhanced UI components.
 
 ## Architecture
 
@@ -55,11 +55,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 3. **Profile** (`pages/profile/profile`) - User account/settings
 
 ### Additional Pages
+- Search (`pages/search/search`) - Podcast search functionality
 - Login (`pages/login/login`) - User authentication
 - History (`pages/history/history`) - Playback history
 - Favorites (`pages/favorites/favorites`) - Saved podcasts
 - Settings (`pages/settings/settings`) - App preferences
 - Feedback (`pages/feedback/feedback`) - User feedback
+- Ranking (`pages/ranking/ranking`) - Podcast rankings
+- Privacy Policy (`pages/privacy-policy/privacy-policy`) - Comprehensive privacy protection statement detailing data collection (user info, device info, operation logs), user rights, data storage practices, and contact information (product@miracleplus.com)
+- Service Agreement (`pages/service-agreement/service-agreement`) - Terms of service
+- Data Collection (`pages/data-collection/data-collection`) - Data collection notice
+- Personal Info (`pages/personal-info/personal-info`) - Personal information management
 
 ## Key Services
 
@@ -370,10 +376,13 @@ miniprogram/
 
 ### WeChat Platform Constraints
 - **No npm/node_modules**: Use native WeChat APIs and vanilla JavaScript
+- **Component Framework**: Uses glass-easel for enhanced component capabilities
+- **WeUI Integration**: WeUI extended library available for standard UI components
 - **Network Whitelist**: External domains must be configured in WeChat backend
 - **Storage Limits**: 10MB per app local storage
 - **File Size Limits**: 2MB per file transfer  
 - **HTTPS Required**: All external API endpoints must use HTTPS
+- **Privacy Compliance**: `__usePrivacyCheck__` enabled for data collection compliance
 
 ### Authentication Flow
 1. Mock WeChat login generates `mock_openid_${code}` (auth.service.js:28)
@@ -387,3 +396,13 @@ All Supabase requests use:
 - **API Key**: Public anon key in Authorization header
 - **Row Level Security**: Database policies control access
 - **HTTPS**: All requests over secure transport
+
+### Icon Usage Guidelines
+**IMPORTANT**: Always use the correct Supabase static-images URL for icons:
+- **Base URL**: `https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/`
+- **Example Usage**: 
+  - Search icon: `https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/search.svg`
+  - Play icon: `https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg`
+  - Close icon: `https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/close.svg`
+- **DO NOT** use incorrect paths like `/icons/` or `public/icons/` - always use the full Supabase URL
+- All icons are SVG format and stored in the `static-images` bucket

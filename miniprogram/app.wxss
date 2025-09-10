@@ -4,7 +4,7 @@ page {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'SF Pro', 'WeChat Sans Std', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Times New Roman', 'SF Pro', 'WeChat Sans Std', -apple-system, BlinkMacSystemFont, serif;
   background: #ffffff;
   color: #333;
   line-height: 1.4;

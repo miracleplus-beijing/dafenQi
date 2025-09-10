@@ -42,7 +42,7 @@
 .menu-text {
   flex: 1;
   font-size: 16px;
-  font-family: SF Pro;
+  font-family: 'Times New Roman', 'SF Pro', serif;
   font-weight: 400;
   color: rgba(0, 0, 0, 0.90);
 }

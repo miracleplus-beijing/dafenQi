@@ -322,12 +322,30 @@ Page({
     }
   },
 
-  // 执行搜索
+  // 跳转到搜索界面
+  goToSearch: function() {
+    console.log('跳转到搜索界面')
+    wx.navigateTo({
+      url: '/pages/search/search',
+      success: function() {
+        console.log('成功跳转到搜索界面')
+      },
+      fail: function(err) {
+        console.error('跳转搜索界面失败:', err)
+        wx.showToast({
+          title: '页面跳转失败',
+          icon: 'none',
+          duration: 2000
+        })
+      }
+    })
+  },
+
+  // 执行搜索（保留原有方法以防其他地方使用）
   performSearch: function(keyword) {
-    wx.showToast({
-      title: '搜索功能开发中',
-      icon: 'none',
-      duration: 1500
+    // 现在跳转到搜索界面，并传递搜索关键词
+    wx.navigateTo({
+      url: `/pages/search/search?query=${encodeURIComponent(keyword)}`
     })
   },
 

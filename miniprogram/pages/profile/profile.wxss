@@ -31,7 +31,7 @@
 .login-prompt {
   color: white;
   font-size: 22px;
-  font-family: SF Pro;
+  font-family: 'Times New Roman', 'SF Pro', serif;
   font-weight: 510;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
@@ -43,7 +43,7 @@
 
 .user-name {
   font-size: 22px;
-  font-family: SF Pro;
+  font-family: 'Times New Roman', 'SF Pro', serif;
   font-weight: 510;
   margin-bottom: 4px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -59,7 +59,7 @@
 
 .user-id {
   font-size: 14px;
-  font-family: SF Pro;
+  font-family: 'Times New Roman', 'SF Pro', serif;
   font-weight: 400;
   opacity: 0.8;
 }
@@ -131,7 +131,7 @@
 .menu-text {
   flex: 1;
   font-size: 16px;
-  font-family: SF Pro;
+  font-family: 'Times New Roman', 'SF Pro', serif;
   font-weight: 400;
   color: rgba(0, 0, 0, 0.90);
 }

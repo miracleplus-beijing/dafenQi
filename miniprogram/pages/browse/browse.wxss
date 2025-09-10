@@ -4,11 +4,20 @@
   height: 100vh;
   background: white;
   position: relative;
+  overflow: hidden;
 }
+
+
+.loading-icon {
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 16rpx;
+}
+
 
 .browse-swiper {
   width: 100%;
-  height: 100vh;
+  height: 100vh; /* 减去推荐区域高度 */
   background: white;
 }
 
@@ -109,19 +118,63 @@
   margin: 24px 0;
 }
 
-.podcast-title {
+/* 播客标题容器 */
+.podcast-title-container {
+  width: 280px; /* 固定宽度，确保一致 */
+  height: 28px; /* 固定高度，避免挤压封面 */
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 25px;
+}
+
+/* 标题滚动包装器 - 修复布局，确保内容自然展开 */
+.title-scroll-wrapper {
+  display: inline-flex; /* 改为inline-flex，让内容自然宽度 */
+  white-space: nowrap;
+  align-items: center;
+  height: 100%;
+  position: relative;
+  width: auto; /* 移除宽度限制，让内容决定宽度 */
+}
+
+/* 标题项目 */
+.title-item {
   color: rgba(0, 0, 0, 0.90);
   font-size: 22px;
-  font-family: SF Pro;
+  font-family: 'Times New Roman', 'SF Pro', serif;
   font-weight: 510;
-  line-height: 1.2;
-  margin-bottom: 25px;
+  line-height: 28px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-right: 50px; /* 两个标题之间的间距 */
+  width: auto; /* 确保项目根据内容决定宽度 */
+}
+
+/* 持续滚动动画 */
+.title-scroll-wrapper.scrolling {
+  animation: continuous-scroll linear infinite;
+}
+
+/* 带有暂停的滚动动画关键帧 */
+@keyframes continuous-scroll {
+  0% { 
+    transform: translateX(0); 
+  }
+  15% {
+    transform: translateX(0); /* 停留阶段：让读者看清标题开头 */
+  }
+  85% { 
+    transform: translateX(-50%); /* 滚动阶段：移动到第二个标题对齐 */
+  }
+  100% { 
+    transform: translateX(-50%); /* 保持位置，形成无缝循环 */
+  }
 }
 
 .podcast-channel {
   color: #0884FF;
   font-size: 17px;
-  font-family: SF Pro;
+  font-family: 'Times New Roman', 'SF Pro', serif;
   font-weight: 400;
   text-decoration: underline;
 }
@@ -177,7 +230,7 @@
 
 .current-time,
 .total-time {
-  font-family: SF Pro;
+  font-family: 'Times New Roman', 'SF Pro', serif;
   font-weight: 400;
   line-height: 1;
 }
@@ -252,6 +305,107 @@
   gap: 37px;
   width: 100%;
   margin: 20px 0;
+}
+
+/* === 智能分块缓冲进度条样式增强 === */
+
+/* 网络状态指示器 */
+.network-indicator {
+  display: flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.network-indicator.fast {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.network-indicator.slow {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* 背景轨道 */
+.progress-track {
+  width: 100%;
+  height: 6px;
+  background: var(--Fills-Primary, rgba(120, 120, 120, 0.20));
+  border-radius: 3px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+/* 分块缓冲显示层 */
+.chunk-buffer-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  z-index: 1;
+}
+
+.chunk-segment {
+  position: absolute;
+  height: 6px;
+  top: 0;
+  background: transparent;
+  transition: all 0.3s ease;
+  border-radius: 1px;
+}
+
+/* 已缓存的分块 */
+.chunk-segment.cached {
+  background: rgba(8, 132, 255, 0.4);
+  box-shadow: inset 0 0 2px rgba(8, 132, 255, 0.6);
+}
+
+/* 正在加载的分块 */
+.chunk-segment.loading {
+  background: linear-gradient(
+    90deg,
+    rgba(8, 132, 255, 0.2) 0%,
+    rgba(8, 132, 255, 0.5) 50%,
+    rgba(8, 132, 255, 0.2) 100%
+  );
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 100% 0;
+  }
+}
+
+/* 传统缓冲进度条(备选) */
+.progress-buffer.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 增强播放进度条 */
+.progress-fill {
+  background: linear-gradient(90deg, #0884FF 0%, #06b6d4 100%);
+  box-shadow: 0 0 4px rgba(8, 132, 255, 0.4);
+}
+
+
+/* 响应式调整 */
+@media (max-width: 375px) {
+  .network-indicator {
+    padding: 1px 4px;
+  }
 }
 
 .control-btn {
@@ -509,6 +663,8 @@
   transform: translateY(100%);
   animation: slideUpIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   z-index: 3001;
+  /* 为程序化动画添加平滑过渡，但不影响实时拖拽 */
+  transition: none;
 }
 
 .insight-container.fullscreen {
