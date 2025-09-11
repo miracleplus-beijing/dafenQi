@@ -25,6 +25,7 @@
       
       <view wx:for="{{hotRankings}}" wx:key="id" class="ranking-item">
         <view class="ranking-number">{{index + 1}}</view>
+        <image src="{{item.channel_cover_url}}" class="ranking-cover" mode="aspectFill" alt="{{item.channel}}"></image>
         <view class="ranking-content">
           <view class="ranking-title">{{item.title}}</view>
           <view class="ranking-channel">{{item.channel}}</view>
@@ -42,6 +43,7 @@
       
       <view wx:for="{{newRankings}}" wx:key="id" class="ranking-item">
         <view class="ranking-number">{{index + 1}}</view>
+        <image src="{{item.channel_cover_url}}" class="ranking-cover" mode="aspectFill" alt="{{item.channel}}"></image>
         <view class="ranking-content">
           <view class="ranking-title">{{item.title}}</view>
           <view class="ranking-channel">{{item.channel}}</view>
@@ -59,6 +61,7 @@
       
       <view wx:for="{{reviewRankings}}" wx:key="id" class="ranking-item">
         <view class="ranking-number">{{index + 1}}</view>
+        <image src="{{item.channel_cover_url}}" class="ranking-cover" mode="aspectFill" alt="{{item.channel}}"></image>
         <view class="ranking-content">
           <view class="ranking-title">{{item.title}}</view>
           <view class="ranking-channel">{{item.channel}}</view>

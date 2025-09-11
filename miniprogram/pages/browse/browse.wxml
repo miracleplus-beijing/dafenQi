@@ -201,14 +201,50 @@
         
         <!-- Insight内容区域 -->
         <view wx:if="{{currentInsightData}}" class="insight-main-content">
-          <!-- 核心总结 -->
+          <!-- 核心洞察滑动卡片 -->
           <view class="insight-section">
             <view class="section-title">
               <text class="title-icon">💡</text>
               <text class="title-text">核心洞察</text>
+              <text class="insight-counter" wx:if="{{insightsList.length > 1}}">{{currentInsightIndex + 1}}/{{insightsList.length}}</text>
             </view>
-            <view class="summary-content">
-              <text class="summary-text">{{currentInsightData.summary}}</text>
+            
+            <!-- 滑动卡片容器 -->
+            <view class="insight-slider-container" wx:if="{{insightsList.length > 0}}">
+              <swiper class="insight-swiper" 
+                      indicator-dots="{{false}}" 
+                      autoplay="{{false}}" 
+                      circular="{{false}}" 
+                      vertical="{{false}}"
+                      current="{{currentInsightIndex}}"
+                      bindchange="handleInsightSlideChange">
+                <swiper-item wx:for="{{insightsList}}" wx:key="id" class="insight-slide-item">
+                  <view class="insight-slide-card">
+                    <view class="insight-slide-header">
+                      <text class="insight-slide-title">{{item.summary}}</text>
+                    </view>
+                    <view class="insight-slide-content">
+                      <text class="insight-slide-text">{{item.detailed_content}}</text>
+                    </view>
+                  </view>
+                </swiper-item>
+              </swiper>
+              
+              <!-- 滑动指示器 -->
+              <view class="insight-slider-dots" wx:if="{{insightsList.length > 1}}">
+                <view wx:for="{{insightsList}}" wx:key="id" 
+                      class="insight-dot {{index === currentInsightIndex ? 'active' : ''}}"
+                      bindtap="handleInsightDotClick"
+                      data-index="{{index}}">
+                </view>
+              </view>
+            </view>
+            
+            <!-- 无数据时显示默认内容 -->
+            <view class="insight-card-outer" wx:elif="{{currentInsightData}}">
+              <view class="insight-card-inner">
+                <text class="summary-text">{{currentInsightData.summary}}</text>
+              </view>
             </view>
           </view>
           

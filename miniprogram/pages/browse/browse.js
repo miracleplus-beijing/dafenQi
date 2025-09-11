@@ -85,6 +85,8 @@ Page({
     insightLoading: false, // 加载状态
     insightError: '', // 错误信息
     currentInsightData: null, // 当前显示的insight数据
+    insightsList: [], // 多个insights列表
+    currentInsightIndex: 0, // 当前显示的insight索引
     insightTranslateY: 0, // 弹窗Y轴位移（用于拖拽动画）
     
     // 拖拽手势相关（用于全屏切换）
@@ -1350,17 +1352,19 @@ Page({
     try {
       console.log('加载Insight数据:', podcastId)
       
-      // 调用insight服务获取真实数据
-      const result = await insightService.getMainInsightByPodcastId(podcastId)
+      // 调用insight服务获取所有insights数据
+      const result = await insightService.getInsightsByPodcastId(podcastId)
       
-      if (result.success && result.data) {
+      if (result.success && result.data && result.data.length > 0) {
         this.setData({
           insightLoading: false,
-          currentInsightData: result.data,
+          insightsList: result.data,
+          currentInsightIndex: 0,
+          currentInsightData: result.data[0], // 显示第一个insight
           insightError: ''
         })
         
-        console.log('Insight数据加载完成:', result.data)
+        console.log(`Insight数据加载完成: ${result.data.length}条记录`, result.data)
       } else {
         throw new Error(result.error || '加载认知提取数据失败')
       }
@@ -1720,6 +1724,28 @@ Page({
     })
     
     console.log('Insight分享:', currentInsightData.title)
+  },
+  
+  // 处理insight滑动切换
+  handleInsightSlideChange: function(e) {
+    const currentIndex = e.detail.current
+    this.setData({
+      currentInsightIndex: currentIndex,
+      currentInsightData: this.data.insightsList[currentIndex]
+    })
+    
+    console.log('Insight滑动到:', currentIndex, this.data.insightsList[currentIndex])
+  },
+  
+  // 处理insight指示器点击
+  handleInsightDotClick: function(e) {
+    const index = e.currentTarget.dataset.index
+    this.setData({
+      currentInsightIndex: index,
+      currentInsightData: this.data.insightsList[index]
+    })
+    
+    console.log('点击Insight指示器:', index)
   },
   
   // 处理insight重试

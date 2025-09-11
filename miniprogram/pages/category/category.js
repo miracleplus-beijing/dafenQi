@@ -102,7 +102,7 @@ Page({
   async loadHotRankings() {
     return new Promise((resolve) => {
       wx.request({
-        url: `${app.globalData.supabaseUrl}/rest/v1/podcasts?select=id,title,description,audio_url,cover_url,duration,play_count,channels(name)&status=eq.published&order=play_count.desc,created_at.desc&limit=10`,
+        url: `${app.globalData.supabaseUrl}/rest/v1/podcasts?select=id,title,description,audio_url,cover_url,duration,play_count,channels(id,name,cover_url)&status=eq.published&order=play_count.desc,created_at.desc&limit=10`,
         method: 'GET',
         header: {
           'apikey': app.globalData.supabaseAnonKey,
@@ -111,17 +111,42 @@ Page({
         },
         success: (res) => {
           if (res.statusCode === 200) {
-            const podcasts = res.data.map(podcast => ({
-              id: podcast.id,
-              title: podcast.title,
-              description: podcast.description,
-              audio_url: podcast.audio_url,
-              cover_url: podcast.cover_url,
-              duration: podcast.duration,
-              play_count: podcast.play_count,
-              channel: podcast.channels?.name || '达芬Qi官方'
-            }))
-            resolve({ success: true, data: podcasts })
+            const podcasts = res.data.map(podcast => {
+              // Map channel names to specific cover URLs
+              const channelName = podcast.channels?.name || '达芬Qi官方'
+              const channelId = podcast.channels?.id
+              
+              let channelCoverUrl
+              if (channelId === '59e0fed4-8c47-4849-9cc3-a3b819771d65') {
+                // 奇绩前沿信号频道
+                channelCoverUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/miracleplus_signal.png'
+              } else if (channelId === '3f1c022b-222a-420a-9126-f96c63144ddc') {
+                // 经典论文解读频道
+                channelCoverUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/classic_paper_interpretation.png'
+              } else {
+                // 默认封面
+                channelCoverUrl = podcast.channels?.cover_url || podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-cover.png'
+              }
+              
+              return {
+                id: podcast.id,
+                title: podcast.title,
+                description: podcast.description,
+                audio_url: podcast.audio_url,
+                cover_url: podcast.cover_url,
+                duration: podcast.duration,
+                play_count: podcast.play_count,
+                channel: channelName,
+                channel_cover_url: channelCoverUrl,
+                channel_id: channelId
+              }
+            })
+            
+            // 手动调整最热榜顺序：
+            // 1. 奇绩前沿信号 9.10 放在第一位
+            // 2. Attention Is All You Need 放在第二位
+            const manuallyOrderedPodcasts = this.arrangeHotRankings(podcasts);
+            resolve({ success: true, data: manuallyOrderedPodcasts })
           } else {
             resolve({ success: false, error: '加载最热榜失败' })
           }
@@ -135,7 +160,7 @@ Page({
   async loadNewRankings() {
     return new Promise((resolve) => {
       wx.request({
-        url: `${app.globalData.supabaseUrl}/rest/v1/podcasts?select=id,title,description,audio_url,cover_url,duration,created_at,channels(name)&status=eq.published&order=created_at.desc&limit=10`,
+        url: `${app.globalData.supabaseUrl}/rest/v1/podcasts?select=id,title,description,audio_url,cover_url,duration,created_at,channels(id,name,cover_url)&status=eq.published&order=created_at.desc&limit=10`,
         method: 'GET', 
         header: {
           'apikey': app.globalData.supabaseAnonKey,
@@ -144,17 +169,41 @@ Page({
         },
         success: (res) => {
           if (res.statusCode === 200) {
-            const podcasts = res.data.map(podcast => ({
-              id: podcast.id,
-              title: podcast.title,
-              description: podcast.description,
-              audio_url: podcast.audio_url,
-              cover_url: podcast.cover_url,
-              duration: podcast.duration,
-              created_at: podcast.created_at,
-              channel: podcast.channels?.name || '达芬Qi官方'
-            }))
-            resolve({ success: true, data: podcasts })
+            const podcasts = res.data.map(podcast => {
+              // Map channel names to specific cover URLs
+              const channelName = podcast.channels?.name || '达芬Qi官方'
+              const channelId = podcast.channels?.id
+              
+              let channelCoverUrl
+              if (channelId === '59e0fed4-8c47-4849-9cc3-a3b819771d65') {
+                // 奇绩前沿信号频道
+                channelCoverUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/miracleplus_signal.png'
+              } else if (channelId === '3f1c022b-222a-420a-9126-f96c63144ddc') {
+                // 经典论文解读频道
+                channelCoverUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/classic_paper_interpretation.png'
+              } else {
+                // 默认封面
+                channelCoverUrl = podcast.channels?.cover_url || podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-cover.png'
+              }
+              
+              return {
+                id: podcast.id,
+                title: podcast.title,
+                description: podcast.description,
+                audio_url: podcast.audio_url,
+                cover_url: podcast.cover_url,
+                duration: podcast.duration,
+                created_at: podcast.created_at,
+                channel: channelName,
+                channel_cover_url: channelCoverUrl,
+                channel_id: channelId
+              }
+            })
+            
+            // 手动调整最新榜顺序：
+            // 1. 奇绩前沿信号 9.11 放在第一位
+            const manuallyOrderedPodcasts = this.arrangeNewRankings(podcasts);
+            resolve({ success: true, data: manuallyOrderedPodcasts })
           } else {
             resolve({ success: false, error: '加载最新榜失败' })
           }
@@ -168,7 +217,7 @@ Page({
   async loadReviewRankings() {
     return new Promise((resolve) => {
       wx.request({
-        url: `${app.globalData.supabaseUrl}/rest/v1/podcasts?select=id,title,description,audio_url,cover_url,duration,favorite_count,channels(name)&status=eq.published&order=favorite_count.desc,like_count.desc,created_at.desc&limit=10`,
+        url: `${app.globalData.supabaseUrl}/rest/v1/podcasts?select=id,title,description,audio_url,cover_url,duration,favorite_count,channels(id,name,cover_url)&status=eq.published&order=favorite_count.desc,like_count.desc,created_at.desc&limit=10`,
         method: 'GET',
         header: {
           'apikey': app.globalData.supabaseAnonKey,
@@ -177,16 +226,36 @@ Page({
         },
         success: (res) => {
           if (res.statusCode === 200) {
-            const podcasts = res.data.map(podcast => ({
-              id: podcast.id,
-              title: podcast.title,
-              description: podcast.description,
-              audio_url: podcast.audio_url,
-              cover_url: podcast.cover_url,
-              duration: podcast.duration,
-              favorite_count: podcast.favorite_count,
-              channel: podcast.channels?.name || '达芬Qi官方'
-            }))
+            const podcasts = res.data.map(podcast => {
+              // Map channel names to specific cover URLs
+              const channelName = podcast.channels?.name || '达芬Qi官方'
+              const channelId = podcast.channels?.id
+              
+              let channelCoverUrl
+              if (channelId === '59e0fed4-8c47-4849-9cc3-a3b819771d65') {
+                // 奇绩前沿信号频道
+                channelCoverUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/miracleplus_signal.png'
+              } else if (channelId === '3f1c022b-222a-420a-9126-f96c63144ddc') {
+                // 经典论文解读频道
+                channelCoverUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/classic_paper_interpretation.png'
+              } else {
+                // 默认封面
+                channelCoverUrl = podcast.channels?.cover_url || podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-cover.png'
+              }
+              
+              return {
+                id: podcast.id,
+                title: podcast.title,
+                description: podcast.description,
+                audio_url: podcast.audio_url,
+                cover_url: podcast.cover_url,
+                duration: podcast.duration,
+                favorite_count: podcast.favorite_count,
+                channel: channelName,
+                channel_cover_url: channelCoverUrl,
+                channel_id: channelId
+              }
+            })
             resolve({ success: true, data: podcasts })
           } else {
             resolve({ success: false, error: '加载综述榜失败' })
@@ -601,5 +670,51 @@ Page({
       query: 'share=timeline',
       imageUrl: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/share-cover.jpg'
     }
+  },
+
+  // 手动调整最热榜顺序
+  arrangeHotRankings: function(podcasts) {
+    // 定义特定 episodes 的 ID
+    const qiji910Id = 'b1b2c3d4-e5f6-7890-abcd-ef1234567890'; // 奇绩前沿信号 9.10
+    const attentionId = '172b5cf1-58c3-4a53-852e-6d222e890882'; // Attention Is All You Need
+    
+    // 找到特定的 episodes
+    const qiji910 = podcasts.find(p => p.id === qiji910Id);
+    const attention = podcasts.find(p => p.id === attentionId);
+    
+    // 过滤掉这些特定的 episodes，剩下的按播放量排序
+    const remainingPodcasts = podcasts.filter(p => 
+      p.id !== qiji910Id && p.id !== attentionId
+    ).sort((a, b) => b.play_count - a.play_count);
+    
+    // 构建新的顺序：9.10 第一，Attention 第二，其余按播放量排序
+    const result = [];
+    if (qiji910) result.push(qiji910);
+    if (attention) result.push(attention);
+    result.push(...remainingPodcasts);
+    
+    // 确保只返回前10个
+    return result.slice(0, 10);
+  },
+
+  // 手动调整最新榜顺序
+  arrangeNewRankings: function(podcasts) {
+    // 定义特定 episodes 的 ID
+    const qiji911Id = 'c1b2c3d4-e5f6-7890-abcd-ef1234567890'; // 奇绩前沿信号 9.11
+    
+    // 找到特定的 episode
+    const qiji911 = podcasts.find(p => p.id === qiji911Id);
+    
+    // 过滤掉这个特定的 episode，剩下的按创建时间排序
+    const remainingPodcasts = podcasts.filter(p => p.id !== qiji911Id)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    
+    // 构建新的顺序：9.11 第一，其余按创建时间排序
+    const result = [];
+    if (qiji911) result.push(qiji911);
+    result.push(...remainingPodcasts);
+    
+    // 确保只返回前10个
+    return result.slice(0, 10);
   }
 })

@@ -27,6 +27,7 @@
       
       <view wx:for="{{hotRankings}}" wx:for-index="idx" wx:key="id" wx:if="{{idx < 3}}" class="ranking-item">
         <view class="ranking-number">{{idx + 1}}</view>
+        <image src="{{item.channel_cover_url}}" class="ranking-cover" mode="aspectFill" alt="{{item.channel}}"></image>
         <view class="ranking-content">
           <view class="ranking-title">{{item.title}}</view>
           <view class="ranking-channel">{{item.channel}}</view>
@@ -105,6 +106,7 @@
       
       <view wx:for="{{newRankings}}" wx:for-index="idx" wx:key="id" wx:if="{{idx < 3}}" class="ranking-item">
         <view class="ranking-number">{{idx + 1}}</view>
+        <image src="{{item.channel_cover_url}}" class="ranking-cover" mode="aspectFill" alt="{{item.channel}}"></image>
         <view class="ranking-content">
           <view class="ranking-title">{{item.title}}</view>
           <view class="ranking-channel">{{item.channel}}</view>
@@ -183,6 +185,7 @@
       
       <view wx:for="{{reviewRankings}}" wx:for-index="idx" wx:key="id" wx:if="{{idx < 3}}" class="ranking-item">
         <view class="ranking-number">{{idx + 1}}</view>
+        <image src="{{item.channel_cover_url}}" class="ranking-cover" mode="aspectFill" alt="{{item.channel}}"></image>
         <view class="ranking-content">
           <view class="ranking-title">{{item.title}}</view>
           <view class="ranking-channel">{{item.channel}}</view>

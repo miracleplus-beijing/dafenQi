@@ -125,6 +125,9 @@
   overflow: hidden;
   position: relative;
   margin-bottom: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* 标题滚动包装器 - 修复布局，确保内容自然展开 */
@@ -843,18 +846,118 @@
   line-height: 1.2;
 }
 
+/* 滑动卡片样式 */
+.insight-slider-container {
+  width: 100%;
+  position: relative;
+}
+
+.insight-swiper {
+  width: 100%;
+  height: 400rpx; /* 固定高度，确保滑动效果 */
+}
+
+.insight-slide-item {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.insight-slide-card {
+  width: 95%;
+  height: 95%;
+  background: linear-gradient(135deg, #0d1120 0%, #3a4b8a 43%, #0d1120 100%);
+  border-radius: 1.2rem;
+  padding: 24rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  box-shadow: 0px 10rpx 30rpx -18rpx #000000e1;
+}
+
+.insight-slide-header {
+  flex-shrink: 0;
+}
+
+.insight-slide-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.insight-slide-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.insight-slide-text {
+  font-size: 28rpx;
+  color: #bec4cf;
+  line-height: 1.6;
+  display: block;
+}
+
+/* 滑动指示器 */
+.insight-slider-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12rpx;
+  padding: 20rpx 0;
+}
+
+.insight-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.insight-dot.active {
+  width: 20rpx;
+  height: 8rpx;
+  border-radius: 4rpx;
+  background: #0884ff;
+}
+
+/* 标题计数器 */
+.insight-counter {
+  font-size: 24rpx;
+  color: #bec4cf;
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+}
+
 /* 摘要内容 */
-.summary-content {
-  background: #f8f9ff;
-  padding: 20px;
-  border-radius: 12px;
-  border-left: 4px solid #0884ff;
-  margin: 0; /* 移除额外margin，由父容器gap控制 */
+.insight-card-outer {
+  background: linear-gradient(135deg, #fffffff5, #3a4b8a, #ffffff98);
+  padding: 1px;
+  border-radius: 1.2rem;
+  box-shadow: 0px 1rem 1.5rem -0.9rem #000000e1;
+  max-width: 300px;
+}
+
+.insight-card-inner {
+  font-size: 1rem;
+  color: #bec4cf;
+  background: linear-gradient(135deg, #0d1120 0%, #3a4b8a 43%, #0d1120 100%);
+  padding: 1.5rem;
+  border-radius: 1.2rem;
 }
 
 .summary-text {
-  color: #333;
-  font-size: 15px;
+  color: #bec4cf;
+  font-size: 1rem;
   line-height: 1.6; /* 增加行高提升可读性 */
   font-weight: 400;
   word-wrap: break-word;
@@ -1092,9 +1195,16 @@
     padding: 0 20px 20px; /* 小屏设备减少左右padding */
   }
   
-  .summary-content,
-  .detailed-content {
-    padding: 16px; /* 小屏设备减少内边距 */
+  .insight-card-outer {
+    max-width: 100%; /* 小屏设备使用全宽 */
+  }
+  
+  .insight-card-inner {
+    padding: 1rem; /* 小屏设备减少内边距 */
+  }
+  
+  .summary-text {
+    font-size: 0.9rem; /* 小屏设备稍小字体 */
   }
   
   .keywords-container {
@@ -1125,9 +1235,12 @@
     padding: 0 28px 28px; /* 大屏设备增加padding */
   }
   
-  .summary-content,
-  .detailed-content {
-    padding: 24px; /* 大屏设备增加内边距 */
+  .insight-card-inner {
+    padding: 1.5rem; /* 大屏设备恢复内边距 */
+  }
+  
+  .summary-text {
+    font-size: 1rem; /* 大屏设备恢复字体大小 */
   }
 }
 
@@ -1160,9 +1273,12 @@
     border-bottom-color: #333;
   }
   
-  .summary-content {
-    background: #2a2a2a;
-    color: #ffffff;
+  .insight-card-outer {
+    background: linear-gradient(135deg, #1a1a1af5, #2a3a7a, #1a1a1a98);
+  }
+  
+  .insight-card-inner {
+    background: linear-gradient(135deg, #0a0a0a 0%, #2a3a7a 43%, #0a0a0a 100%);
   }
   
   .detailed-content {
