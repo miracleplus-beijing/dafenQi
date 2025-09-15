@@ -1,6 +1,6 @@
 /**
  * 认证服务
- * 处理微信登录、用户信息管理等认证相关功能
+ * 使用Supabase Auth处理微信登录、用户信息管理等认证相关功能
  */
 
 const storageService = require('./storage.service.js')
@@ -10,10 +10,14 @@ class AuthService {
     this.supabaseUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co'
     this.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmZjYWZnbmh6amlhdXVrc3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0MjY4NjAsImV4cCI6MjA3MTAwMjg2MH0.uxO5eyw0Usyd59UKz-S7bTrmOnNPg9Ld9wJ6pDMIQUA'
     this.storageService = storageService
+
+    // Initialize Supabase client-like functionality
+    this.currentSession = null
+    this.currentUser = null
   }
 
   /**
-   * 微信登录（集成Supabase存储）
+   * 微信登录（使用Supabase Auth）
    * @returns {Promise<Object>} 登录结果
    */
   async loginWithWechat() {
@@ -24,27 +28,34 @@ class AuthService {
         throw new Error('获取微信登录code失败')
       }
 
-      // 2. 模拟OpenID（实际中需要后端解析）
-      const mockOpenId = 'mock_openid_' + loginResult.code
-      
-      // 3. 查询或创建用户
-      const authResult = await this.findOrCreateUser(mockOpenId)
+      console.log('微信登录code获取成功:', loginResult.code)
 
-      // 4. 保存用户信息到全局状态
-      if (authResult.success) {
-        await this.saveUserSession(authResult.user)
-        try {
-          const app = getApp()
-          if (app && app.globalData) {
-            app.globalData.userInfo = authResult.user
-            app.globalData.isLoggedIn = true
-          }
-        } catch (error) {
-          console.warn('更新全局状态失败:', error)
-        }
+      // 2. 调用Edge Function进行认证
+      const authResult = await this.callWechatAuthFunction(loginResult.code)
+
+      if (!authResult.success) {
+        throw new Error(authResult.error || '认证失败')
       }
 
-      return authResult
+      // 3. 设置会话
+      await this.setSession(authResult.session)
+
+      // 4. 更新全局状态
+      const user = authResult.user
+      await this.saveUserSession(user)
+
+      try {
+        const app = getApp()
+        if (app && app.globalData) {
+          app.globalData.userInfo = user
+          app.globalData.isLoggedIn = true
+        }
+      } catch (error) {
+        console.warn('更新全局状态失败:', error)
+      }
+
+      console.log('微信登录成功:', user)
+      return { success: true, user }
 
     } catch (error) {
       console.error('微信登录失败:', error)
@@ -77,249 +88,453 @@ class AuthService {
   }
 
   /**
-   * 查找或创建用户（使用Supabase）
-   * @param {string} wechatOpenId - 微信OpenID
-   * @returns {Promise<Object>} 用户信息
+   * 调用微信认证Edge Function（带Authorization header）
+   * @param {string} code - 操作代码
+   * @param {Object} userInfo - 用户信息（可选）
+   * @param {string} accessToken - 用户access token
+   * @returns {Promise<Object>} 认证结果
    */
-  async findOrCreateUser(wechatOpenId) {
+  async callWechatAuthFunctionWithAuth(code, userInfo = null, accessToken) {
     try {
-      // 首先查询用户是否已存在
+      console.log('调用wechat-auth Edge Function (带认证)...', { code, hasUserInfo: !!userInfo })
+
       const response = await this.supabaseRequest({
-        url: '/rest/v1/users',
-        method: 'GET',
-        params: {
-          select: '*',
-          wechat_openid: `eq.${wechatOpenId}`
+        url: '/functions/v1/wechat-auth',
+        method: 'POST',
+        data: {
+          code: code,
+          userInfo: userInfo
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
         }
       })
 
-      let user = null
-      
-      if (response.length > 0) {
-        // 用户已存在
-        user = response[0]
-        console.log('用户已存在:', user)
-      } else {
-        // 创建新用户
-        const newUserData = {
-          wechat_openid: wechatOpenId,
-          username: '微信用户',
-          nickname: '微信用户',
-          avatar_url: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/nav-profile.svg',
-          role: 'user',
-          academic_field: { fields: [] },
-          is_active: true
-        }
-        
-        console.log('准备创建新用户:', newUserData)
-        
-        const createResponse = await this.supabaseRequest({
-          url: '/rest/v1/users',
-          method: 'POST',
-          data: newUserData,
-          headers: {
-            'Prefer': 'return=representation'
-          }
-        })
-        
-        user = Array.isArray(createResponse) ? createResponse[0] : createResponse
-        console.log('创建新用户成功:', user)
-      }
-
-      // 确保用户对象存在
-      if (!user) {
-        throw new Error('用户创建或查询失败')
-      }
-
-      // 合并用户信息
-      const combinedUserInfo = {
-        ...user,
-        // 兼容性字段，直接使用users表中的信息
-        display_name: user.nickname || user.username,
-        avatar_url: user.avatar_url,
-        bio: user.bio || '',
-        has_user_info: !!(user.nickname && user.avatar_url && !user.avatar_url.includes('default-avatar'))
-      }
-
-      return {
-        success: true,
-        user: combinedUserInfo
-      }
+      console.log('Edge Function (带认证) 响应:', response)
+      return response
 
     } catch (error) {
-      console.error('查找或创建用户失败:', error)
-      
-      // 如果是RLS错误，提供更详细的错误信息
-      if (error.message.includes('row-level security')) {
-        return {
-          success: false,
-          error: '数据库权限错误，请联系管理员'
+      console.error('调用Edge Function (带认证) 失败:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 调用微信认证Edge Function
+   * @param {string} code - 微信登录code
+   * @param {Object} userInfo - 用户信息（可选）
+   * @returns {Promise<Object>} 认证结果
+   */
+  async callWechatAuthFunction(code, userInfo = null) {
+    try {
+      console.log('调用wechat-auth Edge Function...')
+
+      const response = await this.supabaseRequest({
+        url: '/functions/v1/wechat-auth',
+        method: 'POST',
+        data: {
+          code: code,
+          userInfo: userInfo
+        },
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      console.log('Edge Function响应:', response)
+      return response
+
+    } catch (error) {
+      console.error('调用Edge Function失败:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 设置Supabase Auth会话
+   * @param {Object} session - 会话信息
+   */
+  async setSession(session) {
+    this.currentSession = session
+    this.currentUser = session?.user || null
+
+    // 保存到本地存储
+    if (session) {
+      try {
+        wx.setStorageSync('supabase_session', session)
+        wx.setStorageSync('lastLoginTime', Date.now())
+      } catch (error) {
+        console.error('保存会话到本地失败:', error)
+      }
+    }
+  }
+
+  /**
+   * 获取当前会话 (简化版本，遵循Supabase最佳实践)
+   * @returns {Object|null} 当前会话
+   */
+  getSession() {
+    try {
+      // 优先返回内存中的session (快速访问)
+      if (this.currentSession) {
+        return { data: { session: this.currentSession }, error: null }
+      }
+
+      // 尝试从本地存储恢复 (简化验证)
+      return this.recoverSessionFromStorage()
+    } catch (error) {
+      console.error('获取session时发生异常:', error)
+      return { data: { session: null }, error: error.message }
+    }
+  }
+
+  /**
+   * 从本地存储恢复session (简化版本)
+   * @returns {Object} session结果
+   */
+  recoverSessionFromStorage() {
+    try {
+      const session = wx.getStorageSync('supabase_session')
+      const lastLoginTime = wx.getStorageSync('lastLoginTime')
+
+      if (!session) {
+        return { data: { session: null }, error: null }
+      }
+
+      // 只检查基本的时间过期（7天），移除复杂的JWT验证
+      const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000
+      const isTimeExpired = !lastLoginTime || (Date.now() - lastLoginTime >= SESSION_DURATION)
+
+      if (isTimeExpired) {
+        console.log('Session时间已过期，清理存储')
+        this.clearStorageSession()
+        return { data: { session: null }, error: null }
+      }
+
+      // 基本结构检查（简化）
+      if (!session.access_token || !session.user || !session.user.id) {
+        console.warn('Session结构不完整，清理存储')
+        this.clearStorageSession()
+        return { data: { session: null }, error: null }
+      }
+
+      // 恢复有效session到内存
+      this.currentSession = session
+      this.currentUser = session.user
+
+      console.log('成功恢复session，用户:', session.user.id)
+      return { data: { session }, error: null }
+
+    } catch (error) {
+      console.error('从本地存储恢复session失败:', error)
+      this.clearStorageSession()
+      return { data: { session: null }, error: error.message }
+    }
+  }
+
+  /**
+   * 验证session结构的完整性
+   * @param {Object} session - session对象
+   * @returns {boolean} 是否有效
+   */
+  validateSessionStructure(session) {
+    try {
+      if (!session || typeof session !== 'object') {
+        console.warn('Session不是有效对象')
+        return false
+      }
+
+      // 检查必需字段
+      const requiredFields = ['access_token', 'user']
+      for (const field of requiredFields) {
+        if (!session[field]) {
+          console.warn(`Session缺少必需字段: ${field}`)
+          return false
         }
       }
-      
-      return {
-        success: false,
-        error: error.message
+
+      // 检查user对象结构
+      if (!session.user.id || !session.user.email) {
+        console.warn('Session中的user对象结构无效')
+        return false
       }
+
+      // 检查access_token格式
+      if (typeof session.access_token !== 'string' || session.access_token.trim() === '') {
+        console.warn('Session中的access_token格式无效')
+        return false
+      }
+
+      return true
+    } catch (error) {
+      console.error('验证session结构时出错:', error)
+      return false
+    }
+  }
+
+  /**
+   * 清理当前内存中的session
+   */
+  clearCurrentSession() {
+    try {
+      this.currentSession = null
+      this.currentUser = null
+      console.log('已清理内存中的session')
+    } catch (error) {
+      console.error('清理内存session失败:', error)
+    }
+  }
+
+  /**
+   * 清理本地存储中的session
+   */
+  clearStorageSession() {
+    try {
+      wx.removeStorageSync('supabase_session')
+      wx.removeStorageSync('userInfo')
+      wx.removeStorageSync('lastLoginTime')
+      console.log('已清理本地存储中的session')
+    } catch (error) {
+      console.error('清理本地存储session失败:', error)
+    }
+  }
+
+  /**
+   * 检查JWT token是否过期
+   * @param {string} token - JWT token
+   * @returns {boolean} 是否过期
+   */
+  isTokenExpired(token) {
+    try {
+      // 严格的token格式验证
+      if (!token || typeof token !== 'string' || token.trim() === '') {
+        console.warn('Token为空或格式无效')
+        return true
+      }
+
+      const trimmedToken = token.trim()
+      const parts = trimmedToken.split('.')
+
+      if (parts.length !== 3) {
+        console.warn('JWT token格式错误，parts长度:', parts.length)
+        return true
+      }
+
+      // 验证每个部分都不为空
+      if (!parts[0] || !parts[1] || !parts[2]) {
+        console.warn('JWT token部分为空')
+        return true
+      }
+
+      // 验证payload部分的Base64编码
+      const payload = parts[1]
+
+      // 添加padding if needed
+      let paddedPayload = payload
+      while (paddedPayload.length % 4) {
+        paddedPayload += '='
+      }
+
+      // 验证是否为有效的Base64字符串
+      const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
+      if (!base64Regex.test(paddedPayload)) {
+        console.warn('JWT payload不是有效的Base64编码')
+        return true
+      }
+
+      // 尝试解码payload
+      let decodedPayload
+      try {
+        decodedPayload = JSON.parse(atob(paddedPayload))
+      } catch (decodeError) {
+        console.error('JWT payload解码失败:', decodeError)
+        return true
+      }
+
+      // 检查exp字段
+      if (!decodedPayload.exp || typeof decodedPayload.exp !== 'number') {
+        console.warn('JWT token缺少有效的exp字段')
+        return true
+      }
+
+      // exp是Unix时间戳（秒），需要转换为毫秒
+      const expirationTime = decodedPayload.exp * 1000
+      const currentTime = Date.now()
+
+      // 提前5分钟判断为过期，给刷新留时间
+      const bufferTime = 5 * 60 * 1000
+
+      const isExpired = currentTime >= (expirationTime - bufferTime)
+
+      if (isExpired) {
+        console.log('JWT token已过期或即将过期')
+      }
+
+      return isExpired
+    } catch (error) {
+      console.error('JWT token验证异常:', error)
+      return true
+    }
+  }
+
+  /**
+   * 获取JWT token的剩余有效时间
+   * @param {string} token - JWT token
+   * @returns {number} 剩余时间（毫秒），-1表示无效
+   */
+  getTokenRemainingTime(token) {
+    try {
+      if (!token || typeof token !== 'string') {
+        return -1
+      }
+
+      const parts = token.split('.')
+      if (parts.length !== 3) {
+        return -1
+      }
+
+      const payload = JSON.parse(atob(parts[1]))
+      if (!payload.exp) {
+        return -1
+      }
+
+      const expirationTime = payload.exp * 1000
+      const currentTime = Date.now()
+
+      return Math.max(0, expirationTime - currentTime)
+    } catch (error) {
+      console.error('解析JWT token失败:', error)
+      return -1
+    }
+  }
+
+  /**
+   * 获取当前认证用户 (异步方法，遵循Supabase最佳实践)
+   * @returns {Promise<Object>} 当前用户结果
+   */
+  async getUser() {
+    try {
+      // 优先返回内存中的用户 (快速访问)
+      if (this.currentUser) {
+        return { data: { user: this.currentUser }, error: null }
+      }
+
+      // 从存储恢复会话和用户信息
+      const sessionResult = this.getSession()
+      if (sessionResult.data.session?.user) {
+        this.currentUser = sessionResult.data.session.user
+        return { data: { user: this.currentUser }, error: null }
+      }
+
+      return { data: { user: null }, error: null }
+    } catch (error) {
+      console.error('获取用户信息时发生异常:', error)
+      return { data: { user: null }, error: error.message }
     }
   }
 
 
   /**
-   * 更新用户信息（使用头像昵称填写组件得到的数据，支持private storage）
+   * 更新用户信息（使用Supabase Auth）
    * @param {Object} userInfo - 用户信息
    * @returns {Promise<Object>} 更新结果
    */
   async updateUserInfo(userInfo) {
     try {
-      const currentUser = this.getCurrentUser()
-      if (!currentUser) {
+      const userResult = await this.getUser()
+      if (!userResult.data.user) {
         return { success: false, error: '用户未登录' }
       }
 
-      // 处理头像上传到private bucket
-      let avatarStoragePath = null
-      let avatarSignedUrl = null
+      const currentUser = userResult.data.user
+      console.log('更新用户信息:', userInfo)
+      console.log('当前用户信息:', currentUser)
+
+      // 处理头像上传
       let finalAvatarUrl = null
-      
       if (userInfo.avatarUrl) {
-        // 如果是微信临时文件，需要上传到private storage
         if (userInfo.avatarUrl.includes('tmp') || userInfo.avatarUrl.includes('temp') || userInfo.avatarUrl.includes('wxfile://')) {
-          console.log('准备上传微信头像到private storage')
-          
-          // 使用storage service上传到private bucket
+          console.log('准备上传头像到private storage')
+
+          console.log('开始调用uploadUserFileToPrivateBucket:', {
+            userId: currentUser.id,
+            fileType: 'avatar',
+            tempFilePath: userInfo.avatarUrl
+          })
+
           const uploadResult = await this.storageService.uploadUserFileToPrivateBucket(
-            currentUser.id, 
-            'avatar', 
+            currentUser.id,
+            'avatar',
             userInfo.avatarUrl
           )
-          
+
+          console.log('头像上传结果:', uploadResult)
+
           if (uploadResult.success) {
-            avatarStoragePath = uploadResult.path
-            
-            // 立即生成签名URL用于显示
-            const signedUrlResult = await this.storageService.generateUserFileSignedUrl(
-              uploadResult.path,
-              86400 // 24小时有效期
-            )
-            
-            if (signedUrlResult.success) {
-              avatarSignedUrl = signedUrlResult.signedUrl
-              finalAvatarUrl = avatarSignedUrl
-              console.log('微信头像上传成功，签名URL已生成:', finalAvatarUrl)
-            } else {
-              console.warn('生成签名URL失败:', signedUrlResult.error)
-            }
+            // 存储文件路径而不是签名URL（因为签名URL会过期）
+            finalAvatarUrl = `storage:user_profile/${uploadResult.path}`
+            console.log('头像上传成功，存储路径:', finalAvatarUrl)
           } else {
-            console.warn('头像上传失败:', uploadResult.error)
-            // 提供更详细的错误信息和降级处理
-            const errorMsg = uploadResult.error || '头像上传失败'
-            console.error('详细错误信息:', errorMsg)
-            
-            // 不返回失败，使用默认头像继续
-            finalAvatarUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/nav-profile.svg'
-            console.log('使用默认头像:', finalAvatarUrl)
+            console.error('头像上传失败:', uploadResult.error)
+            // 使用默认头像
+            finalAvatarUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
           }
-        } else if (userInfo.avatarUrl.includes('qlogo.cn') || userInfo.avatarUrl.includes('wx.qlogo.cn')) {
-          // 微信头像URL，直接使用
-          finalAvatarUrl = userInfo.avatarUrl
-          console.log('使用微信头像URL:', finalAvatarUrl)
         } else {
-          // 如果是已经上传的URL，直接使用
           finalAvatarUrl = userInfo.avatarUrl
         }
       }
-      
-      // 准备更新数据
-      const userUpdateData = {
-        updated_at: new Date().toISOString()
-      }
-      
-      // 更新昵称
-      if (userInfo.nickName) {
-        userUpdateData.nickname = userInfo.nickName
-      }
-      
-      // 更新头像URL - 优先使用签名URL，后备使用存储路径
-      if (finalAvatarUrl) {
-        userUpdateData.avatar_url = finalAvatarUrl
-        console.log('准备更新users表头像URL:', userUpdateData.avatar_url)
-      } else if (avatarStoragePath) {
-        // 后备方案：如果签名URL生成失败，使用存储路径
-        userUpdateData.avatar_url = `storage:user_profile/${avatarStoragePath}`
-        console.log('使用存储路径作为头像URL:', userUpdateData.avatar_url)
-      }
 
-      // 更新users表
-      const response = await this.supabaseRequest({
-        url: `/rest/v1/users`,
-        method: 'PATCH',
-        params: {
-          id: `eq.${currentUser.id}`
-        },
-        data: userUpdateData,
-        headers: {
-          'Prefer': 'return=representation'
+      // 调用Edge Function更新用户信息
+      const updateData = {
+        code: 'update_user_info', // 特殊标识
+        userInfo: {
+          nickName: userInfo.nickName || userInfo.nickname,
+          avatarUrl: finalAvatarUrl
         }
-      })
-
-      console.log('用户信息更新响应:', response)
-
-      // 重新获取完整的用户信息
-      const updatedUserResponse = await this.supabaseRequest({
-        url: '/rest/v1/users',
-        method: 'GET',
-        params: {
-          select: '*',
-          id: `eq.${currentUser.id}`
-        }
-      })
-
-      const updatedUser = updatedUserResponse[0]
-
-      // 合并更新后的用户信息，确保头像URL正确
-      const combinedUserInfo = {
-        ...updatedUser,
-        display_name: updatedUser.nickname || updatedUser.username,
-        avatar_url: finalAvatarUrl || updatedUser.avatar_url || await this.getAvatarDisplayUrl(updatedUser),
-        avatar_storage_path: avatarStoragePath,
-        has_user_info: true
       }
 
-      // 保存到本地和全局状态
-      await this.saveUserSession(combinedUserInfo)
+      console.log('调用Edge Function更新用户信息:', updateData)
+
+      // 获取当前session的token用于认证
+      const currentSession = this.getSession()
+      if (!currentSession.data.session?.access_token) {
+        console.error('无法获取access_token进行Edge Function调用')
+        return { success: false, error: '认证状态异常，请重新登录' }
+      }
+
+      const authResult = await this.callWechatAuthFunctionWithAuth('update_user_info', updateData.userInfo, currentSession.data.session.access_token)
+
+      if (!authResult.success) {
+        throw new Error(authResult.error || '更新失败')
+      }
+
+      // 更新本地会话
+      if (authResult.session) {
+        await this.setSession(authResult.session)
+      }
+
+      // 更新全局状态
+      const updatedUser = authResult.user
+      await this.saveUserSession(updatedUser)
+
       try {
         const app = getApp()
         if (app && app.globalData) {
-          app.globalData.userInfo = combinedUserInfo
+          app.globalData.userInfo = updatedUser
         }
       } catch (error) {
         console.warn('更新全局状态失败:', error)
       }
 
-      return { success: true, user: combinedUserInfo }
+      console.log('用户信息更新成功:', updatedUser)
+      return { success: true, user: updatedUser }
+
     } catch (error) {
       console.error('更新用户信息失败:', error)
-      
-      // 提供更详细的错误信息
-      let errorMessage = '更新失败，请重试'
-      
-      if (error.message.includes('row-level security')) {
-        errorMessage = '权限不足，请重新登录'
-      } else if (error.message.includes('network')) {
-        errorMessage = '网络连接失败，请检查网络'
-      } else if (error.message.includes('timeout')) {
-        errorMessage = '请求超时，请重试'
-      } else if (error.message.includes('avatar') || error.message.includes('upload')) {
-        errorMessage = '头像上传失败，已使用默认头像'
-      } else if (error.message) {
-        errorMessage = error.message
-      }
-      
-      return { 
-        success: false, 
-        error: errorMessage,
-        details: error.message // 保留原始错误信息用于调试
+      return {
+        success: false,
+        error: error.message || '更新失败，请重试'
       }
     }
   }
@@ -625,15 +840,74 @@ class AuthService {
   }
 
   /**
+   * 刷新用户session
+   * @returns {Promise<Object>} 刷新结果
+   */
+  async refreshSession() {
+    try {
+      const sessionResult = this.getSession()
+      if (!sessionResult.data.session?.refresh_token) {
+        console.log('没有可用的refresh_token')
+        return { success: false, error: 'No refresh token available' }
+      }
+
+      console.log('尝试刷新session...')
+
+      // 调用Edge Function进行session刷新
+      const response = await this.supabaseRequest({
+        url: '/functions/v1/wechat-auth',
+        method: 'POST',
+        data: {
+          code: 'refresh_session',
+          refresh_token: sessionResult.data.session.refresh_token
+        },
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.success && response.session) {
+        console.log('Session刷新成功')
+        await this.setSession(response.session)
+
+        // 更新全局状态
+        try {
+          const app = getApp()
+          if (app && app.globalData) {
+            app.globalData.userInfo = response.user
+            app.globalData.isLoggedIn = true
+          }
+        } catch (error) {
+          console.warn('更新全局状态失败:', error)
+        }
+
+        return { success: true, session: response.session }
+      } else {
+        console.warn('Session刷新失败:', response.error)
+        return { success: false, error: response.error || 'Refresh failed' }
+      }
+
+    } catch (error) {
+      console.error('Session刷新异常:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  /**
    * 登出
    * @returns {Promise<Object>} 登出结果
    */
   async logout() {
     try {
+      // 清除Supabase Auth会话
+      this.currentSession = null
+      this.currentUser = null
+
       // 清除本地存储
       wx.removeStorageSync('userInfo')
       wx.removeStorageSync('lastLoginTime')
-      
+      wx.removeStorageSync('supabase_session')
+
       // 清除全局状态
       try {
         const app = getApp()
@@ -644,7 +918,8 @@ class AuthService {
       } catch (error) {
         console.warn('清除全局状态失败:', error)
       }
-      
+
+      console.log('用户已登出')
       return { success: true }
     } catch (error) {
       console.error('登出失败:', error)
@@ -657,30 +932,40 @@ class AuthService {
    * @returns {Promise<boolean>} 是否已登录
    */
   async checkLoginStatus() {
-    // 检查全局状态
     try {
-      const app = getApp()
-      if (app && app.globalData && app.globalData.isLoggedIn && app.globalData.userInfo) {
+      // 检查Supabase Auth会话
+      const sessionResult = this.getSession()
+      if (sessionResult.data.session?.user) {
+        const user = sessionResult.data.session.user
+
+        // 转换用户数据格式
+        const userInfo = {
+          id: user.id,
+          email: user.email,
+          nickName: user.user_metadata?.nickname || '微信用户',  // 统一使用nickName
+          avatarUrl: user.user_metadata?.avatar_url,            // 统一使用avatarUrl
+          nickname: user.user_metadata?.nickname || '微信用户', // 保持兼容性
+          avatar_url: user.user_metadata?.avatar_url,           // 保持兼容性
+          wechat_openid: user.user_metadata?.wechat_openid,
+          display_name: user.user_metadata?.nickname || '微信用户',
+          has_user_info: !!(user.user_metadata?.nickname && user.user_metadata?.avatar_url)
+        }
+
+        // 更新全局状态
+        try {
+          const app = getApp()
+          if (app && app.globalData) {
+            app.globalData.userInfo = userInfo
+            app.globalData.isLoggedIn = true
+          }
+        } catch (error) {
+          console.warn('更新全局状态失败:', error)
+        }
+
         return true
       }
     } catch (error) {
-      console.warn('检查全局状态失败:', error)
-    }
-
-    // 检查本地存储
-    const localUser = this.getLocalUserSession()
-    if (localUser) {
-      // 恢复全局状态
-      try {
-        const app = getApp()
-        if (app && app.globalData) {
-          app.globalData.userInfo = localUser
-          app.globalData.isLoggedIn = true
-        }
-      } catch (error) {
-        console.warn('恢复全局状态失败:', error)
-      }
-      return true
+      console.error('检查登录状态失败:', error)
     }
 
     return false
@@ -688,12 +973,47 @@ class AuthService {
 
   /**
    * 获取当前用户信息
-   * @returns {Object|null} 用户信息
+   * @returns {Promise<Object|null>} 用户信息
    */
-  getCurrentUser() {
+  async getCurrentUser() {
+    // 优先从Supabase Auth获取
+    const userResult = await this.getUser()
+    if (userResult.data.user) {
+      const user = userResult.data.user
+
+      // 动态生成头像URL
+      const avatarUrl = await this.getAvatarDisplayUrl({
+        avatar_url: user.user_metadata?.avatar_url
+      })
+
+      return {
+        id: user.id,
+        email: user.email,
+        nickName: user.user_metadata?.nickname || '微信用户',  // 统一使用nickName
+        avatarUrl: avatarUrl,                                  // 使用动态生成的头像URL
+        nickname: user.user_metadata?.nickname || '微信用户', // 保持兼容性
+        avatar_url: user.user_metadata?.avatar_url,           // 原始avatar_url用于重新生成
+        wechat_openid: user.user_metadata?.wechat_openid,
+        display_name: user.user_metadata?.nickname || '微信用户',
+        has_user_info: !!(user.user_metadata?.nickname && user.user_metadata?.avatar_url)
+      }
+    }
+
+    // 回退到全局状态
     try {
       const app = getApp()
-      return app && app.globalData ? app.globalData.userInfo : null
+      const globalUser = app && app.globalData ? app.globalData.userInfo : null
+
+      if (globalUser && globalUser.avatar_url) {
+        // 也需要为全局状态的用户动态生成头像URL
+        const avatarUrl = await this.getAvatarDisplayUrl(globalUser)
+        return {
+          ...globalUser,
+          avatarUrl: avatarUrl
+        }
+      }
+
+      return globalUser
     } catch (error) {
       console.warn('获取当前用户失败:', error)
       return null
@@ -796,38 +1116,233 @@ class AuthService {
     try {
       // 如果没有avatar_url，返回默认头像
       if (!user.avatar_url) {
-        return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/nav-profile.svg'
+        return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
       }
 
-      // 如果是storage引用格式，生成签名URL
-      if (user.avatar_url.startsWith('storage:user_profile/')) {
-        const storagePath = user.avatar_url.replace('storage:user_profile/', '')
-        const signedUrlResult = await this.storageService.generateUserFileSignedUrl(storagePath, 86400)
-        
-        if (signedUrlResult.success) {
-          return signedUrlResult.signedUrl
-        } else {
-          console.warn('生成头像签名URL失败:', signedUrlResult.error)
-          return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/nav-profile.svg'
+      // 如果是已过期的签名URL，需要重新生成
+      if (user.avatar_url.includes('/object/sign/user_profile/')) {
+        console.log('检测到签名URL，需要重新生成...')
+
+        // 从签名URL中提取文件路径
+        const urlMatch = user.avatar_url.match(/\/object\/sign\/user_profile\/([^?]+)/);
+        if (urlMatch && urlMatch[1]) {
+          const filePath = urlMatch[1]
+          console.log('提取文件路径:', filePath)
+
+          // 生成新的签名URL (7天有效期)，重试机制
+          const signedUrlResult = await this.retryGenerateSignedUrl(filePath, 3)
+
+          if (signedUrlResult.success) {
+            console.log('成功生成新的签名URL')
+            return signedUrlResult.signedUrl
+          } else {
+            console.warn('生成头像签名URL失败:', signedUrlResult.error)
+            return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
+          }
         }
       }
 
-      // 如果是已经签名的URL或者是公共URL，直接返回
-      if (user.avatar_url.startsWith('https://') || user.avatar_url.startsWith('http://')) {
-        return user.avatar_url
+      // 如果是storage引用格式，生成签名URL
+      if (user.avatar_url && user.avatar_url.startsWith('storage:user_profile/')) {
+        const storagePath = user.avatar_url.replace('storage:user_profile/', '')
+        console.log('检测到storage引用，生成签名URL:', storagePath)
+
+        // 生成签名URL (7天有效期)，重试机制
+        const signedUrlResult = await this.retryGenerateSignedUrl(storagePath, 3)
+
+        if (signedUrlResult.success) {
+          console.log('签名URL生成成功')
+          return signedUrlResult.signedUrl
+        } else {
+          console.warn('生成头像签名URL失败:', signedUrlResult.error)
+          return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
+        }
       }
 
-      // 如果是微信头像URL，直接返回
-      if (user.avatar_url.includes('qlogo.cn') || user.avatar_url.includes('wx.qlogo.cn')) {
-        return user.avatar_url
+      // 如果是公共URL，直接返回
+      if (user.avatar_url.startsWith('https://') || user.avatar_url.startsWith('http://')) {
+        // 检查是否是公共storage URL
+        if (user.avatar_url.includes('/storage/v1/object/public/')) {
+          return user.avatar_url
+        }
+
+        // 如果是微信头像URL，直接返回
+        if (user.avatar_url.includes('qlogo.cn') || user.avatar_url.includes('wx.qlogo.cn')) {
+          return user.avatar_url
+        }
       }
 
       // 回退到默认头像
-      return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/nav-profile.svg'
-      
+      console.warn('无法处理的头像URL格式:', user.avatar_url)
+      return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
+
     } catch (error) {
       console.error('获取头像显示URL失败:', error)
-      return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/nav-profile.svg'
+      return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
+    }
+  }
+
+  /**
+   * 重试生成签名URL (优化的错误处理和恢复机制)
+   * @param {string} filePath - 文件路径
+   * @param {number} maxRetries - 最大重试次数
+   * @returns {Promise<Object>} 签名URL结果
+   */
+  async retryGenerateSignedUrl(filePath, maxRetries = 3) {
+    let lastError = null
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`尝试生成签名URL (第${attempt}次尝试):`, filePath)
+
+        const result = await this.storageService.generateUserFileSignedUrl(filePath, 604800)
+
+        if (result.success) {
+          console.log(`签名URL生成成功 (第${attempt}次尝试)`)
+          return result
+        } else {
+          lastError = result.error
+          console.warn(`签名URL生成失败 (第${attempt}次尝试):`, result.error)
+
+          // 优化错误恢复策略
+          if (await this.shouldAttemptRecovery(result.error)) {
+            console.log('检测到可恢复错误，尝试恢复认证状态...')
+
+            const recoverySuccess = await this.attemptAuthRecovery()
+            if (recoverySuccess) {
+              console.log('认证状态恢复成功，继续重试')
+              continue
+            } else {
+              console.warn('认证状态恢复失败，停止重试')
+              break
+            }
+          }
+
+          // 如果不是最后一次尝试，等待后重试
+          if (attempt < maxRetries) {
+            const delay = Math.min(attempt * 1000, 3000) // 递增延迟，最大3秒
+            console.log(`等待${delay}ms后重试...`)
+            await new Promise(resolve => setTimeout(resolve, delay))
+          }
+        }
+      } catch (error) {
+        lastError = error.message || error
+        console.error(`签名URL生成异常 (第${attempt}次尝试):`, error)
+
+        // 对于严重错误，尝试恢复
+        if (await this.shouldAttemptRecovery(error.message)) {
+          await this.attemptAuthRecovery()
+        }
+
+        // 如果不是最后一次尝试，等待后重试
+        if (attempt < maxRetries) {
+          const delay = Math.min(attempt * 1000, 3000)
+          console.log(`等待${delay}ms后重试...`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+      }
+    }
+
+    return {
+      success: false,
+      error: lastError || `重试${maxRetries}次后仍然失败`
+    }
+  }
+
+  /**
+   * 判断是否应该尝试认证状态恢复
+   * @param {string} errorMessage - 错误消息
+   * @returns {Promise<boolean>} 是否应该尝试恢复
+   */
+  async shouldAttemptRecovery(errorMessage) {
+    if (!errorMessage || typeof errorMessage !== 'string') {
+      return false
+    }
+
+    const recoverableErrors = [
+      '过期',
+      '登录',
+      'Unauthorized',
+      'Invalid Compact JWS',
+      'exp',
+      'token',
+      '认证'
+    ]
+
+    return recoverableErrors.some(keyword => errorMessage.includes(keyword))
+  }
+
+  /**
+   * 尝试认证状态恢复
+   * @returns {Promise<boolean>} 恢复是否成功
+   */
+  async attemptAuthRecovery() {
+    try {
+      console.log('开始尝试认证状态恢复...')
+
+      // 方法1: 尝试从本地存储恢复
+      const localRecovery = this.recoverSessionFromStorage()
+      if (localRecovery.data.session?.user) {
+        console.log('本地存储恢复成功')
+        return true
+      }
+
+      // 方法2: 检查全局状态
+      try {
+        const app = getApp()
+        if (app && app.globalData && app.globalData.isLoggedIn && app.globalData.userInfo) {
+          console.log('从全局状态恢复用户信息')
+
+          // 尝试重建基本session结构
+          const mockSession = {
+            user: {
+              id: app.globalData.userInfo.id,
+              email: app.globalData.userInfo.email,
+              user_metadata: {
+                nickname: app.globalData.userInfo.nickName,
+                avatar_url: app.globalData.userInfo.avatar_url,
+                wechat_openid: app.globalData.userInfo.wechat_openid
+              }
+            },
+            access_token: 'recovery_placeholder' // 标记为需要重新获取
+          }
+
+          await this.setSession(mockSession)
+          console.log('基本session结构已重建，需要重新登录获取有效token')
+          return false // 需要用户重新登录
+        }
+      } catch (globalError) {
+        console.warn('全局状态恢复失败:', globalError)
+      }
+
+      // 方法3: 清理状态，准备重新登录
+      console.log('无法恢复认证状态，清理本地状态')
+      await this.clearInvalidSession()
+
+      return false
+    } catch (error) {
+      console.error('认证状态恢复异常:', error)
+      return false
+    }
+  }
+
+  /**
+   * 清理无效认证状态
+   * @returns {Promise<void>}
+   */
+  async clearInvalidSession() {
+    try {
+      console.log('清理无效的认证状态...')
+
+      // 清理内存状态
+      this.clearCurrentSession()
+
+      // 清理本地存储
+      this.clearStorageSession()
+
+      console.log('认证状态清理完成')
+    } catch (error) {
+      console.error('清理认证状态失败:', error)
     }
   }
 }

@@ -105,6 +105,23 @@ Comprehensive user profile management service integrating storage and data synch
 - Playback state management
 - Progress tracking
 
+### Recommendation System (services/recommendation/index.js)
+Comprehensive AI-powered recommendation engine with multiple services:
+- **Personalized Recommendations**: `getPersonalizedRecommendations()` - User-based collaborative filtering
+- **Popular Recommendations**: `getPopularRecommendations()` - Trending content discovery
+- **Performance Monitoring**: Built-in health checks, performance stats, and degradation handling
+- **User Behavior Tracking**: Click and conversion recording for algorithm improvement
+- **Fallback System**: Graceful degradation when recommendation service is unavailable
+- **Health Monitoring**: Real-time service health checks with automatic recovery
+
+### Insight Service (services/insight.service.js)
+AI-generated content insights and cognitive extraction:
+- **Podcast Insights**: `getInsightsByPodcastId()`, `getMainInsightByPodcastId()` - AI-generated summaries and analysis
+- **Content Types**: Summary, analysis, questions, quotes, highlights with metadata
+- **User Interactions**: Like/view tracking, user engagement recording
+- **Fallback Data**: Default insights when database content unavailable
+- **Related Content**: Keywords, papers, authors linking for academic context
+
 ## Supabase Integration
 
 ### Configuration (app.js:18-19)
@@ -331,6 +348,22 @@ When modifying services, follow these patterns:
 2. Update profile: `await profileService.updateUserProfile(userId, updateData)`
 3. Check completeness: `profileService.checkProfileCompleteness(user)`
 4. Upload avatar: Include `avatarFile` in updateData for automatic private storage handling
+
+### Working with Recommendation System
+1. Initialize service: `await recommendationService.initialize()`
+2. Get personalized recommendations: `await recommendationService.getPersonalizedRecommendations(userId, options)`
+3. Get popular content: `await recommendationService.getPopularRecommendations(limit)`
+4. Record user interactions: `await recommendationService.recordRecommendationClick(userId, podcastId, recommendationId, position)`
+5. Monitor performance: `await recommendationService.getPerformanceReport()`
+6. Health check: `await recommendationService.performHealthCheck()`
+
+### Working with Insights
+1. Get podcast insights: `await insightService.getInsightsByPodcastId(podcastId)`
+2. Get main insight: `await insightService.getMainInsightByPodcastId(podcastId)`
+3. Get insight details: `await insightService.getInsightById(insightId)`
+4. Record user engagement: `await insightService.incrementLikeCount(insightId)`
+5. Track interactions: `await insightService.createUserInteraction(userId, insightId, type)`
+6. Get popular insights: `await insightService.getPopularInsights(limit)`
 
 ### Adding API Endpoints
 1. Add new methods to appropriate section in `apiService` (podcast/user/category/search/stats)

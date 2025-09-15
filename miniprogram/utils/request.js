@@ -30,17 +30,20 @@ class RequestUtil {
       method = 'GET',
       data,
       headers = {},
-      needAuth = true
+      needAuth = true,
+      retryWithoutAuth = true
     } = options
 
     // 构建请求头
     const requestHeaders = { ...this.defaultHeaders, ...headers }
-    
+
     // 添加认证头
     if (needAuth) {
       const token = await this.getAuthToken()
       if (token) {
         requestHeaders['Authorization'] = `Bearer ${token}`
+      } else {
+        console.log('未找到认证token，使用匿名访问')
       }
     }
 
@@ -67,6 +70,14 @@ class RequestUtil {
 
           if (res.statusCode >= 200 && res.statusCode < 300) {
             resolve(res.data)
+          } else if (res.statusCode === 401 && needAuth && retryWithoutAuth) {
+            // 401错误且允许重试，尝试匿名访问
+            console.log('认证失败，尝试匿名访问:', url)
+            this.request({
+              ...options,
+              needAuth: false,
+              retryWithoutAuth: false
+            }).then(resolve).catch(reject)
           } else {
             const error = new Error(`HTTP ${res.statusCode}: ${res.errMsg}`)
             error.statusCode = res.statusCode
@@ -87,12 +98,29 @@ class RequestUtil {
     const queryString = Object.keys(params)
       .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
       .join('&')
-    
+
     const fullUrl = queryString ? `${url}?${queryString}` : url
-    
+
     return this.request({
       url: fullUrl,
       method: 'GET',
+      ...options
+    })
+  }
+
+  // GET 请求（强制认证，不允许降级）
+  async getAuthenticated(url, params = {}, options = {}) {
+    const queryString = Object.keys(params)
+      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+      .join('&')
+
+    const fullUrl = queryString ? `${url}?${queryString}` : url
+
+    return this.request({
+      url: fullUrl,
+      method: 'GET',
+      needAuth: true,
+      retryWithoutAuth: false,
       ...options
     })
   }

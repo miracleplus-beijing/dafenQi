@@ -131,13 +131,13 @@ Page({
       this.setData({ recommendationsLoading: true })
 
       // 固定使用个性化推荐
-      const result = userInfo && userInfo.id 
+      const result = userInfo && userInfo.id
         ? await apiService.recommendation.getPersonalized(userInfo.id, {
             algorithm: 'hybrid',
             count: 20,
             includeReasons: true
           })
-        : await apiService.recommendation.getPopular(20)
+        : await apiService.recommendation.getPopularRecommendations(20)
 
       if (result.success && result.data) {
         this.setData({
@@ -440,7 +440,7 @@ Page({
     this.savePlayProgress()
     
     // 销毁音频上下文
-    if (this.data.audioContext) {
+    if (this.data.audioContext && typeof this.data.audioContext.destroy === 'function') {
       this.data.audioContext.destroy()
     }
     
@@ -983,7 +983,9 @@ Page({
     audioContext.stop()
     
     // 销毁当前音频上下文，使用预加载的
-    audioContext.destroy()
+    if (audioContext && typeof audioContext.destroy === 'function') {
+      audioContext.destroy()
+    }
     
     // 使用预加载的音频上下文
     this.setData({ audioContext: preloadedAudio })
@@ -2229,7 +2231,9 @@ Page({
         audioContext.stop()
         
         // 销毁当前音频上下文，使用预加载的
-        audioContext.destroy()
+        if (audioContext && typeof audioContext.destroy === 'function') {
+          audioContext.destroy()
+        }
         
         // 使用预加载的音频上下文
         const newAudioContext = preloadedAudio

@@ -397,7 +397,7 @@ class ProfileService {
     try {
       // 如果没有avatar_url，返回默认头像
       if (!user.avatar_url) {
-        return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/nav-profile.svg'
+        return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
       }
 
       // 如果是storage引用格式，生成签名URL
@@ -410,7 +410,7 @@ class ProfileService {
         } else {
           console.warn('生成头像签名URL失败:', signedUrlResult.error)
           // 回退到默认头像
-          return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/nav-profile.svg'
+          return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
         }
       }
 
@@ -419,7 +419,7 @@ class ProfileService {
       
     } catch (error) {
       console.error('获取头像显示URL失败:', error)
-      return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/nav-profile.svg'
+      return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
     }
   }
 

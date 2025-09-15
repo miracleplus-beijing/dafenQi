@@ -6,15 +6,15 @@
 const ratingMatrixService = require('./rating-matrix.service.js')
 const collaborativeFilteringService = require('./collaborative-filtering.service.js')
 const performanceMonitor = require('./performance-monitor.service.js')
-const apiService = require('../api.service.js')
+const requestUtil = require('../../utils/request.js')
 
 class RecommendationService {
   constructor() {
     this.ratingService = ratingMatrixService
     this.cfService = collaborativeFilteringService
     this.monitor = performanceMonitor
-    this.api = apiService
-    
+    this.requestUtil = requestUtil
+
     // 服务状态
     this.isInitialized = false
     this.serviceHealth = 'healthy' // 'healthy', 'degraded', 'unhealthy'
@@ -27,27 +27,38 @@ class RecommendationService {
   async initialize() {
     try {
       console.log('初始化推荐服务...')
-      
+
       // 清理缓存
       this.clearAllCache()
-      
-      // 检查数据完整性
+
+      // 检查数据完整性（使用更宽松的检查）
       await this.validateDataIntegrity()
-      
+
       // 预热推荐系统（可选）
       // await this.preheatSystem()
-      
+
       this.isInitialized = true
       this.serviceHealth = 'healthy'
       this.lastHealthCheck = Date.now()
-      
+
       console.log('推荐服务初始化完成')
       return { success: true, message: '推荐服务初始化成功' }
-      
+
     } catch (error) {
       console.error('推荐服务初始化失败:', error)
-      this.serviceHealth = 'unhealthy'
-      return { success: false, error: error.message }
+
+      // 更宽松的初始化策略：即使某些检查失败，仍然允许服务启动
+      // 这样可以确保基本的推荐功能可用
+      this.isInitialized = true
+      this.serviceHealth = 'degraded'
+      this.lastHealthCheck = Date.now()
+
+      console.warn('推荐服务以降级模式启动:', error.message)
+      return {
+        success: true,
+        message: '推荐服务以降级模式启动',
+        warning: error.message
+      }
     }
   }
 
@@ -90,13 +101,35 @@ class RecommendationService {
    */
   async getPopularRecommendations(limit = 10) {
     try {
-      return await this.cfService.getPopularItems(limit)
+      // 首先尝试使用协同过滤服务获取推荐
+      const result = await this.cfService.getPopularItems(limit)
+      return result
     } catch (error) {
-      console.error('获取热门推荐失败:', error)
-      return {
-        success: false,
-        error: error.message,
-        data: []
+      console.error('获取热门推荐失败，使用降级方案:', error)
+
+      // 降级方案：直接从数据库获取最受欢迎的播客
+      try {
+        const podcasts = await this.requestUtil.get('/rest/v1/podcasts', {
+          select: 'id,title,description,cover_url,audio_url,duration,play_count,like_count',
+          order: 'play_count.desc,created_at.desc',
+          limit: limit
+        })
+
+        return {
+          success: true,
+          data: podcasts || [],
+          metadata: {
+            algorithm: 'fallback_popular',
+            message: '使用降级方案获取热门内容'
+          }
+        }
+      } catch (fallbackError) {
+        console.error('降级方案也失败了:', fallbackError)
+        return {
+          success: false,
+          error: fallbackError.message,
+          data: []
+        }
       }
     }
   }
@@ -238,8 +271,8 @@ class RecommendationService {
   async checkDataSource() {
     try {
       // 检查数据库连接
-      const result = await this.api.request.get('/rest/v1/users', { limit: 1 })
-      
+      const result = await this.requestUtil.get('/rest/v1/users', { limit: 1 })
+
       return {
         healthy: result !== null,
         severity: 'critical',
@@ -314,28 +347,33 @@ class RecommendationService {
     try {
       // 检查必要的表是否存在数据
       const [users, podcasts, favorites] = await Promise.all([
-        this.api.request.get('/rest/v1/users', { limit: 1 }),
-        this.api.request.get('/rest/v1/podcasts', { limit: 1 }),
-        this.api.request.get('/rest/v1/user_favorites', { limit: 1 })
+        this.requestUtil.get('/rest/v1/users', { limit: 1 }),
+        this.requestUtil.get('/rest/v1/podcasts', { limit: 1 }),
+        this.requestUtil.get('/rest/v1/user_favorites', { limit: 1 })
       ])
-      
+
       const issues = []
-      
+
       if (!users || users.length === 0) {
         issues.push('用户表数据为空')
       }
-      
+
       if (!podcasts || podcasts.length === 0) {
         issues.push('播客表数据为空')
       }
-      
+
+      // 改进：对于user_favorites表为空，只记录警告而不抛出错误
+      if (!favorites || favorites.length === 0) {
+        console.warn('用户收藏表数据为空，推荐算法将使用降级方案')
+      }
+
       if (issues.length > 0) {
         throw new Error(`数据完整性检查失败: ${issues.join(', ')}`)
       }
-      
+
       console.log('数据完整性检查通过')
       return true
-      
+
     } catch (error) {
       console.error('数据完整性检查失败:', error)
       throw error

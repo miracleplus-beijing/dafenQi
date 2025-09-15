@@ -3,11 +3,11 @@
  * 基于用户行为数据构建隐式评分矩阵
  */
 
-const apiService = require('../api.service.js')
+const requestUtil = require('../../utils/request.js')
 
 class RatingMatrixService {
   constructor() {
-    this.api = apiService
+    this.requestUtil = requestUtil
     this.ratingCache = new Map()
     this.lastUpdateTime = null
     this.CACHE_DURATION = 30 * 60 * 1000 // 30分钟缓存
@@ -80,7 +80,7 @@ class RatingMatrixService {
    */
   async getAllUsers() {
     try {
-      const result = await this.api.request.get('/rest/v1/users', {
+      const result = await this.requestUtil.get('/rest/v1/users', {
         select: 'id,academic_field,nickname,username',
         is_active: 'eq.true',
         limit: 1000
@@ -97,7 +97,7 @@ class RatingMatrixService {
    */
   async getAllPodcasts() {
     try {
-      const result = await this.api.request.get('/rest/v1/podcasts', {
+      const result = await this.requestUtil.get('/rest/v1/podcasts', {
         select: 'id,title,channel_id,category,play_count,like_count,favorite_count',
         status: 'eq.published',
         limit: 1000
@@ -114,7 +114,7 @@ class RatingMatrixService {
    */
   async getAllFavorites() {
     try {
-      const result = await this.api.request.get('/rest/v1/user_favorites', {
+      const result = await this.requestUtil.get('/rest/v1/user_favorites', {
         select: 'user_id,podcast_id,created_at',
         limit: 5000
       })
@@ -130,7 +130,7 @@ class RatingMatrixService {
    */
   async getAllLikes() {
     try {
-      const result = await this.api.request.get('/rest/v1/user_likes', {
+      const result = await this.requestUtil.get('/rest/v1/user_likes', {
         select: 'user_id,podcast_id,created_at',
         limit: 5000
       })
@@ -146,7 +146,7 @@ class RatingMatrixService {
    */
   async getAllPlayHistory() {
     try {
-      const result = await this.api.request.get('/rest/v1/user_play_history', {
+      const result = await this.requestUtil.get('/rest/v1/user_play_history', {
         select: 'user_id,podcast_id,play_position,play_duration,completed,played_at',
         limit: 10000
       })
@@ -269,21 +269,33 @@ class RatingMatrixService {
   async getUserBehaviorStats(userId) {
     try {
       const [favorites, likes, history] = await Promise.all([
-        this.api.user.getFavorites(userId),
-        this.api.request.get('/rest/v1/user_likes', { user_id: `eq.${userId}` }),
-        this.api.user.getHistory(userId, 100)
+        // 获取用户收藏
+        this.requestUtil.get('/rest/v1/user_favorites', {
+          user_id: `eq.${userId}`,
+          select: '*, podcast:podcast_id(*)',
+          order: 'created_at.desc'
+        }),
+        // 获取用户点赞
+        this.requestUtil.get('/rest/v1/user_likes', { user_id: `eq.${userId}` }),
+        // 获取用户播放历史
+        this.requestUtil.get('/rest/v1/user_play_history', {
+          user_id: `eq.${userId}`,
+          select: '*, podcast:podcast_id(*)',
+          order: 'played_at.desc',
+          limit: 100
+        })
       ])
 
-      const completedCount = history.data?.filter(h => h.completed).length || 0
-      const totalPlayTime = history.data?.reduce((sum, h) => sum + (h.play_duration || 0), 0) || 0
+      const completedCount = history?.filter(h => h.completed).length || 0
+      const totalPlayTime = history?.reduce((sum, h) => sum + (h.play_duration || 0), 0) || 0
 
       return {
-        favoritesCount: favorites.data?.length || 0,
+        favoritesCount: favorites?.length || 0,
         likesCount: likes?.length || 0,
-        historyCount: history.data?.length || 0,
+        historyCount: history?.length || 0,
         completedCount,
         totalPlayTime,
-        avgPlayTime: history.data?.length > 0 ? totalPlayTime / history.data.length : 0
+        avgPlayTime: history?.length > 0 ? totalPlayTime / history.length : 0
       }
     } catch (error) {
       console.error('获取用户行为统计失败:', error)

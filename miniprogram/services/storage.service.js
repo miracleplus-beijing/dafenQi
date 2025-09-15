@@ -245,34 +245,49 @@ class StorageService {
       if (!this.fileTypes[fileType]) {
         throw new Error(`不支持的文件类型: ${fileType}`)
       }
-      
+
+      // 严格的用户认证检查
+      const authService = require('./auth.service.js')
+      const authCheck = await this.validateUserAuthentication(authService, userId)
+
+      if (!authCheck.isValid) {
+        throw new Error(authCheck.error)
+      }
+
+      const userToken = authCheck.token
+
+      console.log('开始上传文件，用户认证验证通过')
+
       // 读取临时文件
       const fileData = await this.readTempFile(tempFilePath)
-      
+      console.log('临时文件读取成功，大小:', fileData.byteLength || fileData.length)
+
       // 生成文件名
       const timestamp = Date.now()
       const fileExtension = this.getFileExtension(tempFilePath) || 'jpg'
       const fileName = `${userId}/${this.fileTypes[fileType]}/${fileType}_${timestamp}.${fileExtension}`
-      
+
       console.log('准备上传文件到private bucket:', fileName)
-      
-      // 上传到Supabase Storage
-      const uploadResponse = await this.supabaseStorageRequest({
+
+      // 使用带认证的上传方法
+      const uploadResponse = await this.supabaseStorageRequestWithAuth({
         method: 'POST',
         path: fileName,
         file: fileData,
         options: {
           contentType: options.contentType || 'image/jpeg',
           upsert: true
-        }
+        },
+        authToken: userToken
       })
-      
+
       if (uploadResponse.error) {
+        console.error('文件上传失败:', uploadResponse.error)
         throw new Error(uploadResponse.error.message || '文件上传失败')
       }
-      
+
       console.log('文件上传成功:', uploadResponse)
-      
+
       return {
         success: true,
         path: fileName,
@@ -280,7 +295,7 @@ class StorageService {
         fullPath: `${this.userProfileBucket}/${fileName}`,
         uploadResponse
       }
-      
+
     } catch (error) {
       console.error('文件上传失败:', error)
       return {
@@ -291,40 +306,209 @@ class StorageService {
   }
 
   /**
-   * 为private bucket文件生成签名URL
+   * 验证用户认证状态 (使用getUser()方法，遵循Supabase最佳实践)
+   * @param {Object} authService - 认证服务实例
+   * @param {string} expectedUserId - 期望的用户ID
+   * @returns {Promise<Object>} 验证结果
+   */
+  async validateUserAuthentication(authService, expectedUserId) {
+    try {
+      console.log('开始验证用户认证状态，期望用户ID:', expectedUserId)
+
+      // 使用getUser()方法，遵循Supabase最佳实践
+      const userResult = await authService.getUser()
+      console.log('getUser()结果:', userResult)
+
+      if (!userResult.data.user) {
+        console.error('用户验证失败 - 用户为空:', {
+          userResult: userResult,
+          hasData: !!userResult.data,
+          userExists: !!userResult.data.user
+        })
+        return {
+          isValid: false,
+          error: '用户未登录，无法上传文件'
+        }
+      }
+
+      const currentUser = userResult.data.user
+
+      // 获取access_token用于文件操作认证
+      const sessionResult = authService.getSession()
+      const userToken = sessionResult.data.session?.access_token
+
+      console.log('用户验证通过，检查token:', {
+        hasToken: !!userToken,
+        tokenType: typeof userToken,
+        tokenLength: userToken ? userToken.length : 0,
+        userId: currentUser.id
+      })
+
+      // 验证token格式
+      if (!userToken || typeof userToken !== 'string' || userToken.trim() === '') {
+        console.error('用户token为空或格式无效')
+        return {
+          isValid: false,
+          error: '用户认证状态无效，请重新登录'
+        }
+      }
+
+      // 验证用户ID匹配
+      const currentUserId = currentUser.id
+      if (expectedUserId && currentUserId !== expectedUserId) {
+        console.error('用户ID不匹配:', {
+          expected: expectedUserId,
+          current: currentUserId
+        })
+        return {
+          isValid: false,
+          error: '用户身份不匹配，请重新登录'
+        }
+      }
+
+      // 简单的JWT格式检查
+      const tokenParts = userToken.split('.')
+      if (tokenParts.length !== 3) {
+        console.error('JWT token格式无效，parts:', tokenParts.length)
+        return {
+          isValid: false,
+          error: '用户认证token格式无效，请重新登录'
+        }
+      }
+
+      console.log('用户认证验证通过:', {
+        tokenParts: tokenParts.length,
+        tokenStart: userToken.substring(0, 20) + '...',
+        userId: currentUserId
+      })
+
+      return {
+        isValid: true,
+        token: userToken,
+        userId: currentUserId
+      }
+
+    } catch (error) {
+      console.error('验证用户认证时出错:', error)
+      return {
+        isValid: false,
+        error: '认证验证失败，请重新登录'
+      }
+    }
+  }
+
+  /**
+   * 为private bucket文件生成签名URL (遵循Supabase最佳实践)
    * @param {string} filePath - 文件路径
-   * @param {number} expiresIn - 过期时间(秒)，默认24小时
+   * @param {number} expiresIn - 过期时间(秒)，默认7天
    * @returns {Promise<Object>} 签名URL结果
    */
-  async generateUserFileSignedUrl(filePath, expiresIn = 86400) {
+  async generateUserFileSignedUrl(filePath, expiresIn = 604800) { // 默认7天
     try {
-      const response = await this.supabaseRequest({
+      // 获取用户认证token
+      const authService = require('./auth.service.js')
+
+      // 使用getUser()检查用户状态，遵循Supabase最佳实践
+      const userResult = await authService.getUser()
+
+      if (!userResult.data.user) {
+        throw new Error('用户未登录，无法生成签名URL')
+      }
+
+      // 获取token用于API认证
+      const sessionResult = authService.getSession()
+      let userToken = sessionResult.data.session?.access_token
+
+      // 验证token格式和有效性
+      if (!userToken || typeof userToken !== 'string') {
+        console.error('用户token为空或格式无效')
+        await this.clearInvalidSession()
+        throw new Error('用户认证状态无效，请重新登录')
+      }
+
+      const tokenParts = userToken.split('.')
+      if (tokenParts.length !== 3) {
+        console.error('JWT token格式无效，parts:', tokenParts.length)
+        await this.clearInvalidSession()
+        throw new Error('用户认证token格式无效，请重新登录')
+      }
+
+      console.log('使用有效JWT token生成签名URL:', {
+        tokenParts: tokenParts.length,
+        tokenStart: userToken.substring(0, 20) + '...',
+        filePath: filePath,
+        expiresIn: expiresIn
+      })
+
+      const response = await this.supabaseRequestWithAuth({
         url: `/storage/v1/object/sign/${this.userProfileBucket}/${filePath}`,
         method: 'POST',
         data: {
           expiresIn: expiresIn
-        }
+        },
+        authToken: userToken
       })
-      
+
       if (response.error) {
         throw new Error(response.error.message)
       }
-      
+
       const signedUrl = `${this.supabaseUrl}${response.signedURL}`
-      
+
+      console.log('签名URL生成成功:', {
+        signedUrlStart: signedUrl.substring(0, 80) + '...',
+        expiresIn: expiresIn,
+        expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString()
+      })
+
       return {
         success: true,
         signedUrl: signedUrl,
         expiresIn: expiresIn,
         expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString()
       }
-      
+
     } catch (error) {
       console.error('生成签名URL失败:', error)
+
+      // 提供更友好的错误消息
+      let errorMessage = error.message
+      if (error.message?.includes('Invalid Compact JWS')) {
+        errorMessage = '用户认证已过期，请重新登录'
+      } else if (error.message?.includes('Unauthorized')) {
+        errorMessage = '没有权限访问此文件，请重新登录'
+      } else if (error.message?.includes('exp')) {
+        errorMessage = 'token已过期，请重新登录'
+      }
+
       return {
         success: false,
-        error: error.message
+        error: errorMessage
       }
+    }
+  }
+
+  /**
+   * 清理无效的本地session
+   */
+  async clearInvalidSession() {
+    try {
+      console.log('清理无效的本地session...')
+      const authService = require('./auth.service.js')
+
+      // 清理本地存储
+      wx.removeStorageSync('supabase_session')
+      wx.removeStorageSync('userInfo')
+      wx.removeStorageSync('lastLoginTime')
+
+      // 清理auth service中的状态
+      if (authService.logout) {
+        await authService.logout()
+      }
+
+      console.log('本地session清理完成')
+    } catch (error) {
+      console.error('清理本地session失败:', error)
     }
   }
 
@@ -413,6 +597,72 @@ class StorageService {
   getFileExtension(filePath) {
     const parts = filePath.split('.')
     return parts.length > 1 ? parts.pop().toLowerCase() : null
+  }
+
+  /**
+   * 带用户认证的Supabase请求封装
+   * @param {Object} options - 请求选项
+   * @returns {Promise<Object>} 响应数据
+   */
+  async supabaseRequestWithAuth(options) {
+    const { url, method = 'POST', data, authToken } = options
+
+    return new Promise((resolve, reject) => {
+      wx.request({
+        url: `${this.supabaseUrl}${url}`,
+        method,
+        data,
+        header: {
+          'apikey': this.supabaseAnonKey,
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        success: (res) => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(res.data)
+          } else {
+            reject(new Error(`HTTP ${res.statusCode}: ${JSON.stringify(res.data)}`))
+          }
+        },
+        fail: reject
+      })
+    })
+  }
+
+  /**
+   * 带用户认证的Supabase Storage上传请求
+   * @param {Object} options - 请求选项
+   * @returns {Promise<Object>} 响应数据
+   */
+  async supabaseStorageRequestWithAuth(options) {
+    const { method = 'POST', path, file, options: uploadOptions = {}, authToken } = options
+
+    return new Promise((resolve, reject) => {
+      wx.request({
+        url: `${this.supabaseUrl}/storage/v1/object/${this.userProfileBucket}/${path}`,
+        method: method,
+        data: file,
+        header: {
+          'apikey': this.supabaseAnonKey,
+          'Authorization': `Bearer ${authToken}`, // 使用用户认证token
+          'Content-Type': uploadOptions.contentType || 'application/octet-stream',
+          ...(uploadOptions.upsert && { 'x-upsert': 'true' })
+        },
+        success: (res) => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve({ data: res.data, error: null })
+          } else {
+            resolve({
+              data: null,
+              error: {
+                message: `HTTP ${res.statusCode}: ${JSON.stringify(res.data)}`
+              }
+            })
+          }
+        },
+        fail: (error) => resolve({ data: null, error })
+      })
+    })
   }
 
   /**

@@ -13,7 +13,6 @@ class IconManager {
       // 导航类图标
       'nav-browse': 'nav-browse.svg',
       'nav-category': 'nav-category.svg', 
-      'nav-profile': 'nav-profile.svg',
       
       // 播放控制类图标
       'player-play-large': 'player-play-large.svg',

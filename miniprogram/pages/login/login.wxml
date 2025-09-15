@@ -13,41 +13,41 @@
 
   <!-- 登录标题区域 -->
   <view class="tips">
-    <text class="title">登录</text>
+    <text class="title">{{mode === 'register' ? '注册' : '登录'}}</text>
     <text class="subtitle">听见学术的声音</text>
   </view>
   
   <!-- 表单区域 -->
   <view class="form-box">
     <!-- 微信登录按钮 -->
-    <view wx:if="{{!showUserInfoForm}}" class="login-btn" bindtap="handleWechatLogin">
+    <view wx:if="{{!showUserInfoForm}}" class="login-btn" bindtap="{{mode === 'register' ? 'handleRegister' : 'handleWechatLogin'}}">
       <image class="login-icon" src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/wechat.svg"></image>
-      <text class="login-text">微信登录</text>
+      <text class="login-text">{{mode === 'register' ? '微信注册' : '微信登录'}}</text>
     </view>
 
     <!-- 用户信息设置表单 -->
     <view wx:if="{{showUserInfoForm}}" class="user-info-section">
-      <view class="form-title">完善个人信息</view>
-      
+      <view class="form-title">{{mode === 'register' ? '填写注册信息' : '完善个人信息'}}</view>
+
       <!-- 头像选择 - 完全复刻avatar_nickname -->
       <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
         <image class="avatar" src="{{avatarUrl}}"></image>
       </button>
-      
+
       <!-- 昵称输入 - 完全复刻avatar_nickname -->
       <view class="nickname-section">
         <text class="nickname-label">昵称</text>
-        <input type="nickname" class="nickname-input" placeholder="请输入昵称"/>
+        <input type="nickname" class="nickname-input" placeholder="请输入昵称" value="{{nickname}}" bindinput="onNicknameChange"/>
       </view>
-      
+
       <!-- 完成按钮 -->
-      <button class="complete-btn" bindtap="completeUserInfo">完成设置</button>
+      <button class="complete-btn" bindtap="completeUserInfo">{{mode === 'register' ? '完成注册' : '完成设置'}}</button>
     </view>
 
     <!-- 其他操作 -->
     <view wx:if="{{!showUserInfoForm}}" class="other-actions">
       <text bindtap="handleGuestMode">游客浏览</text>
-      <text class="register-link" bindtap="handleRegister">快速注册</text>
+      <text class="register-link" bindtap="switchMode">{{mode === 'register' ? '已有账号？登录' : '没有账号？注册'}}</text>
     </view>
 
     <!-- 协议同意 -->

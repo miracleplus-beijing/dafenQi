@@ -386,25 +386,45 @@ class AudioPreloaderService {
   }
 
   /**
+   * 清理过期缓存 (兼容旧版API)
+   */
+  cleanExpiredCache() {
+    console.log('🧹 清理过期缓存 (分块预加载版本)')
+    // 使用LRU缓存的自动清理机制
+    lruCache.cleanup()
+    // 清理过期的音频文件信息
+    audioChunkManager.cleanExpiredInfo(5 * 60 * 1000) // 清理5分钟前的信息
+  }
+
+  /**
+   * 清理距离当前位置过远的预加载内容 (兼容旧版API)
+   * @param {number} currentIndex - 当前播放索引
+   */
+  cleanDistantPreloads(currentIndex) {
+    console.log('🧹 清理过远预加载内容:', currentIndex)
+    this.cleanDistantAudioCache(currentIndex)
+  }
+
+  /**
    * 销毁所有预加载资源
    */
   destroyAll() {
     console.log('🗑️ 销毁所有分块预加载资源')
-    
+
     // 清理分块预加载资源
     smartPreloadController.destroy()
     lruCache.clear()
     audioChunkManager.cleanExpiredInfo(0) // 立即清理所有缓存
-    
+
     // 重置状态
     this.currentPlayingAudio = null
     this.isPreloading = false
-    
+
     if (this.playbackProgressInterval) {
       clearInterval(this.playbackProgressInterval)
       this.playbackProgressInterval = null
     }
-    
+
     console.log('✅ 所有分块预加载资源已清理完成')
   }
 }

@@ -5,14 +5,14 @@
 
 const ratingMatrixService = require('./rating-matrix.service.js')
 const similarityUtils = require('../../utils/similarity.utils.js')
-const apiService = require('../api.service.js')
+const requestUtil = require('../../utils/request.js')
 
 class CollaborativeFilteringService {
   constructor() {
     this.ratingService = ratingMatrixService
     this.similarity = similarityUtils
-    this.api = apiService
-    
+    this.requestUtil = requestUtil
+
     // 推荐算法配置
     this.config = {
       maxSimilarUsers: 20,        // 最大相似用户数
@@ -24,7 +24,7 @@ class CollaborativeFilteringService {
       noveltyWeight: 0.1,         // 新颖性权重
       popularityWeight: 0.3       // 热门度权重
     }
-    
+
     this.recommendationCache = new Map()
     this.CACHE_DURATION = 20 * 60 * 1000 // 20分钟缓存
   }
@@ -378,13 +378,28 @@ class CollaborativeFilteringService {
    */
   async getPopularItems(count = 10) {
     try {
-      const result = await this.api.podcast.getRecommended(count)
-      return result.success ? result.data.map(item => ({
+      // 直接从数据库查询热门播客，避免循环依赖
+      const podcasts = await this.requestUtil.get('/rest/v1/podcasts', {
+        select: 'id,title,description,cover_url,audio_url,duration,play_count,like_count,favorite_count',
+        order: 'play_count.desc,created_at.desc',
+        limit: count
+      })
+
+      if (!podcasts || podcasts.length === 0) {
+        console.warn('没有找到热门播客数据')
+        return []
+      }
+
+      // 转换为推荐算法格式
+      return podcasts.map(item => ({
         ...item,
-        predictedRating: item.play_count * 0.01, // 简化的热门度评分
+        itemId: item.id, // 添加itemId字段以保持一致性
+        predictedRating: (item.play_count || 0) * 0.01, // 简化的热门度评分
         algorithm: 'popular',
-        reasons: ['热门推荐']
-      })) : []
+        reasons: ['热门推荐'],
+        score: (item.play_count || 0) * 0.01
+      }))
+
     } catch (error) {
       console.error('获取热门物品失败:', error)
       return []

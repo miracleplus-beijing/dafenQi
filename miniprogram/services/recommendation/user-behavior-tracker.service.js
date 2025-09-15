@@ -3,8 +3,6 @@
  * 用于收集和分析用户行为数据，优化推荐算法
  */
 
-const apiService = require('../api.service.js')
-
 class UserBehaviorTracker {
   constructor() {
     // 行为队列，用于批量处理

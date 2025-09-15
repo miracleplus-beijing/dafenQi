@@ -1,5 +1,6 @@
 // 我的页面逻辑
 const app = getApp()
+const authService = require('../../services/auth.service.js')
 
 Page({
   data: {
@@ -57,54 +58,53 @@ Page({
   },
 
   // 检查登录状态
-  checkLoginStatus: function() {
-    const globalData = app.globalData
-    
-    // 优先检查全局状态
-    let isLoggedIn = globalData.isLoggedIn || false
-    let userInfo = globalData.userInfo || {}
-    
-    // 如果全局状态没有，检查本地存储
-    if (!isLoggedIn || !userInfo.id) {
-      try {
-        const localUserInfo = wx.getStorageSync('userInfo')
-        if (localUserInfo && localUserInfo.id) {
-          userInfo = localUserInfo
-          isLoggedIn = true
-          
-          // 同步到全局数据
-          app.globalData.userInfo = userInfo
-          app.globalData.isLoggedIn = true
+  checkLoginStatus: async function() {
+    console.log('检查登录状态...')
+
+    try {
+      // 优先检查Supabase Auth状态
+      const isLoggedIn = await authService.checkLoginStatus()
+      const currentUser = await authService.getCurrentUser() // 现在是异步调用
+
+      console.log('Supabase Auth登录状态:', isLoggedIn)
+      console.log('当前用户信息:', currentUser)
+
+      // 更新页面数据
+      this.setData({
+        isLoggedIn: isLoggedIn,
+        userInfo: currentUser || {
+          nickName: '',
+          avatarUrl: '',
+          id: ''
         }
-      } catch (e) {
-        console.error('读取本地用户信息失败:', e)
+      })
+
+      // 同步到全局数据（确保一致性）
+      try {
+        const app = getApp()
+        if (app && app.globalData) {
+          app.globalData.isLoggedIn = isLoggedIn
+          app.globalData.userInfo = currentUser
+        }
+      } catch (error) {
+        console.warn('同步到全局数据失败:', error)
       }
+
+      console.log('页面登录状态更新完成:', { isLoggedIn, userInfo: currentUser })
+
+    } catch (error) {
+      console.error('检查登录状态失败:', error)
+
+      // 出错时设置为未登录状态
+      this.setData({
+        isLoggedIn: false,
+        userInfo: {
+          nickName: '',
+          avatarUrl: '',
+          id: ''
+        }
+      })
     }
-    
-    // 再次检查认证服务
-    if (!isLoggedIn) {
-      const authService = require('../../services/auth.service.js')
-      isLoggedIn = authService.getCurrentUser() !== null
-      if (isLoggedIn && !userInfo.id) {
-        userInfo = authService.getCurrentUser()
-      }
-    }
-    
-    // 格式化用户信息显示
-    const displayUserInfo = {
-      ...userInfo,
-      // 确保使用正确的字段名显示昵称
-      nickName: userInfo.nickname || userInfo.nickName || userInfo.username || '微信用户',
-      avatarUrl: userInfo.avatar_url || userInfo.avatarUrl || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-avatar.png'
-    }
-    
-    this.setData({
-      isLoggedIn: isLoggedIn,
-      userInfo: displayUserInfo
-    })
-    
-    console.log('登录状态:', isLoggedIn)
-    console.log('用户信息:', displayUserInfo)
   },
 
   // 页面进入动画
@@ -148,11 +148,6 @@ Page({
         })
         break
       
-      case 'share':
-        console.log('分享给朋友')
-        this.handleShare()
-        break
-      
       case 'feedback':
         console.log('跳转到问题反馈')
         wx.navigateTo({
@@ -177,19 +172,6 @@ Page({
     }
   },
 
-  // 处理分享
-  handleShare: function() {
-    wx.showShareMenu({
-      withShareTicket: true,
-      showShareItems: ['wechatFriends', 'wechatMoment']
-    })
-    
-    wx.showToast({
-      title: '请使用右上角分享',
-      icon: 'none',
-      duration: 2000
-    })
-  },
 
   // 处理退出登录
   handleLogout: function() {
@@ -207,38 +189,75 @@ Page({
   },
 
   // 执行退出登录
-  performLogout: function() {
+  performLogout: async function() {
+    const authService = require('../../services/auth.service.js')
+
     wx.showLoading({
       title: '退出中...'
     })
-    
-    // 清除全局用户数据
-    app.logout()
-    
-    // 清除本地存储的用户信息
+
     try {
-      wx.removeStorageSync('userInfo')
-    } catch (e) {
-      console.error('清除本地用户信息失败:', e)
-    }
-    
-    // 更新页面状态
-    this.setData({
-      isLoggedIn: false,
-      userInfo: {}
-    })
-    
-    setTimeout(() => {
+      // 使用auth service登出
+      const result = await authService.logout()
+
+      if (result.success) {
+        // 更新页面状态
+        this.setData({
+          isLoggedIn: false,
+          userInfo: {
+            nickName: '',
+            avatarUrl: '',
+            id: ''
+          }
+        })
+
+        wx.hideLoading()
+        wx.showToast({
+          title: '已退出登录',
+          icon: 'success',
+          duration: 1500
+        })
+
+        console.log('退出登录成功')
+      } else {
+        wx.hideLoading()
+        wx.showToast({
+          title: '退出失败: ' + result.error,
+          icon: 'none',
+          duration: 1500
+        })
+      }
+    } catch (error) {
+      console.error('退出登录失败:', error)
+
+      // 即使退出失败，也清除本地状态
+      this.setData({
+        isLoggedIn: false,
+        userInfo: {
+          nickName: '',
+          avatarUrl: '',
+          id: ''
+        }
+      })
+
+      // 清除全局状态
+      try {
+        const app = getApp()
+        if (app && app.globalData) {
+          app.globalData.isLoggedIn = false
+          app.globalData.userInfo = null
+        }
+      } catch (appError) {
+        console.warn('清除全局状态失败:', appError)
+      }
+
       wx.hideLoading()
-      
       wx.showToast({
         title: '已退出登录',
         icon: 'success',
         duration: 1500
       })
-    }, 500)
-    
-    console.log('退出登录成功')
+    }
   },
 
   // 触摸开始
@@ -430,15 +449,48 @@ Page({
   },
 
   // 更换头像
-  changeAvatar: function() {
+  changeAvatar: async function() {
+    console.log('尝试更换头像，当前登录状态:', this.data.isLoggedIn)
+
+    // 重新检查登录状态
+    await this.checkLoginStatus()
+
     if (!this.data.isLoggedIn) {
-      wx.showToast({
-        title: '请先登录',
-        icon: 'none',
-        duration: 1500
+      wx.showModal({
+        title: '需要登录',
+        content: '请先登录后再修改头像',
+        confirmText: '去登录',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({
+              url: '/pages/login/login'
+            })
+          }
+        }
       })
       return
     }
+
+    const currentUser = await authService.getCurrentUser()
+    if (!currentUser || !currentUser.id) {
+      wx.showModal({
+        title: '登录状态异常',
+        content: '请重新登录后再试',
+        confirmText: '重新登录',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({
+              url: '/pages/login/login'
+            })
+          }
+        }
+      })
+      return
+    }
+
+    console.log('开始选择头像，用户ID:', currentUser.id)
 
     wx.showActionSheet({
       itemList: ['从相册选择', '拍照'],
@@ -568,37 +620,52 @@ Page({
   },
 
   // 更新用户名
-  updateUserName: function(nickName) {
+  updateUserName: async function(nickName) {
+    const authService = require('../../services/auth.service.js')
+
     wx.showLoading({
       title: '更新中...'
     })
-    
-    // 模拟网络请求
-    setTimeout(() => {
-      const newUserInfo = {
-        ...this.data.userInfo,
+
+    try {
+      const result = await authService.updateUserInfo({
         nickName: nickName
-      }
-      
-      // 更新页面数据
-      this.setData({
-        userInfo: newUserInfo
       })
-      
-      // 更新全局数据
-      app.globalData.userInfo = newUserInfo
-      
-      // 保存到本地存储
-      wx.setStorageSync('userInfo', newUserInfo)
-      
+
+      if (result.success) {
+        // 更新页面数据
+        const newUserInfo = result.user
+        this.setData({
+          userInfo: newUserInfo
+        })
+
+        // 更新全局数据
+        app.globalData.userInfo = newUserInfo
+
+        wx.hideLoading()
+        wx.showToast({
+          title: '用户名更新成功',
+          icon: 'success',
+          duration: 1500
+        })
+
+        console.log('用户名更新成功:', newUserInfo.nickname)
+      } else {
+        wx.hideLoading()
+        wx.showToast({
+          title: '用户名更新失败: ' + result.error,
+          icon: 'none',
+          duration: 2000
+        })
+      }
+    } catch (error) {
       wx.hideLoading()
       wx.showToast({
-        title: '用户名更新成功',
-        icon: 'success',
+        title: '用户名更新失败',
+        icon: 'none',
         duration: 1500
       })
-      
-      console.log('用户名更新成功:', nickName)
-    }, 800)
+      console.error('用户名更新失败:', error)
+    }
   }
 })

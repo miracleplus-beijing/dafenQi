@@ -15,6 +15,32 @@ class AudioService {
   }
 
   /**
+   * 获取用户JWT token
+   * @returns {string|null} JWT token或null
+   */
+  getUserAccessToken() {
+    try {
+      const session = wx.getStorageSync('supabase_session')
+      if (session && session.access_token) {
+        return session.access_token
+      }
+      return null
+    } catch (error) {
+      console.warn('获取用户token失败:', error)
+      return null
+    }
+  }
+
+  /**
+   * 检查当前用户是否已登录
+   * @returns {boolean} 是否已登录
+   */
+  isUserLoggedIn() {
+    const token = this.getUserAccessToken()
+    return token !== null
+  }
+
+  /**
    * 获取播客列表
    * @param {Object} options - 查询选项
    * @returns {Promise<Object>} 播客列表
@@ -118,8 +144,14 @@ class AudioService {
    */
   async recordPlayHistory(userId, podcastId, playPosition = 0, playDuration = 0) {
     try {
+      // 检查用户是否已登录
+      if (!this.isUserLoggedIn()) {
+        console.warn('用户未登录，跳过播放历史记录')
+        return { success: true, message: '未登录用户，跳过历史记录' }
+      }
+
       const url = `${this.supabaseUrl}/rest/v1/user_play_history`
-      
+
       const data = {
         user_id: userId,
         podcast_id: podcastId,
@@ -129,14 +161,25 @@ class AudioService {
         played_at: new Date().toISOString()
       }
 
-      await this.makeRequest(url, 'POST', data)
-      
+      // 明确要求用户认证
+      await this.makeRequest(url, 'POST', data, true)
+
       // 同时更新播客的播放次数
       await this.incrementPlayCount(podcastId)
-      
+
       return { success: true }
     } catch (error) {
       console.error('记录播放历史失败:', error)
+
+      // 如果是权限问题，给用户友好的提示
+      if (error.message.includes('权限不足') || error.message.includes('未登录')) {
+        return {
+          success: false,
+          error: '请先登录后再播放',
+          errorType: 'auth_required'
+        }
+      }
+
       return {
         success: false,
         error: error.message
@@ -190,22 +233,28 @@ class AudioService {
    */
   async addToFavorites(userId, podcastId) {
     try {
+      // 检查用户是否已登录
+      if (!this.isUserLoggedIn()) {
+        return { success: false, error: '请先登录后再收藏', errorType: 'auth_required' }
+      }
+
       const url = `${this.supabaseUrl}/rest/v1/user_favorites`
-      
+
       const data = {
         user_id: userId,
         podcast_id: podcastId,
         created_at: new Date().toISOString()
       }
 
-      await this.makeRequest(url, 'POST', data)
-      
+      // 需要用户认证
+      await this.makeRequest(url, 'POST', data, true)
+
       return { success: true }
     } catch (error) {
       console.error('添加收藏失败:', error)
       return {
         success: false,
-        error: error.message
+        error: error.message.includes('权限不足') ? '请先登录后再收藏' : error.message
       }
     }
   }
@@ -218,15 +267,22 @@ class AudioService {
    */
   async removeFromFavorites(userId, podcastId) {
     try {
+      // 检查用户是否已登录
+      if (!this.isUserLoggedIn()) {
+        return { success: false, error: '请先登录后操作', errorType: 'auth_required' }
+      }
+
       const url = `${this.supabaseUrl}/rest/v1/user_favorites?user_id=eq.${userId}&podcast_id=eq.${podcastId}`
-      await this.makeRequest(url, 'DELETE')
-      
+
+      // 需要用户认证
+      await this.makeRequest(url, 'DELETE', null, true)
+
       return { success: true }
     } catch (error) {
       console.error('移除收藏失败:', error)
       return {
         success: false,
-        error: error.message
+        error: error.message.includes('权限不足') ? '请先登录后操作' : error.message
       }
     }
   }
@@ -238,9 +294,16 @@ class AudioService {
    */
   async getUserFavorites(userId) {
     try {
+      // 检查用户是否已登录
+      if (!this.isUserLoggedIn()) {
+        return { success: false, error: '请先登录', errorType: 'auth_required', data: [] }
+      }
+
       const url = `${this.supabaseUrl}/rest/v1/user_favorites?user_id=eq.${userId}&select=*,podcasts(id,title,cover_url,duration,channels(name))&order=created_at.desc`
-      const response = await this.makeRequest(url, 'GET')
-      
+
+      // 需要用户认证
+      const response = await this.makeRequest(url, 'GET', null, true)
+
       return {
         success: true,
         data: response.data || []
@@ -249,7 +312,7 @@ class AudioService {
       console.error('获取收藏列表失败:', error)
       return {
         success: false,
-        error: error.message,
+        error: error.message.includes('权限不足') ? '请先登录' : error.message,
         data: []
       }
     }
@@ -373,32 +436,61 @@ class AudioService {
    * @param {string} url - 请求地址
    * @param {string} method - 请求方法
    * @param {Object} data - 请求数据
+   * @param {boolean} requireAuth - 是否需要用户认证
    * @returns {Promise<Object>} 响应结果
    */
-  makeRequest(url, method = 'GET', data = null) {
+  makeRequest(url, method = 'GET', data = null, requireAuth = false) {
     return new Promise((resolve, reject) => {
+      // 智能选择认证方式
+      const userToken = this.getUserAccessToken()
+      let authorizationHeader
+
+      if (requireAuth && !userToken) {
+        // 需要认证但用户未登录，直接拒绝请求
+        reject(new Error('用户未登录，无法执行此操作'))
+        return
+      }
+
+      if (userToken && (requireAuth || url.includes('user_'))) {
+        // 使用用户JWT token（对于需要认证的操作或用户相关的表）
+        authorizationHeader = `Bearer ${userToken}`
+        console.log('使用用户JWT token进行认证请求')
+      } else {
+        // 使用匿名token（对于公开操作）
+        authorizationHeader = `Bearer ${this.supabaseAnonKey}`
+        console.log('使用匿名token进行公开请求')
+      }
+
       const requestOptions = {
         url,
         method,
         header: {
           'apikey': this.supabaseAnonKey,
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.supabaseAnonKey}`,
+          'Authorization': authorizationHeader,
           'Prefer': 'return=representation'
         },
         success: (res) => {
           console.log('网络请求响应:', {
             statusCode: res.statusCode,
             data: res.data,
-            header: res.header
+            header: res.header,
+            authType: userToken ? 'user' : 'anonymous'
           })
-          
+
           if (res.statusCode >= 200 && res.statusCode < 300) {
             resolve({ data: res.data })
           } else {
             const errorMsg = `HTTP ${res.statusCode}: ${(res.data && res.data.message) || res.errMsg}`
             console.error('API请求失败:', errorMsg)
-            reject(new Error(errorMsg))
+
+            // 特殊处理RLS权限错误
+            if (res.statusCode === 401 && res.data && res.data.message && res.data.message.includes('row-level security')) {
+              console.error('RLS权限错误，用户可能未登录或无权限访问此资源')
+              reject(new Error('权限不足，请先登录'))
+            } else {
+              reject(new Error(errorMsg))
+            }
           }
         },
         fail: (error) => {
