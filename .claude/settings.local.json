@@ -93,7 +93,11 @@
       "mcp__supabase__deploy_edge_function",
       "mcp__supabase__get_edge_function",
       "WebFetch(domain:supabase.com)",
-      "Bash(\"https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/sign/user_profile/f6759cc3-8b0e-4faa-8cea-56b2d169579c/avatars/avatar_1757854309708.jpeg\")"
+      "Bash(\"https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/sign/user_profile/f6759cc3-8b0e-4faa-8cea-56b2d169579c/avatars/avatar_1757854309708.jpeg\")",
+      "Bash(python:*)",
+      "Bash(for:*)",
+      "Bash(echo:*)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

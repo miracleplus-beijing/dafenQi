@@ -412,11 +412,18 @@ const recommendationService = new RecommendationService()
 
 module.exports = recommendationService
 
-// 自动初始化
-recommendationService.initialize().then(result => {
-  if (result.success) {
-    console.log('推荐服务已就绪')
-  } else {
-    console.error('推荐服务初始化失败:', result.error)
-  }
-})
+// 延迟自动初始化，避免阻塞模块加载
+setTimeout(() => {
+  recommendationService.initialize().then(result => {
+    if (result.success) {
+      console.log('推荐服务已就绪')
+    } else {
+      console.error('推荐服务初始化失败:', result.error)
+    }
+  }).catch(error => {
+    console.error('推荐服务初始化异常:', error.message)
+    // 即使初始化失败，也确保服务可用
+    recommendationService.isInitialized = true
+    recommendationService.serviceHealth = 'degraded'
+  })
+}, 0)

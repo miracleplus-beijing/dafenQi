@@ -125,7 +125,7 @@ Page({
                 channelCoverUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/classic_paper_interpretation.png'
               } else {
                 // 默认封面
-                channelCoverUrl = podcast.channels?.cover_url || podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-cover.png'
+                channelCoverUrl = podcast.channels?.cover_url || podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png'
               }
               
               return {
@@ -183,7 +183,7 @@ Page({
                 channelCoverUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/classic_paper_interpretation.png'
               } else {
                 // 默认封面
-                channelCoverUrl = podcast.channels?.cover_url || podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-cover.png'
+                channelCoverUrl = podcast.channels?.cover_url || podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png'
               }
               
               return {
@@ -240,7 +240,7 @@ Page({
                 channelCoverUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/classic_paper_interpretation.png'
               } else {
                 // 默认封面
-                channelCoverUrl = podcast.channels?.cover_url || podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-cover.png'
+                channelCoverUrl = podcast.channels?.cover_url || podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png'
               }
               
               return {
@@ -267,24 +267,49 @@ Page({
   },
 
   // 初始化推荐论文
-  initRecommendedPapers: function() {
-    const papers = [
-      {
-        id: 'paper_001',
-        title: '论文标题',
-        team: '主要团队 研究机构',
-        abstract: 'Abstract: As robots are becoming skilled at performing complex tasks, the next step……'
-      },
-      {
-        id: 'paper_002',
-        title: '论文标题',
-        team: '主要团队 研究机构',
-        abstract: 'Abstract: The criteria for consideration of translational and clinical research……'
-      }
-    ]
-    
-    this.setData({
-      recommendedPapers: papers
+  async initRecommendedPapers() {
+    try {
+      const result = await this.loadRecommendedPapers()
+      this.setData({
+        recommendedPapers: result.success ? result.data : []
+      })
+    } catch (error) {
+      console.error('加载推荐论文失败:', error)
+      // 降级到空数组
+      this.setData({
+        recommendedPapers: []
+      })
+    }
+  },
+
+  // 加载推荐论文数据
+  async loadRecommendedPapers() {
+    return new Promise((resolve) => {
+      wx.request({
+        url: `${app.globalData.supabaseUrl}/rest/v1/paper_recommendations?select=*&status=eq.active&order=display_order.asc&limit=2`,
+        method: 'GET',
+        header: {
+          'apikey': app.globalData.supabaseAnonKey,
+          'Authorization': `Bearer ${app.globalData.supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        },
+        success: (res) => {
+          if (res.statusCode === 200) {
+            const papers = res.data.map(paper => ({
+              id: paper.id,
+              title: paper.title,
+              team: paper.team,
+              abstract: paper.abstract,
+              paper_url: paper.paper_url,
+              channel_cover_url: paper.channel_cover_url
+            }))
+            resolve({ success: true, data: papers })
+          } else {
+            resolve({ success: false, error: '加载推荐论文失败' })
+          }
+        },
+        fail: () => resolve({ success: false, error: '网络错误' })
+      })
     })
   },
 
@@ -334,24 +359,51 @@ Page({
   },
 
   // 初始化精选播客
-  initFeaturedPodcasts: function() {
-    const podcasts = [
-      {
-        id: 'featured_001',
-        channel: '频道名称',
-        title: '播客标题 播客标题 播客标题 播客标题',
-        recommendation: '编辑推荐语 编辑推荐语 编辑推荐语 编辑推荐语 编辑推荐语'
-      },
-      {
-        id: 'featured_002',
-        channel: '频道名称',
-        title: '播客标题 播客标题 播客标题 播客标题',
-        recommendation: '编辑推荐语 编辑推荐语 编辑推荐语 编辑推荐语 编辑推荐语'
-      }
-    ]
-    
-    this.setData({
-      featuredPodcasts: podcasts
+  async initFeaturedPodcasts() {
+    try {
+      const result = await this.loadFeaturedPodcasts()
+      this.setData({
+        featuredPodcasts: result.success ? result.data : []
+      })
+    } catch (error) {
+      console.error('加载精选播客失败:', error)
+      // 降级到空数组
+      this.setData({
+        featuredPodcasts: []
+      })
+    }
+  },
+
+  // 加载精选播客数据
+  async loadFeaturedPodcasts() {
+    return new Promise((resolve) => {
+      wx.request({
+        url: `${app.globalData.supabaseUrl}/rest/v1/editorial_recommendations?select=*,podcasts(id,title,description,cover_url,audio_url,duration,channels(name))&recommendation_type=eq.featured&status=eq.active&order=display_order.asc&limit=2`,
+        method: 'GET',
+        header: {
+          'apikey': app.globalData.supabaseAnonKey,
+          'Authorization': `Bearer ${app.globalData.supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        },
+        success: (res) => {
+          if (res.statusCode === 200) {
+            const featuredPodcasts = res.data.map(item => ({
+              id: item.podcasts.id,
+              title: item.podcasts.title,
+              description: item.podcasts.description,
+              cover_url: item.podcasts.cover_url,
+              audio_url: item.podcasts.audio_url,
+              duration: item.podcasts.duration,
+              channel: item.podcasts.channels?.name || '达芬Qi官方',
+              recommendation: item.recommendation_text
+            }))
+            resolve({ success: true, data: featuredPodcasts })
+          } else {
+            resolve({ success: false, error: '加载精选播客失败' })
+          }
+        },
+        fail: () => resolve({ success: false, error: '网络错误' })
+      })
     })
   },
 
@@ -438,7 +490,7 @@ Page({
       title: item.title,
       description: item.description,
       audio_url: item.audio_url,
-      cover_url: item.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-cover.png',
+      cover_url: item.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png',
       duration: item.duration,
       channel: item.channel,
       play_count: item.play_count || 0,

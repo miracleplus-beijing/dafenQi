@@ -11,55 +11,55 @@ Page({
     isPlaying: false,
     currentProgress: 0,
     maxProgress: 100,
-    
+
     // 播客列表
     podcastList: [],
     currentIndex: 0,
     loading: true,
-    
+
     // 自定义音频加载状态
     audioLoadingVisible: false,
     audioLoadingText: '加载播客...',
-    
+
     // 分页和去重
     currentPage: 1,
     hasMoreData: true,
     loadedPodcastIds: [], // 已加载的播客ID数组
-    
+
     // 音频相关
     audioContext: null,
     currentAudio: null,
     audioPosition: 0, // 当前播放位置（秒）
     audioDuration: 0,  // 音频总时长（秒）
     audioLoading: false, // 音频是否正在加载
-    
+
     // 时间显示
     currentTimeFormatted: '0:00',
     totalTimeFormatted: '0:00',
-    
+
     // 防止自动滑动的标志
     lastUserInteraction: 0,
     allowSwiperChange: false,
     isDraggingThumb: false,
-    
+
     // 自动播放控制
     autoPlayOnSwipe: true, // 控制下滑后是否自动播放
     userGestureActive: false, // 是否有用户手势正在进行
-    
+
     // 智能分块缓冲进度条数据
     progressBarRect: null, // 缓存进度条位置信息
     chunkDistribution: [], // 分块分布数据
-    
+
     // 网络状态指示器（仅用于视觉指示，不显示文字）
     networkStatus: {
       networkType: 'wifi',
       isSlowNetwork: false
     },
-    
+
     // 节流控制
     lastThrottleTime: 0, // 节流时间戳
     throttleInterval: 16, // 约60fps的节流间隔
-    
+
     // CDN图片URL (带本地降级)
     cdnImages: {
       playIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-large.svg',
@@ -78,7 +78,7 @@ Page({
       loadingIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/loading.svg',
       shareCover: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/share-cover.jpg'
     },
-    
+
     // 认知提取相关状态
     insightVisible: false, // 弹窗显示状态
     insightFullScreen: false, // 全屏模式
@@ -88,16 +88,22 @@ Page({
     insightsList: [], // 多个insights列表
     currentInsightIndex: 0, // 当前显示的insight索引
     insightTranslateY: 0, // 弹窗Y轴位移（用于拖拽动画）
-    
+
     // 拖拽手势相关（用于全屏切换）
     insightTouchStartY: 0, // 手势开始位置
     insightTouchMoveY: 0, // 手势移动位置
     insightTouchStartTime: 0, // 手势开始时间
-    
+
     // 内容手势相关（用于关闭手势）
     contentTouchStartY: 0, // 内容区手势开始位置
     contentTouchMoveY: 0, // 内容区手势移动位置
     contentTouchStartTime: 0, // 内容区手势开始时间
+
+    // 智能降级和用户体验相关
+    isLoggedIn: false, // 登录状态
+    showLoginTip: false, // 显示登录提示
+    loginTipMessage: '', // 登录提示消息
+    isPersonalized: true, // 是否为个性化推荐
     
     // 个性化推荐相关
     personalizedRecommendations: [], // 个性化推荐列表
@@ -107,13 +113,16 @@ Page({
 
   onLoad: function (options) {
     console.log('漫游页面加载', options)
-    
+
+    // 检查登录状态
+    this.checkLoginStatus()
+
     // 初始化音频上下文
     this.initAudioContext()
-    
-    // 获取用户个性化推荐
+
+    // 获取用户个性化推荐（带智能降级）
     this.loadPersonalizedRecommendations()
-    
+
     // 处理来自搜索页面的播客跳转
     if (options.podcastId) {
       console.log('接收到搜索跳转播客ID:', options.podcastId)
@@ -124,31 +133,131 @@ Page({
     }
   },
 
-  // 加载个性化推荐（固定模式）
+  // 检查登录状态
+  checkLoginStatus() {
+    const userInfo = app.globalData.userInfo
+    const isLoggedIn = app.globalData.isLoggedIn && userInfo && userInfo.id
+
+    this.setData({
+      isLoggedIn: isLoggedIn
+    })
+
+    console.log('用户登录状态:', isLoggedIn)
+  },
+
+  // 智能降级的个性化推荐加载
   async loadPersonalizedRecommendations() {
     try {
       const userInfo = app.globalData.userInfo
       this.setData({ recommendationsLoading: true })
 
-      // 固定使用个性化推荐
-      const result = userInfo && userInfo.id
-        ? await apiService.recommendation.getPersonalized(userInfo.id, {
-            algorithm: 'hybrid',
-            count: 20,
-            includeReasons: true
-          })
-        : await apiService.recommendation.getPopularRecommendations(20)
-
-      if (result.success && result.data) {
-        this.setData({
-          personalizedRecommendations: result.data,
-          recommendationsLoading: false
+      // 智能降级逻辑：优先尝试个性化推荐
+      if (this.data.isLoggedIn && userInfo && userInfo.id) {
+        console.log('尝试加载个性化推荐')
+        const result = await apiService.recommendation.getPersonalized(userInfo.id, {
+          algorithm: 'hybrid',
+          count: 20,
+          includeReasons: true
         })
+
+        if (result.success) {
+          this.setData({
+            personalizedRecommendations: result.data || [],
+            recommendationsLoading: false,
+            isPersonalized: true
+          })
+          console.log('个性化推荐加载成功')
+          return
+        } else if (result.needLogin) {
+          console.log('个性化推荐需要登录，降级到热门推荐')
+          this.showLoginTip('登录后可获得个性化推荐')
+        } else {
+          console.warn('个性化推荐加载失败，降级到热门推荐:', result.error)
+        }
+      } else {
+        console.log('用户未登录，直接使用热门推荐')
+      }
+
+      // 降级到热门推荐
+      await this.loadPopularRecommendations()
+
+    } catch (error) {
+      console.error('推荐系统异常，降级到热门推荐:', error)
+      await this.loadPopularRecommendations()
+    }
+  },
+
+  // 热门推荐降级方案
+  async loadPopularRecommendations() {
+    try {
+      console.log('加载热门推荐作为降级方案')
+
+      // 防御性检查：确保apiService和recommendation存在
+      if (!apiService) {
+        console.error('apiService未加载，使用静态内容')
+        this.loadStaticRecommendations()
+        return
+      }
+
+      if (!apiService.recommendation) {
+        console.error('apiService.recommendation未加载，使用静态内容')
+        this.loadStaticRecommendations()
+        return
+      }
+
+      if (typeof apiService.recommendation.getPopular !== 'function') {
+        console.error('apiService.recommendation.getPopular方法不存在，使用静态内容')
+        this.loadStaticRecommendations()
+        return
+      }
+
+      const result = await apiService.recommendation.getPopular(20)
+
+      if (result.success) {
+        this.setData({
+          personalizedRecommendations: result.data || [],
+          recommendationsLoading: false,
+          isPersonalized: false
+        })
+        console.log('热门推荐加载成功')
+      } else {
+        console.warn('热门推荐加载失败，使用静态内容')
+        this.showStaticContent()
       }
     } catch (error) {
-      console.error('加载个性化推荐失败:', error)
-      this.setData({ recommendationsLoading: false })
+      console.error('热门推荐加载异常，使用静态内容:', error)
+      this.showStaticContent()
     }
+  },
+
+  // 最后的降级：显示静态内容
+  showStaticContent() {
+    this.setData({
+      personalizedRecommendations: [],
+      recommendationsLoading: false,
+      isPersonalized: false
+    })
+    console.log('使用静态内容作为最后降级方案')
+  },
+
+  // 显示友好的登录提示
+  showLoginTip(message) {
+    this.setData({
+      showLoginTip: true,
+      loginTipMessage: message
+    })
+
+    // 3秒后自动隐藏
+    setTimeout(() => {
+      this.setData({ showLoginTip: false })
+    }, 3000)
+  },
+
+  // 用户点击登录提示
+  handleLoginTip() {
+    wx.navigateTo({
+      url: '/pages/login/login'
+    })
   },
 
 
@@ -179,7 +288,7 @@ Page({
       
       // 自动播放插入的播客
       setTimeout(() => {
-        this.startAutoPlay()
+        this.triggerAutoPlay()
       }, 500)
     }
     
@@ -231,7 +340,7 @@ Page({
         if (shouldAutoPlay) {
           setTimeout(() => {
             console.log('开始自动播放搜索的播客')
-            this.startAutoPlay()
+            this.triggerAutoPlay()
           }, 500)
         }
       } else {
@@ -283,7 +392,7 @@ Page({
         if (shouldAutoPlay) {
           setTimeout(() => {
             console.log('开始自动播放插入的播客')
-            this.startAutoPlay()
+            this.triggerAutoPlay()
           }, 500)
         }
       } else {
@@ -373,7 +482,7 @@ Page({
         })
         // 自动播放
         setTimeout(() => {
-          this.startAutoPlay()
+          this.triggerAutoPlay()
         }, 500)
       } else {
         // 播客不在当前列表中，将其插入到列表开头
@@ -402,7 +511,7 @@ Page({
           console.log('播客列表已更新，当前索引:', this.data.currentIndex)
           // 自动播放新插入的播客
           setTimeout(() => {
-            this.startAutoPlay()
+            this.triggerAutoPlay()
           }, 500)
         })
       }

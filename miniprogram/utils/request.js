@@ -12,7 +12,7 @@ class RequestUtil {
     }
   }
 
-  // 获取认证令牌
+  // 获取认证令牌（已弃用，使用getValidAuthToken代替）
   async getAuthToken() {
     try {
       const session = wx.getStorageSync('supabase_session')
@@ -23,7 +23,101 @@ class RequestUtil {
     }
   }
 
-  // 通用请求方法
+  // 获取有效认证令牌（带智能验证）
+  async getValidAuthToken() {
+    try {
+      const session = wx.getStorageSync('supabase_session')
+      if (!session?.access_token) {
+        console.log('无Session或access_token，将使用匿名访问')
+        return null
+      }
+
+      // 检查token是否过期
+      if (this.isTokenExpired(session.access_token)) {
+        console.log('Token已过期，清理session并降级到匿名访问')
+        this.clearExpiredSession()
+        return null
+      }
+
+      return session.access_token
+    } catch (error) {
+      console.error('获取token失败:', error)
+      return null
+    }
+  }
+
+  // JWT过期检查
+  isTokenExpired(token) {
+    try {
+      if (!token || typeof token !== 'string') return true
+
+      // 检测占位符token
+      if (token === 'recovery_placeholder' || token.includes('placeholder')) {
+        console.log('检测到占位符token，视为过期')
+        return true
+      }
+
+      const parts = token.split('.')
+      if (parts.length !== 3) return true
+
+      try {
+        const payload = JSON.parse(atob(parts[1]))
+        if (!payload.exp) return true
+
+        const expirationTime = payload.exp * 1000
+        const currentTime = Date.now()
+        const bufferTime = 5 * 60 * 1000 // 5分钟缓冲
+
+        return currentTime >= (expirationTime - bufferTime)
+      } catch (decodeError) {
+        console.warn('JWT解码失败，视为过期token:', decodeError.message)
+        return true
+      }
+    } catch (error) {
+      console.error('Token验证失败:', error)
+      return true
+    }
+  }
+
+  // 清理过期session
+  clearExpiredSession() {
+    try {
+      wx.removeStorageSync('supabase_session')
+      wx.removeStorageSync('userInfo')
+      wx.removeStorageSync('lastLoginTime')
+      console.log('已清理过期session')
+    } catch (error) {
+      console.error('清理session失败:', error)
+    }
+  }
+
+  // API权限分类 - 可以匿名访问的API
+  canUseAnonymousAccess(url) {
+    const ANONYMOUS_ALLOWED_APIS = [
+      '/rest/v1/podcasts',
+      '/rest/v1/channels',
+      '/rest/v1/insights',
+      '/rest/v1/users',
+      '/rest/v1/user_favorites',
+      '/rest/v1/research_fields',
+      '/rest/v1/institutions'
+    ]
+
+    return ANONYMOUS_ALLOWED_APIS.some(path => url.includes(path))
+  }
+
+  // 需要认证但可以友好提示的API
+  requiresAuthWithPrompt(url) {
+    const AUTH_REQUIRED_APIS = [
+      '/rest/v1/comments',
+      '/rest/v1/user_likes',
+      '/rest/v1/user_play_history'
+    ]
+
+    return AUTH_REQUIRED_APIS.some(path => url.includes(path))
+  }
+
+  // 智能降级的请求方法
   async request(options) {
     const {
       url,
@@ -37,13 +131,24 @@ class RequestUtil {
     // 构建请求头
     const requestHeaders = { ...this.defaultHeaders, ...headers }
 
-    // 添加认证头
+    // 智能认证处理
     if (needAuth) {
-      const token = await this.getAuthToken()
+      // 第一步：尝试获取有效JWT token
+      const token = await this.getValidAuthToken()
       if (token) {
         requestHeaders['Authorization'] = `Bearer ${token}`
+        console.log('使用JWT token认证')
       } else {
-        console.log('未找到认证token，使用匿名访问')
+        // 第二步：判断是否可以降级到匿名访问
+        if (this.canUseAnonymousAccess(url)) {
+          console.log(`JWT不可用，降级到匿名访问: ${url}`)
+          // 使用anon key，不设置Authorization头
+        } else if (this.requiresAuthWithPrompt(url)) {
+          // 第三步：需要认证的API返回友好错误
+          throw new AuthRequiredError('此功能需要登录使用')
+        } else {
+          console.log('未知API类型，尝试匿名访问')
+        }
       }
     }
 
@@ -70,14 +175,20 @@ class RequestUtil {
 
           if (res.statusCode >= 200 && res.statusCode < 300) {
             resolve(res.data)
-          } else if (res.statusCode === 401 && needAuth && retryWithoutAuth) {
-            // 401错误且允许重试，尝试匿名访问
-            console.log('认证失败，尝试匿名访问:', url)
-            this.request({
-              ...options,
-              needAuth: false,
-              retryWithoutAuth: false
-            }).then(resolve).catch(reject)
+          } else if (res.statusCode === 401) {
+            // 401错误的智能处理
+            if (needAuth && retryWithoutAuth && this.canUseAnonymousAccess(url)) {
+              console.log('JWT认证失败，自动重试匿名访问')
+              this.request({
+                ...options,
+                needAuth: false,
+                retryWithoutAuth: false
+              }).then(resolve).catch(reject)
+            } else if (this.requiresAuthWithPrompt(url)) {
+              reject(new AuthRequiredError('请登录后使用此功能'))
+            } else {
+              reject(new Error(`认证失败: ${res.statusCode} - ${JSON.stringify(res.data)}`))
+            }
           } else {
             const error = new Error(`HTTP ${res.statusCode}: ${res.errMsg}`)
             error.statusCode = res.statusCode
@@ -202,7 +313,17 @@ class RequestUtil {
   }
 }
 
+// 自定义错误类
+class AuthRequiredError extends Error {
+  constructor(message) {
+    super(message)
+    this.name = 'AuthRequiredError'
+    this.needLogin = true
+  }
+}
+
 // 创建单例实例
 const requestUtil = new RequestUtil()
 
 module.exports = requestUtil
+module.exports.AuthRequiredError = AuthRequiredError

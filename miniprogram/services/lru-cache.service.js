@@ -375,7 +375,7 @@ class LRUCache {
    */
   smartCleanup(memoryPressure = 3) {
     if (memoryPressure < 1 || memoryPressure > 5) return
-    
+
     let cleanupRatio = 0
     switch (memoryPressure) {
       case 1: cleanupRatio = 0.1; break  // 清理10%
@@ -384,14 +384,23 @@ class LRUCache {
       case 4: cleanupRatio = 0.5; break  // 清理50%
       case 5: cleanupRatio = 0.8; break  // 清理80%
     }
-    
+
     const targetSize = this.maxSize * (1 - cleanupRatio)
     const spaceToFree = Math.max(0, this.currentSize - targetSize)
-    
+
     if (spaceToFree > 0) {
       console.log(`智能清理模式${memoryPressure}: 目标释放${(spaceToFree / 1024).toFixed(1)}KB`)
       this.ensureSpace(spaceToFree)
     }
+  }
+
+  /**
+   * 清理过期缓存 (兼容旧版API)
+   */
+  cleanup() {
+    console.log('执行LRU缓存清理...')
+    // 使用智能清理机制，中等强度清理
+    this.smartCleanup(3)
   }
 }
 

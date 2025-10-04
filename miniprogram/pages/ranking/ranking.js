@@ -104,7 +104,7 @@ Page({
                 channelCoverUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/classic_paper_interpretation.png'
               } else {
                 // 默认封面
-                channelCoverUrl = podcast.channels?.cover_url || podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-cover.png'
+                channelCoverUrl = podcast.channels?.cover_url || podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png'
               }
               
               return {
@@ -162,7 +162,7 @@ Page({
                 channelCoverUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/classic_paper_interpretation.png'
               } else {
                 // 默认封面
-                channelCoverUrl = podcast.channels?.cover_url || podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-cover.png'
+                channelCoverUrl = podcast.channels?.cover_url || podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png'
               }
               
               return {
@@ -219,7 +219,7 @@ Page({
                 channelCoverUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/classic_paper_interpretation.png'
               } else {
                 // 默认封面
-                channelCoverUrl = podcast.channels?.cover_url || podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-cover.png'
+                channelCoverUrl = podcast.channels?.cover_url || podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png'
               }
               
               return {
@@ -333,7 +333,7 @@ Page({
       title: item.title,
       description: item.description,
       audio_url: item.audio_url,
-      cover_url: item.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-cover.png',
+      cover_url: item.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png',
       duration: item.duration,
       channel: item.channel,
       play_count: item.play_count || 0,

@@ -48,7 +48,7 @@
       
       <view wx:for="{{recommendedPapers}}" wx:key="id" class="paper-item" 
             bindtap="readPaper" data-item="{{item}}">
-        <view class="paper-thumbnail"></view>
+        <image src="{{item.channel_cover_url}}" class="paper-thumbnail" mode="aspectFill" alt="{{item.team}}"></image>
         <view class="paper-info">
           <view class="paper-title">{{item.title}}</view>
           <view class="paper-team">{{item.team}}</view>
@@ -127,7 +127,7 @@
       
       <view wx:for="{{recommendedPapers}}" wx:key="id" class="paper-item" 
             bindtap="readPaper" data-item="{{item}}">
-        <view class="paper-thumbnail"></view>
+        <image src="{{item.channel_cover_url}}" class="paper-thumbnail" mode="aspectFill" alt="{{item.team}}"></image>
         <view class="paper-info">
           <view class="paper-title">{{item.title}}</view>
           <view class="paper-team">{{item.team}}</view>
@@ -206,7 +206,7 @@
       
       <view wx:for="{{recommendedPapers}}" wx:key="id" class="paper-item" 
             bindtap="readPaper" data-item="{{item}}">
-        <view class="paper-thumbnail"></view>
+        <image src="{{item.channel_cover_url}}" class="paper-thumbnail" mode="aspectFill" alt="{{item.team}}"></image>
         <view class="paper-info">
           <view class="paper-title">{{item.title}}</view>
           <view class="paper-team">{{item.team}}</view>

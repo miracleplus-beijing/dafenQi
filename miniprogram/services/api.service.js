@@ -2,6 +2,7 @@
 const authService = require('./auth.service.js')
 const storageService = require('./storage.service.js')
 const requestUtil = require('../utils/request.js')
+const { AuthRequiredError } = require('../utils/request.js')
 const recommendationService = require('./recommendation/index.js')
 
 class ApiService {
@@ -10,6 +11,24 @@ class ApiService {
     this.storage = storageService
     this.request = requestUtil
     this.recommendation = recommendationService
+  }
+
+  // 统一错误处理
+  handleApiError(error, context) {
+    if (error.name === 'AuthRequiredError' || error.needLogin) {
+      return {
+        success: false,
+        error: error.message,
+        needLogin: true,
+        context: context
+      }
+    }
+
+    return {
+      success: false,
+      error: error.message,
+      needLogin: false
+    }
   }
 
   // 播客相关 API
@@ -26,11 +45,9 @@ class ApiService {
         } = params
 
         const result = await requestUtil.get('/rest/v1/podcasts', {
-          page,
-          limit,
-          category,
-          search,
-          order: sortBy
+          select: 'id,title,description,cover_url,audio_url,duration,play_count,like_count,favorite_count',
+          order: 'play_count.desc,created_at.desc',
+          limit
         })
 
         return {
@@ -39,10 +56,7 @@ class ApiService {
         }
       } catch (error) {
         console.error('获取播客列表失败:', error)
-        return {
-          success: false,
-          error: error.message
-        }
+        return apiService.handleApiError(error, 'podcast.getList')
       }
     },
 
@@ -103,10 +117,7 @@ class ApiService {
         }
       } catch (error) {
         console.error('获取用户收藏失败:', error)
-        return {
-          success: false,
-          error: error.message
-        }
+        return apiService.handleApiError(error, 'user.getFavorites')
       }
     },
 
@@ -542,6 +553,15 @@ class ApiService {
     // 获取热门推荐
     getPopular: async (limit = 10) => {
       try {
+        // 确保推荐服务已初始化
+        if (!recommendationService) {
+          throw new Error('推荐服务未加载')
+        }
+
+        if (typeof recommendationService.getPopularRecommendations !== 'function') {
+          throw new Error('推荐服务方法不可用')
+        }
+
         const result = await recommendationService.getPopularRecommendations(limit)
         return result
       } catch (error) {
