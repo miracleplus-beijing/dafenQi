@@ -4,6 +4,8 @@ const storageService = require('./storage.service.js')
 const requestUtil = require('../utils/request.js')
 const { AuthRequiredError } = require('../utils/request.js')
 const recommendationService = require('./recommendation/index.js')
+const commentService = require('./comment.service.js')
+const insightService = require('./insight.service.js')
 
 class ApiService {
   constructor() {
@@ -11,6 +13,8 @@ class ApiService {
     this.storage = storageService
     this.request = requestUtil
     this.recommendation = recommendationService
+    this.comment = commentService
+    this.insight = insightService
   }
 
   // 统一错误处理
@@ -529,6 +533,197 @@ class ApiService {
           success: false,
           error: error.message
         }
+      }
+    }
+  }
+
+  // 评论相关 API
+  comment = {
+    // 获取播客的所有评论
+    getList: async (podcastId) => {
+      try {
+        const result = await commentService.getCommentsByPodcastId(podcastId)
+        return result
+      } catch (error) {
+        console.error('获取评论列表失败:', error)
+        return {
+          success: false,
+          error: error.message,
+          data: []
+        }
+      }
+    },
+
+    // 获取悬浮播放条显示的评论（置顶 > 高赞 > 随机）
+    getFloatingComment: async (podcastId) => {
+      try {
+        const result = await commentService.getPinnedOrPopularComment(podcastId)
+        return result
+      } catch (error) {
+        console.error('获取悬浮播放条评论失败:', error)
+        return {
+          success: false,
+          error: error.message,
+          data: null
+        }
+      }
+    },
+
+    // 发表评论
+    create: async (userId, podcastId, content, audioTimestamp = 0) => {
+      try {
+        const result = await commentService.createComment(userId, podcastId, content, audioTimestamp)
+        return result
+      } catch (error) {
+        console.error('发表评论失败:', error)
+        return apiService.handleApiError(error, 'comment.create')
+      }
+    },
+
+    // 回复评论
+    reply: async (userId, parentCommentId, content) => {
+      try {
+        const result = await commentService.replyToComment(userId, parentCommentId, content)
+        return result
+      } catch (error) {
+        console.error('回复评论失败:', error)
+        return apiService.handleApiError(error, 'comment.reply')
+      }
+    },
+
+    // 点赞/取消点赞评论
+    like: async (userId, commentId) => {
+      try {
+        const result = await commentService.likeComment(userId, commentId)
+        return result
+      } catch (error) {
+        console.error('点赞评论失败:', error)
+        return apiService.handleApiError(error, 'comment.like')
+      }
+    },
+
+    // 置顶评论（管理员功能）
+    pin: async (commentId) => {
+      try {
+        const result = await commentService.pinComment(commentId)
+        return result
+      } catch (error) {
+        console.error('置顶评论失败:', error)
+        return apiService.handleApiError(error, 'comment.pin')
+      }
+    },
+
+    // 取消置顶评论
+    unpin: async (commentId) => {
+      try {
+        const result = await commentService.unpinComment(commentId)
+        return result
+      } catch (error) {
+        console.error('取消置顶评论失败:', error)
+        return apiService.handleApiError(error, 'comment.unpin')
+      }
+    }
+  }
+
+  // 认知提取相关 API
+  insight = {
+    // 获取播客的所有insights（按点击次数智能排序）
+    getList: async (podcastId) => {
+      try {
+        const result = await insightService.getInsightsByClickCount(podcastId)
+        return result
+      } catch (error) {
+        console.error('获取insights列表失败:', error)
+        return {
+          success: false,
+          error: error.message,
+          data: []
+        }
+      }
+    },
+
+    // 获取播客的主要insight
+    getMain: async (podcastId) => {
+      try {
+        const result = await insightService.getMainInsightByPodcastId(podcastId)
+        return result
+      } catch (error) {
+        console.error('获取主要insight失败:', error)
+        return {
+          success: false,
+          error: error.message,
+          data: null
+        }
+      }
+    },
+
+    // 获取insight详情
+    getDetail: async (insightId) => {
+      try {
+        const result = await insightService.getInsightById(insightId)
+        return result
+      } catch (error) {
+        console.error('获取insight详情失败:', error)
+        return {
+          success: false,
+          error: error.message,
+          data: null
+        }
+      }
+    },
+
+    // 点击查看insight详情（会增加点击次数）
+    recordClick: async (insightId) => {
+      try {
+        const result = await insightService.incrementClickCount(insightId)
+        return result
+      } catch (error) {
+        console.error('记录insight点击失败:', error)
+        // 非关键操作，失败不影响主流程
+        return {
+          success: false,
+          error: error.message
+        }
+      }
+    },
+
+    // 点赞insight
+    like: async (insightId) => {
+      try {
+        const result = await insightService.incrementLikeCount(insightId)
+        return result
+      } catch (error) {
+        console.error('点赞insight失败:', error)
+        return {
+          success: false,
+          error: error.message
+        }
+      }
+    },
+
+    // 获取热门insights
+    getPopular: async (limit = 10) => {
+      try {
+        const result = await insightService.getPopularInsights(limit)
+        return result
+      } catch (error) {
+        console.error('获取热门insights失败:', error)
+        return {
+          success: false,
+          error: error.message,
+          data: []
+        }
+      }
+    },
+
+    // 创建用户交互记录
+    createInteraction: async (userId, insightId, interactionType) => {
+      try {
+        const result = await insightService.createUserInteraction(userId, insightId, interactionType)
+        return result
+      } catch (error) {
+        console.error('创建用户交互记录失败:', error)
+        return apiService.handleApiError(error, 'insight.createInteraction')
       }
     }
   }

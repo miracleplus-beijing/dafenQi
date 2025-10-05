@@ -35,33 +35,45 @@
       </view>
     </view>
 
-    <!-- 播客信息 -->
-    <view class="podcast-info">
-      <view class="podcast-title-container">
-        <view class="title-scroll-wrapper {{item.title.length > 12 ? 'scrolling' : ''}}" 
-              data-title="{{item.title}}" 
-              style="{{item.title.length > 12 ? 'animation-duration: ' + (item.title.length > 20 ? '5s' : item.title.length > 16 ? '4s' : item.title.length > 12 ? '3.5s' : '3s') : ''}}">
-          <view class="title-item">{{item.title}}</view>
-          <view class="title-item" wx:if="{{item.title.length > 12}}">{{item.title}}</view>
+    <!-- 播客标题 - 支持手动拖拽和自动滚动 -->
+    <view class="podcast-title-wrapper">
+      <scroll-view
+        scroll-x
+        class="title-scroll-view {{autoScrollTitle ? 'auto-scrolling' : ''}}"
+        scroll-left="{{titleScrollLeft}}"
+        bindscroll="handleTitleScroll"
+        bindtouchstart="handleTitleTouchStart"
+        bindtouchend="handleTitleTouchEnd">
+        <view class="title-content" style="width: {{titleWidth}}px;">
+          <text class="title-text">{{item.title}}</text>
         </view>
-      </view>
-      <view class="podcast-channel" bindtap="handleChannelClick">{{item.channel_name}}</view>
+      </scroll-view>
     </view>
 
-    <!-- 交互按钮区域 -->
-    <view class="action-buttons">
-      <view class="action-btn" bindtap="handleThumbsUp">
-        <image src="{{item.isThumbsUp ? cdnImages.thumbsUpActiveIcon : cdnImages.thumbsUpIcon}}" 
-               alt="点赞" class="icon"></image>
-      </view>
-      <view class="action-btn" bindtap="handleLike">
-        <image src="{{item.isLiked ? cdnImages.likeActiveIcon : cdnImages.likeIcon}}" 
-               alt="喜欢" class="icon"></image>
-      </view>
-      <view class="action-btn" bindtap="handleFavorite">
-        <image src="{{item.isFavorited ? cdnImages.favoriteActiveIcon : cdnImages.favoriteIcon}}" 
-               alt="收藏" class="icon"></image>
-      </view>
+    <!-- 认知卡片滑动区域 -->
+    <view class="insight-cards-container">
+      <swiper
+        class="insight-swiper"
+        indicator-dots="{{false}}"
+        autoplay="{{autoPlayInsights}}"
+        interval="5000"
+        circular="{{insightList.length > 1}}"
+        current="{{currentInsightIndex}}"
+        bindchange="handleInsightChange"
+        bindtouchstart="handleInsightTouchStart"
+        bindtouchend="handleInsightTouchEnd">
+        <swiper-item wx:for="{{insightList}}" wx:key="id" wx:for-item="insightItem" class="insight-card-wrapper">
+          <view class="insight-card" bindtap="handleInsightCardClick" data-insight-id="{{insightItem.id}}">
+            <view class="insight-header">
+              <text class="insight-label">认知提取</text>
+              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/insight.svg"
+                     class="insight-icon" />
+            </view>
+            <text class="quote-text">{{insightItem.quote_text}}</text>
+            <text class="quote-author">——{{insightItem.quote_author}}</text>
+          </view>
+        </swiper-item>
+      </swiper>
     </view>
 
     <!-- 智能分块缓冲进度条 -->
@@ -103,32 +115,52 @@
       </view>
     </view>
 
+    <!-- 悬浮评论卡片（新位置：进度条和控制按钮之间）-->
+    <view class="floating-playbar" bindtap="handleOpenComments">
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/comment_quote.svg"
+             class="playbar-quote-icon" />
+
+      <image wx:if="{{floatingComment && floatingComment.user_avatar}}"
+             src="{{floatingComment.user_avatar}}"
+             class="playbar-avatar" />
+      <image wx:else
+             src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-avatar.png"
+             class="playbar-avatar" />
+
+      <text class="playbar-comment-text">
+        {{floatingComment ? floatingComment.content : '惠人达己，守正出奇'}}
+      </text>
+    </view>
+
     <!-- 播放控制 -->
     <view class="playback-controls">
-      <!-- 分享按钮 -->
-      <view class="control-btn" bindtap="handleShare">
-        <image src="{{cdnImages.shareIcon}}" alt="分享" class="icon"></image>
+      <!-- 播放速度按钮 -->
+      <view class="control-btn speed-btn" bindtap="handleSpeedChange">
+        <text class="speed-text">{{playbackSpeed}}×</text>
       </view>
 
       <!-- 后退15秒 -->
       <view class="control-btn" bindtap="handleRewind">
-        <image src="{{cdnImages.rewindIcon}}" alt="后退15秒" class="icon"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/backward-15s.svg"
+               class="icon" />
       </view>
 
       <!-- 播放/暂停按钮 -->
       <view class="play-pause-btn" bindtap="handlePlayPause">
-        <image src="{{isPlaying ? cdnImages.pauseIcon : cdnImages.playIcon}}" 
-               alt="{{isPlaying ? '暂停' : '播放'}}" class="play-pause-icon"></image>
+        <image src="{{isPlaying ? 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/pause.svg' : 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-large.svg'}}"
+               class="play-pause-icon" />
       </view>
 
       <!-- 前进30秒 -->
       <view class="control-btn" bindtap="handleFastForward">
-        <image src="{{cdnImages.forwardIcon}}" alt="前进30秒" class="icon"></image>
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/forward-30s.svg"
+               class="icon" />
       </view>
 
-      <!-- 认知提取按钮 -->
-      <view class="control-btn" bindtap="handleInsight">
-        <image src="{{cdnImages.insightIcon}}" alt="认知提取" class="icon"></image>
+      <!-- 收藏按钮（金色星星）-->
+      <view class="control-btn favorite-btn" bindtap="handleFavorite">
+        <image src="{{item.isFavorited ? 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/collection_selected.svg' : 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/collection_unselected.svg'}}"
+               class="icon" />
       </view>
     </view>
 
@@ -162,178 +194,62 @@
     </view>
   </view>
 
-  <!-- 认知提取弹窗 -->
-  <view wx:if="{{insightVisible}}" class="insight-popup {{insightFullScreen ? 'fullscreen' : ''}}" 
-        catchtouchmove="preventScroll">
-    <!-- 遮罩层 -->
-    <view class="insight-mask" bindtap="handleInsightClose"></view>
-    
-    <!-- 弹窗内容容器 -->
-    <view class="insight-container {{insightFullScreen ? 'fullscreen' : ''}}" 
-          style="transform: translateY({{insightTranslateY}}px);"
-          catchtouchmove="preventScroll">
-      
-      <!-- 拖拽指示条和头部 - 负责全屏切换手势 -->
-      <view class="insight-header"
-            catchtouchstart="handleDragStart"
-            catchtouchmove="handleDragMove"
-            catchtouchend="handleDragEnd">
-        <view class="drag-indicator"></view>
-        <view class="insight-title-bar">
-          <text class="insight-title">认知提取</text>
+  <!-- 评论弹窗 -->
+  <view class="comment-popup {{showCommentPopup ? 'show' : ''}}" catchtouchmove="preventScroll">
+    <view class="popup-mask" bindtap="handleCloseComments"></view>
+    <view class="popup-content">
+      <view class="popup-header">
+        <text class="popup-title">评论</text>
+        <view class="popup-close" bindtap="handleCloseComments">
+          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/close.svg"
+                 class="close-icon" />
         </view>
       </view>
-      
-      <!-- 滚动内容区域 - 负责关闭手势 -->
-      <scroll-view class="insight-content" 
-                   scroll-y="{{true}}"
-                   enable-flex="{{true}}"
-                   catchtouchstart="handleContentTouchStart"
-                   catchtouchmove="handleContentTouchMove" 
-                   catchtouchend="handleContentTouchEnd">
-        <!-- 内容包装容器 -->
-        <view class="insight-content-wrapper">
-        <!-- 播客基本信息 -->
-        <view class="insight-podcast-info">
-          <text class="podcast-title-insight">{{podcastList[currentIndex].title}}</text>
-          <text class="podcast-channel-insight">{{podcastList[currentIndex].channel_name || '奇绩前沿信号'}}</text>
-        </view>
-        
-        <!-- Insight内容区域 -->
-        <view wx:if="{{currentInsightData}}" class="insight-main-content">
-          <!-- 核心洞察滑动卡片 -->
-          <view class="insight-section">
-            <view class="section-title">
-              <text class="title-icon">💡</text>
-              <text class="title-text">核心洞察</text>
-              <text class="insight-counter" wx:if="{{insightsList.length > 1}}">{{currentInsightIndex + 1}}/{{insightsList.length}}</text>
+
+      <!-- 评论列表 -->
+      <scroll-view class="comment-list" scroll-y>
+        <view wx:for="{{commentList}}" wx:key="id" class="comment-item">
+          <image src="{{item.user_avatar}}" class="comment-avatar" />
+          <view class="comment-content">
+            <view class="comment-header">
+              <text class="comment-user">{{item.user_nickname}}</text>
+              <text class="comment-time">{{item.timestamp_formatted}}</text>
             </view>
-            
-            <!-- 滑动卡片容器 -->
-            <view class="insight-slider-container" wx:if="{{insightsList.length > 0}}">
-              <swiper class="insight-swiper" 
-                      indicator-dots="{{false}}" 
-                      autoplay="{{false}}" 
-                      circular="{{false}}" 
-                      vertical="{{false}}"
-                      current="{{currentInsightIndex}}"
-                      bindchange="handleInsightSlideChange">
-                <swiper-item wx:for="{{insightsList}}" wx:key="id" class="insight-slide-item">
-                  <view class="insight-slide-card">
-                    <view class="insight-slide-header">
-                      <text class="insight-slide-title">{{item.summary}}</text>
-                    </view>
-                    <view class="insight-slide-content">
-                      <text class="insight-slide-text">{{item.detailed_content}}</text>
-                    </view>
-                  </view>
-                </swiper-item>
-              </swiper>
-              
-              <!-- 滑动指示器 -->
-              <view class="insight-slider-dots" wx:if="{{insightsList.length > 1}}">
-                <view wx:for="{{insightsList}}" wx:key="id" 
-                      class="insight-dot {{index === currentInsightIndex ? 'active' : ''}}"
-                      bindtap="handleInsightDotClick"
-                      data-index="{{index}}">
-                </view>
+            <text class="comment-text">{{item.content}}</text>
+            <view class="comment-actions">
+              <view class="comment-action-btn" bindtap="handleReplyComment" data-comment-id="{{item.id}}">
+                <text>回复</text>
               </view>
-            </view>
-            
-            <!-- 无数据时显示默认内容 -->
-            <view class="insight-card-outer" wx:elif="{{currentInsightData}}">
-              <view class="insight-card-inner">
-                <text class="summary-text">{{currentInsightData.summary}}</text>
+              <view class="comment-action-btn like-btn {{item.isLiked ? 'liked' : ''}}"
+                    bindtap="handleLikeComment"
+                    data-comment-id="{{item.id}}">
+                <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/like-small.svg"
+                       class="like-icon" />
+                <text>{{item.like_count > 0 ? item.like_count : ''}}</text>
               </view>
-            </view>
-          </view>
-          
-          <!-- 详细内容 -->
-          <view wx:if="{{currentInsightData.detailed_content}}" class="insight-section">
-            <view class="section-title">
-              <text class="title-icon">📄</text>
-              <text class="title-text">详细分析</text>
-            </view>
-            <view class="detailed-content">
-              <text class="detailed-text">{{currentInsightData.detailed_content}}</text>
-            </view>
-          </view>
-          
-          <!-- 关键词标签 -->
-          <view wx:if="{{currentInsightData.keywords && currentInsightData.keywords.length > 0}}" class="insight-section">
-            <view class="section-title">
-              <text class="title-icon">🏷️</text>
-              <text class="title-text">关键词</text>
-            </view>
-            <view class="keywords-container">
-              <view wx:for="{{currentInsightData.keywords}}" wx:key="*this" class="keyword-tag">
-                <text class="keyword-text">{{item}}</text>
-              </view>
-            </view>
-          </view>
-          
-          <!-- 相关论文 -->
-          <view wx:if="{{currentInsightData.related_papers && currentInsightData.related_papers.length > 0}}" class="insight-section">
-            <view class="section-title">
-              <text class="title-icon">📚</text>
-              <text class="title-text">相关论文</text>
-            </view>
-            <view class="related-papers">
-              <view wx:for="{{currentInsightData.related_papers}}" wx:key="title" class="paper-item">
-                <text class="paper-title">{{item.title}}</text>
-                <text class="paper-authors">{{item.authors.join(', ')}}</text>
-              </view>
-            </view>
-          </view>
-          
-          <!-- 相关作者 -->
-          <view wx:if="{{currentInsightData.related_authors && currentInsightData.related_authors.length > 0}}" class="insight-section">
-            <view class="section-title">
-              <text class="title-icon">👥</text>
-              <text class="title-text">相关作者</text>
-            </view>
-            <view class="related-authors">
-              <view wx:for="{{currentInsightData.related_authors}}" wx:key="name" class="author-item">
-                <text class="author-name">{{item.name}}</text>
-                <text class="author-institution">{{item.institution}}</text>
-              </view>
-            </view>
-          </view>
-          
-          <!-- 互动区域 -->
-          <view class="insight-actions">
-            <view class="action-item" bindtap="handleInsightLike">
-              <image src="{{currentInsightData.isLiked ? cdnImages.likeActiveIcon : cdnImages.likeIcon}}" 
-                     class="action-icon-image" alt="点赞"></image>
-              <text class="action-count">{{currentInsightData.like_count || 0}}</text>
-            </view>
-            <view class="action-item" bindtap="handleInsightBookmark">
-              <image src="{{cdnImages.favoriteIcon}}" class="action-icon-image" alt="收藏"></image>
-              <text class="action-text">收藏</text>
-            </view>
-            <view class="action-item" bindtap="handleInsightShare">
-              <image src="{{cdnImages.shareGrayIcon}}" class="action-icon-image" alt="分享"></image>
-              <text class="action-text">分享</text>
             </view>
           </view>
         </view>
-        
-        <!-- 加载状态 -->
-        <view wx:if="{{insightLoading}}" class="insight-loading">
-          <image src="{{cdnImages.loadingIcon}}" class="loading-icon-small"></image>
-          <text class="loading-text-small">正在加载认知提取...</text>
+
+        <!-- 空评论提示 -->
+        <view wx:if="{{commentList.length === 0}}" class="comment-empty">
+          <text>还没有评论，来抢沙发吧~</text>
         </view>
-        
-        <!-- 错误状态 -->
-        <view wx:if="{{insightError}}" class="insight-error">
-          <text class="error-icon">⚠️</text>
-          <text class="error-text">{{insightError}}</text>
-          <view class="retry-btn" bindtap="handleInsightRetry">
-            <text>重试</text>
-          </view>
-        </view>
-        </view> <!-- 结束 insight-content-wrapper -->
       </scroll-view>
+
+      <!-- 评论输入框 -->
+      <view class="comment-input-wrapper">
+        <input
+          class="comment-input"
+          placeholder="{{replyingToCommentId ? '回复评论...' : '发表评论...'}}"
+          value="{{commentInputText}}"
+          bindinput="handleCommentInput"
+          confirm-type="send"
+          bindconfirm="handleSendComment" />
+        <view class="send-btn {{commentInputText.length > 0 ? 'active' : ''}}" bindtap="handleSendComment">
+          <text>发送</text>
+        </view>
+      </view>
     </view>
   </view>
 </view>

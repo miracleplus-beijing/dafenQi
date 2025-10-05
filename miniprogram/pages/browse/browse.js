@@ -66,38 +66,37 @@ Page({
       pauseIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/pause.svg',
       favoriteIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/favorite-unselected.svg',
       favoriteActiveIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/favorite-selected.svg',
-      likeIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/like-unselected.svg',
-      likeActiveIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/like-selected.svg',
-      thumbsUpIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/thumbs-up-unselected.svg',
-      thumbsUpActiveIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/thumbs-up-selected.svg',
-      shareIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/share.svg',
-      shareGrayIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/share-gray.svg',
       insightIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/insight.svg',
       rewindIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/backward-15s.svg',
       forwardIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/forward-30s.svg',
-      loadingIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/loading.svg',
-      shareCover: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/share-cover.jpg'
+      loadingIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/loading.svg'
     },
 
-    // 认知提取相关状态
-    insightVisible: false, // 弹窗显示状态
-    insightFullScreen: false, // 全屏模式
-    insightLoading: false, // 加载状态
-    insightError: '', // 错误信息
-    currentInsightData: null, // 当前显示的insight数据
-    insightsList: [], // 多个insights列表
+    // 认知卡片相关状态
+    insightList: [{
+      id: 'default',
+      quote_text: '人之一生唯有两种活法：要么视万物皆为奇迹，要么视一切皆属寻常',
+      quote_author: '阿尔伯特·爱因斯坦'
+    }], // 认知卡片列表（带默认值）
     currentInsightIndex: 0, // 当前显示的insight索引
-    insightTranslateY: 0, // 弹窗Y轴位移（用于拖拽动画）
+    autoPlayInsights: true, // 是否自动轮播insight卡片
 
-    // 拖拽手势相关（用于全屏切换）
-    insightTouchStartY: 0, // 手势开始位置
-    insightTouchMoveY: 0, // 手势移动位置
-    insightTouchStartTime: 0, // 手势开始时间
+    // 评论相关状态
+    commentList: [], // 评论列表
+    floatingComment: null, // 悬浮播放条显示的评论
+    showCommentPopup: false, // 是否显示评论弹窗
+    commentInputText: '', // 评论输入内容
+    replyingToCommentId: null, // 正在回复的评论ID
+    floatingCommentTimer: null, // 评论轮换定时器
 
-    // 内容手势相关（用于关闭手势）
-    contentTouchStartY: 0, // 内容区手势开始位置
-    contentTouchMoveY: 0, // 内容区手势移动位置
-    contentTouchStartTime: 0, // 内容区手势开始时间
+    // 播放速度相关
+    playbackSpeed: 1.0, // 当前播放速度
+
+    // 标题滚动相关
+    titleScrollLeft: 0, // 标题滚动位置
+    titleWidth: 375, // 标题宽度(px)
+    autoScrollTitle: false, // 是否自动滚动标题
+    titleScrollTimer: null, // 标题滚动定时器
 
     // 智能降级和用户体验相关
     isLoggedIn: false, // 登录状态
@@ -119,6 +118,9 @@ Page({
 
     // 初始化音频上下文
     this.initAudioContext()
+
+    // 加载播放速度设置
+    this.loadPlaybackSpeed()
 
     // 获取用户个性化推荐（带智能降级）
     this.loadPersonalizedRecommendations()
@@ -952,7 +954,7 @@ Page({
     // 更新当前索引并重置播放状态（但不清空音频源）
     const currentPodcast = podcastList[currentIndex]
     const podcastDuration = currentPodcast?.duration || 0
-    
+
     this.setData({
       currentIndex,
       isPlaying: false,
@@ -963,7 +965,13 @@ Page({
       totalTimeFormatted: podcastDuration > 0 ? this.formatTime(podcastDuration) : '0:00',
       userGestureActive: false // 重置手势状态
     })
-    
+
+    // 加载新播客的认知卡片和评论
+    if (currentPodcast && currentPodcast.id) {
+      this.loadInsightsForCurrentPodcast(currentPodcast.id)
+      this.loadFloatingComment(currentPodcast.id)
+    }
+
     // 更新预加载服务的当前位置
     audioPreloader.updateCurrentIndex(currentIndex)
     
@@ -1255,96 +1263,6 @@ Page({
     console.log('前进30秒到:', newPosition)
   },
 
-  // 处理喜欢 - 优化响应速度
-  handleLike: function() {
-    const { currentIndex, podcastList } = this.data
-    const currentPodcast = podcastList[currentIndex]
-    const newIsLiked = !currentPodcast.isLiked
-    
-    // 立即更新UI状态（乐观更新）
-    const updatedPodcastList = [...podcastList]
-    updatedPodcastList[currentIndex] = {
-      ...currentPodcast,
-      isLiked: newIsLiked
-    }
-    
-    this.setData({
-      podcastList: updatedPodcastList
-    })
-    
-    // 异步处理后台操作（无提示窗口）
-    this.updateLikeStatusBackground(currentPodcast.id, newIsLiked)
-  },
-  
-  // 后台异步更新喜欢状态
-  async updateLikeStatusBackground(podcastId, isLiked) {
-    try {
-      setTimeout(async () => {
-        // 这里可以添加实际的API调用
-        console.log('喜欢状态更新:', { podcastId, isLiked })
-      }, 0)
-    } catch (error) {
-      console.error('喜欢操作失败:', error)
-    }
-  },
-
-  // 处理点赞 - 优化响应速度
-  handleThumbsUp: function() {
-    const { currentIndex, podcastList } = this.data
-    const currentPodcast = podcastList[currentIndex]
-    const newIsThumbsUp = !currentPodcast.isThumbsUp
-    
-    // 立即更新UI状态（乐观更新）
-    const updatedPodcastList = [...podcastList]
-    updatedPodcastList[currentIndex] = {
-      ...currentPodcast,
-      isThumbsUp: newIsThumbsUp
-    }
-    
-    this.setData({
-      podcastList: updatedPodcastList
-    })
-    
-    // 异步处理后台操作，不阻塞用户交互
-    this.updateLikeStatus(currentPodcast.id, newIsThumbsUp)
-  },
-  
-  // 异步更新点赞状态
-  async updateLikeStatus(podcastId, isLiked) {
-    try {
-      const audioService = require('../../services/audio.service.js')
-      
-      // 使用 setTimeout 确保不阻塞主线程
-      setTimeout(async () => {
-        try {
-          // 这里可以添加实际的API调用
-          // await audioService.toggleLike(userId, podcastId, isLiked)
-          console.log('点赞状态更新:', { podcastId, isLiked })
-        } catch (error) {
-          console.error('点赞更新失败:', error)
-          // 失败时回滚UI状态
-          this.rollbackLikeState(podcastId)
-        }
-      }, 0)
-    } catch (error) {
-      console.error('点赞操作失败:', error)
-    }
-  },
-  
-  // 回滚点赞状态
-  rollbackLikeState(podcastId) {
-    const { podcastList } = this.data
-    const index = podcastList.findIndex(p => p.id === podcastId)
-    if (index !== -1) {
-      const updatedPodcastList = [...podcastList]
-      updatedPodcastList[index] = {
-        ...updatedPodcastList[index],
-        isThumbsUp: !updatedPodcastList[index].isThumbsUp
-      }
-      this.setData({ podcastList: updatedPodcastList })
-    }
-  },
-
   // 处理收藏 - 优化响应速度
   handleFavorite() {
     const { currentIndex, podcastList } = this.data
@@ -1429,461 +1347,382 @@ Page({
     }
   },
 
-  // 处理认知提取
-  handleInsight: function() {
-    console.log('点击认知提取按钮')
-    
-    const { currentIndex, podcastList } = this.data
-    const currentPodcast = podcastList[currentIndex]
-    
-    if (!currentPodcast) {
-      wx.showToast({
-        title: '播客数据无效',
-        icon: 'none',
-        duration: 2000
-      })
-      return
-    }
-    
-    // 显示弹窗并开始加载数据
+  // ========== 认知卡片相关方法 ==========
+  handleInsightChange: function(e) {
+    const currentIndex = e.detail.current
     this.setData({
-      insightVisible: true,
-      insightLoading: true,
-      insightError: '',
-      insightFullScreen: false,
-      insightTranslateY: 0 // 重置弹窗位置
+      currentInsightIndex: currentIndex
     })
-    
-    // 模拟加载数据（后续替换为真实API调用）
-    this.loadInsightData(currentPodcast.id)
+    console.log('Insight卡片切换到:', currentIndex)
   },
-  
-  // 加载insight数据（真实API调用）
-  async loadInsightData(podcastId) {
+
+  handleInsightTouchStart: function(e) {
+    // 用户开始手势，暂停自动轮播
+    this.setData({ autoPlayInsights: false })
+  },
+
+  handleInsightTouchEnd: function(e) {
+    // 用户手势结束后延迟恢复自动轮播
+    setTimeout(() => {
+      this.setData({ autoPlayInsights: true })
+    }, 5000)
+  },
+
+  handleInsightCardClick: function(e) {
+    const insightId = e.currentTarget.dataset.insightId
+    console.log('点击了Insight卡片:', insightId)
+
+    // 记录点击统计
+    if (insightId && insightId !== 'default') {
+      insightService.incrementViewCount(insightId).catch(err => {
+        console.error('记录insight点击失败:', err)
+      })
+    }
+
+    // 可以在这里添加跳转到详情页的逻辑
+    wx.showToast({
+      title: '认知详情开发中',
+      icon: 'none',
+      duration: 1500
+    })
+  },
+
+  // 加载当前播客的insights
+  async loadInsightsForCurrentPodcast(podcastId) {
     try {
-      console.log('加载Insight数据:', podcastId)
-      
-      // 调用insight服务获取所有insights数据
       const result = await insightService.getInsightsByPodcastId(podcastId)
-      
+
       if (result.success && result.data && result.data.length > 0) {
+        // 将insights数据转换为卡片格式
+        const insightCards = result.data.map(insight => ({
+          id: insight.id,
+          quote_text: insight.summary || insight.detailed_content || '',
+          quote_author: insight.related_authors && insight.related_authors.length > 0
+            ? insight.related_authors[0]
+            : '未知'
+        }))
+
         this.setData({
-          insightLoading: false,
-          insightsList: result.data,
-          currentInsightIndex: 0,
-          currentInsightData: result.data[0], // 显示第一个insight
-          insightError: ''
+          insightList: insightCards,
+          currentInsightIndex: 0
         })
-        
-        console.log(`Insight数据加载完成: ${result.data.length}条记录`, result.data)
+        console.log(`成功加载${insightCards.length}个认知卡片`)
       } else {
-        throw new Error(result.error || '加载认知提取数据失败')
+        // 没有数据时使用默认卡片
+        this.setData({
+          insightList: [{
+            id: 'default',
+            quote_text: '人之一生唯有两种活法：要么视万物皆为奇迹，要么视一切皆属寻常',
+            quote_author: '阿尔伯特·爱因斯坦'
+          }],
+          currentInsightIndex: 0
+        })
       }
     } catch (error) {
-      console.error('加载Insight数据失败:', error)
-      
+      console.error('加载认知卡片失败:', error)
+      // 出错时也使用默认卡片
       this.setData({
-        insightLoading: false,
-        insightError: error.message || '加载失败，请重试',
-        currentInsightData: null
+        insightList: [{
+          id: 'default',
+          quote_text: '人之一生唯有两种活法：要么视万物皆为奇迹，要么视一切皆属寻常',
+          quote_author: '阿尔伯特·爱因斯坦'
+        }],
+        currentInsightIndex: 0
       })
     }
   },
-  
-  // 关闭认知提取弹窗
-  handleInsightClose: function(e) {
-    console.log('关闭认知提取弹窗')
-    
-    // 强制停止任何正在进行的拖拽操作
-    this.stopAllDragOperations()
-    
-    // 立即设置关闭状态，确保蒙版和容器同时消失
-    this.setData({
-      insightVisible: false,
-      insightFullScreen: false,
-      currentInsightData: null,
-      insightLoading: false,
-      insightError: '',
-      insightTranslateY: 0, // 重置弹窗位置
-      // 重置所有手势相关状态
-      insightTouchStartY: 0,
-      insightTouchMoveY: 0,
-      insightTouchStartTime: 0,
-      contentTouchStartY: 0,
-      contentTouchMoveY: 0,
-      contentTouchStartTime: 0
-    })
-    
-    console.log('弹窗已关闭')
-  },
-  
-  // 动画关闭弹窗（平滑下滑消失）
-  animateClose: function() {
-    console.log('开始关闭动画')
-    
-    // 获取弹窗高度，用于计算滑出距离
-    let windowHeight = 700 // 默认高度
+
+  // ========== 评论相关方法 ==========
+  async loadCommentsForCurrentPodcast(podcastId) {
     try {
-      const windowInfo = wx.getWindowInfo()
-      windowHeight = windowInfo.windowHeight || 700
+      // 防御性检查
+      if (!apiService || !apiService.comment || typeof apiService.comment.getList !== 'function') {
+        console.warn('apiService.comment.getList 不可用,跳过评论加载')
+        this.setData({ commentList: [] })
+        return
+      }
+
+      const result = await apiService.comment.getList(podcastId)
+      if (result.success) {
+        this.setData({
+          commentList: result.data || []
+        })
+        console.log(`成功加载${result.data.length}条评论`)
+      }
     } catch (error) {
-      console.warn('获取窗口高度失败:', error)
+      console.error('加载评论失败:', error)
+      this.setData({ commentList: [] })
     }
-    
-    // 使用定时器实现平滑滑动动画
-    let currentY = this.data.insightTranslateY || 0
-    const targetY = windowHeight // 滑动到屏幕外
-    const duration = 250 // 动画时长250ms
-    const frames = 15 // 动画帧数
-    const step = (targetY - currentY) / frames
-    
-    let frame = 0
-    const animate = () => {
-      if (frame >= frames) {
-        // 动画完成，真正关闭弹窗
-        this.handleInsightClose()
+  },
+
+  async loadFloatingComment(podcastId) {
+    try {
+      const commentService = require('../../services/comment.service.js')
+
+      // 防御性检查
+      if (!commentService) {
+        console.warn('commentService 未初始化,使用默认评论')
+        this.setDefaultFloatingComment()
         return
       }
-      
-      currentY += step
-      this.setData({
-        insightTranslateY: Math.max(0, currentY)
-      })
-      
-      frame++
-      setTimeout(animate, duration / frames)
-    }
-    
-    animate()
-  },
-  
-  // 回弹动画（未达到关闭条件时回弹到原位置）
-  animateBounceBack: function() {
-    console.log('开始回弹动画')
-    
-    const currentY = this.data.insightTranslateY || 0
-    if (currentY <= 5) {
-      // 已经接近原位置，直接重置
-      this.setData({ insightTranslateY: 0 })
-      return
-    }
-    
-    // 使用弹性动画效果
-    const duration = 300 // 动画时长300ms
-    const frames = 20 // 动画帧数
-    let frame = 0
-    
-    const animate = () => {
-      if (frame >= frames) {
-        // 动画完成，确保完全回到原位置
-        this.setData({ insightTranslateY: 0 })
+
+      if (typeof commentService.getPinnedOrPopularComment !== 'function') {
+        console.warn('commentService.getPinnedOrPopularComment 方法不存在,使用默认评论')
+        this.setDefaultFloatingComment()
         return
       }
-      
-      // 使用缓动函数实现回弹效果
-      const progress = frame / frames
-      const easeOut = 1 - Math.pow(1 - progress, 3) // cubic-out 缓动
-      const translateY = currentY * (1 - easeOut)
-      
-      this.setData({
-        insightTranslateY: Math.max(0, translateY)
-      })
-      
-      frame++
-      setTimeout(animate, duration / frames)
-    }
-    
-    animate()
-  },
-  
-  // 停止所有拖拽操作
-  stopAllDragOperations: function() {
-    this.isDragging = false
-    
-    // 清除所有可能的定时器
-    if (this.dragTimeout) {
-      clearTimeout(this.dragTimeout)
-      this.dragTimeout = null
+
+      const result = await commentService.getPinnedOrPopularComment(podcastId)
+      if (result.success && result.data) {
+        this.setData({
+          floatingComment: result.data
+        })
+        console.log('加载悬浮评论成功:', result.data.content)
+      } else {
+        this.setDefaultFloatingComment()
+      }
+    } catch (error) {
+      console.error('加载悬浮评论失败:', error)
+      this.setDefaultFloatingComment()
     }
   },
-  
-  // 防止滚动穿透
+
+  setDefaultFloatingComment() {
+    this.setData({
+      floatingComment: {
+        content: '惠人达己，守正出奇',
+        user_avatar: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-avatar.png',
+        user_nickname: '系统'
+      }
+    })
+  },
+
+  startFloatingCommentRotation() {
+    // 清除现有定时器
+    if (this.data.floatingCommentTimer) {
+      clearInterval(this.data.floatingCommentTimer)
+    }
+
+    // 每5秒轮换一次评论
+    const timer = setInterval(() => {
+      const { podcastList, currentIndex } = this.data
+      if (podcastList[currentIndex]) {
+        this.loadFloatingComment(podcastList[currentIndex].id)
+      }
+    }, 5000)
+
+    this.setData({ floatingCommentTimer: timer })
+  },
+
+  stopFloatingCommentRotation() {
+    if (this.data.floatingCommentTimer) {
+      clearInterval(this.data.floatingCommentTimer)
+      this.setData({ floatingCommentTimer: null })
+    }
+  },
+
+  handleOpenComments() {
+    console.log('打开评论弹窗')
+    this.setData({ showCommentPopup: true })
+
+    // 加载当前播客的评论
+    const { podcastList, currentIndex } = this.data
+    if (podcastList[currentIndex]) {
+      this.loadCommentsForCurrentPodcast(podcastList[currentIndex].id)
+    }
+  },
+
+  handleCloseComments() {
+    console.log('关闭评论弹窗')
+    this.setData({
+      showCommentPopup: false,
+      commentInputText: '',
+      replyingToCommentId: null
+    })
+  },
+
   preventScroll: function(e) {
     return false
   },
-  
-  // 处理拖拽手势开始（拖拽指示条区域）
-  handleDragStart: function(e) {
-    const touch = e.touches[0]
-    
+
+  handleCommentInput(e) {
     this.setData({
-      insightTouchStartY: touch.clientY,
-      insightTouchStartTime: Date.now()
-    })
-    console.log('拖拽手势开始:', touch.clientY)
-  },
-  
-  // 处理拖拽手势移动（拖拽指示条区域）
-  handleDragMove: function(e) {
-    const touch = e.touches[0]
-    const { insightTouchStartY, insightFullScreen } = this.data
-    const moveY = touch.clientY - insightTouchStartY
-    
-    this.setData({
-      insightTouchMoveY: moveY,
-      // 实时更新弹窗位置，但只允许向下拖拽
-      insightTranslateY: Math.max(0, moveY)
-    })
-    
-    // 在非全屏状态下，如果上划超过50px，则进入全屏模式
-    if (!insightFullScreen && moveY < -50) {
-      this.setData({
-        insightFullScreen: true,
-        insightTranslateY: 0 // 全屏模式重置位移
-      })
-      console.log('进入全屏模式')
-    }
-    // 在全屏状态下，如果下划超过80px，则退出全屏模式
-    else if (insightFullScreen && moveY > 80) {
-      this.setData({
-        insightFullScreen: false
-      })
-      console.log('退出全屏模式')
-    }
-  },
-  
-  // 处理拖拽手势结束（拖拽指示条区域）
-  handleDragEnd: function(e) {
-    const { insightTouchMoveY, insightTouchStartTime } = this.data
-    const touchDuration = Date.now() - insightTouchStartTime
-    
-    console.log('拖拽手势结束:', {
-      moveY: insightTouchMoveY,
-      duration: touchDuration
-    })
-    
-    // 头部区域下滑关闭：下划超过100px或速度较快时关闭
-    const dragVelocity = Math.abs(insightTouchMoveY) / touchDuration
-    const shouldClose = (insightTouchMoveY > 100) || (insightTouchMoveY > 50 && dragVelocity > 0.2)
-    
-    if (shouldClose && touchDuration < 1000) {
-      console.log('通过头部区域下划关闭弹窗')
-      this.animateClose()
-      return
-    }
-    
-    // 未达到关闭条件，回弹到原位置
-    this.animateBounceBack()
-    
-    // 重置手势数据
-    this.setData({
-      insightTouchStartY: 0,
-      insightTouchMoveY: 0,
-      insightTouchStartTime: 0
+      commentInputText: e.detail.value
     })
   },
-  
-  // 处理内容区域手势开始（用于关闭手势）
-  handleContentTouchStart: function(e) {
-    const touch = e.touches[0]
-    this.setData({
-      contentTouchStartY: touch.clientY,
-      contentTouchStartTime: Date.now()
-    })
-  },
-  
-  // 处理内容区域手势移动
-  handleContentTouchMove: function(e) {
-    const touch = e.touches[0]
-    const contentMoveY = touch.clientY - (this.data.contentTouchStartY || 0)
-    
-    this.setData({
-      contentTouchMoveY: contentMoveY,
-      // 实时更新弹窗位置，只允许向下拖拽
-      insightTranslateY: Math.max(0, contentMoveY)
-    })
-  },
-  
-  // 处理内容区域手势结束（支持下滑关闭）
-  handleContentTouchEnd: function(e) {
-    const { contentTouchMoveY, contentTouchStartTime, insightFullScreen } = this.data
-    const touchDuration = Date.now() - (contentTouchStartTime || 0)
-    
-    console.log('内容手势结束:', {
-      moveY: contentTouchMoveY,
-      duration: touchDuration,
-      fullScreen: insightFullScreen
-    })
-    
-    // 计算下滑速度
-    const dragVelocity = Math.abs(contentTouchMoveY) / (touchDuration || 1)
-    
-    // 下滑关闭条件判断
-    let shouldClose = false
-    if (!insightFullScreen) {
-      // 非全屏模式：下划超过80px或速度较快时关闭
-      shouldClose = (contentTouchMoveY > 80) || (contentTouchMoveY > 40 && dragVelocity > 0.15)
-    } else {
-      // 全屏模式：需要更大的滑动距离或更快的速度
-      shouldClose = (contentTouchMoveY > 150) || (contentTouchMoveY > 80 && dragVelocity > 0.25)
-    }
-    
-    if (shouldClose && touchDuration < 1200) {
-      console.log('通过内容区域下划关闭弹窗')
-      this.animateClose()
-    } else {
-      // 未达到关闭条件，回弹到原位置
-      this.animateBounceBack()
-    }
-    
-    // 重置手势数据
-    this.setData({
-      contentTouchStartY: 0,
-      contentTouchMoveY: 0,
-      contentTouchStartTime: 0
-    })
-  },
-  
-  // 处理insight点赞
-  async handleInsightLike() {
-    const { currentInsightData } = this.data
-    if (!currentInsightData || currentInsightData.id === 'default') {
+
+  async handleSendComment() {
+    const { commentInputText, replyingToCommentId, podcastList, currentIndex, audioContext } = this.data
+
+    if (!commentInputText.trim()) {
       wx.showToast({
-        title: '无法点赞默认内容',
+        title: '请输入评论内容',
         icon: 'none',
         duration: 1500
       })
       return
     }
-    
-    try {
-      // 乐观更新UI - 切换点赞状态和图标
-      const newIsLiked = !(currentInsightData.isLiked || false)
-      const newLikeCount = newIsLiked ? 
-        (currentInsightData.like_count || 0) + 1 : 
-        Math.max(0, (currentInsightData.like_count || 0) - 1)
-      
-      this.setData({
-        'currentInsightData.isLiked': newIsLiked,
-        'currentInsightData.like_count': newLikeCount
+
+    const userId = this.getCurrentUserId()
+    if (!userId) {
+      wx.showToast({
+        title: '请先登录',
+        icon: 'none',
+        duration: 1500
       })
-      
-      // 调用API更新点赞数
-      const result = await insightService.incrementLikeCount(currentInsightData.id)
-      
+      return
+    }
+
+    const currentPodcast = podcastList[currentIndex]
+    if (!currentPodcast) return
+
+    // 获取当前播放时间戳
+    const audioTimestamp = audioContext ? Math.floor(audioContext.currentTime || 0) : 0
+
+    try {
+      let result
+      if (replyingToCommentId) {
+        // 回复评论
+        result = await apiService.comment.reply(userId, replyingToCommentId, commentInputText.trim())
+      } else {
+        // 发表新评论
+        result = await apiService.comment.create(userId, currentPodcast.id, commentInputText.trim(), audioTimestamp)
+      }
+
       if (result.success) {
-        // 使用API返回的实际点赞数更新UI
-        this.setData({
-          'currentInsightData.like_count': result.data.like_count
-        })
-        
         wx.showToast({
-          title: newIsLiked ? '点赞成功' : '取消点赞',
+          title: '评论成功',
           icon: 'success',
           duration: 1500
         })
-        
-        console.log('Insight点赞成功:', result.data.like_count)
-      } else {
-        // API调用失败，回滚UI状态
+
+        // 清空输入框
         this.setData({
-          'currentInsightData.isLiked': currentInsightData.isLiked || false,
-          'currentInsightData.like_count': currentInsightData.like_count
+          commentInputText: '',
+          replyingToCommentId: null
         })
-        
-        wx.showToast({
-          title: result.error || '点赞失败',
-          icon: 'none',
-          duration: 1500
-        })
+
+        // 重新加载评论列表
+        this.loadCommentsForCurrentPodcast(currentPodcast.id)
+      } else {
+        throw new Error(result.error)
       }
     } catch (error) {
-      // 异常情况，回滚UI状态
-      this.setData({
-        'currentInsightData.isLiked': currentInsightData.isLiked || false,
-        'currentInsightData.like_count': currentInsightData.like_count
-      })
-      
-      console.error('点赞操作失败:', error)
+      console.error('发表评论失败:', error)
       wx.showToast({
-        title: '点赞失败，请重试',
+        title: error.message || '评论失败',
         icon: 'none',
-        duration: 1500
+        duration: 2000
       })
     }
   },
-  
-  // 处理insight收藏
-  handleInsightBookmark: function() {
-    wx.showToast({
-      title: '收藏成功',
-      icon: 'success',
-      duration: 1500
-    })
-    
-    console.log('Insight收藏')
-  },
-  
-  // 处理insight分享
-  handleInsightShare: function() {
-    const { currentInsightData } = this.data
-    if (!currentInsightData) return
-    
-    wx.showShareMenu({
-      withShareTicket: true,
-      menus: ['shareAppMessage', 'shareTimeline']
-    })
-    
-    console.log('Insight分享:', currentInsightData.title)
-  },
-  
-  // 处理insight滑动切换
-  handleInsightSlideChange: function(e) {
-    const currentIndex = e.detail.current
+
+  handleReplyComment(e) {
+    const commentId = e.currentTarget.dataset.commentId
     this.setData({
-      currentInsightIndex: currentIndex,
-      currentInsightData: this.data.insightsList[currentIndex]
+      replyingToCommentId: commentId
     })
-    
-    console.log('Insight滑动到:', currentIndex, this.data.insightsList[currentIndex])
-  },
-  
-  // 处理insight指示器点击
-  handleInsightDotClick: function(e) {
-    const index = e.currentTarget.dataset.index
-    this.setData({
-      currentInsightIndex: index,
-      currentInsightData: this.data.insightsList[index]
-    })
-    
-    console.log('点击Insight指示器:', index)
-  },
-  
-  // 处理insight重试
-  handleInsightRetry: function() {
-    console.log('重试加载Insight')
-    
-    const { currentIndex, podcastList } = this.data
-    const currentPodcast = podcastList[currentIndex]
-    
-    if (!currentPodcast) return
-    
-    this.setData({
-      insightLoading: true,
-      insightError: ''
-    })
-    
-    this.loadInsightData(currentPodcast.id)
+    console.log('回复评论:', commentId)
   },
 
-  // 处理分享
-  handleShare: function() {
-    console.log('分享内容')
-    
-    wx.showShareMenu({
-      withShareTicket: true,
-      showShareItems: ['wechatFriends', 'wechatMoment']
+  async handleLikeComment(e) {
+    const commentId = e.currentTarget.dataset.commentId
+    const userId = this.getCurrentUserId()
+
+    if (!userId) {
+      wx.showToast({
+        title: '请先登录',
+        icon: 'none',
+        duration: 1500
+      })
+      return
+    }
+
+    try {
+      const result = await apiService.comment.like(userId, commentId)
+      if (result.success) {
+        // 重新加载评论列表
+        const { podcastList, currentIndex } = this.data
+        if (podcastList[currentIndex]) {
+          this.loadCommentsForCurrentPodcast(podcastList[currentIndex].id)
+        }
+      }
+    } catch (error) {
+      console.error('点赞评论失败:', error)
+    }
+  },
+
+  // ========== 播放速度相关方法 ==========
+  handleSpeedChange() {
+    const { playbackSpeed, audioContext } = this.data
+
+    // 循环切换播放速度: 1.0x -> 1.5x -> 2.0x -> 1.0x
+    let newSpeed
+    if (playbackSpeed === 1.0) {
+      newSpeed = 1.5
+    } else if (playbackSpeed === 1.5) {
+      newSpeed = 2.0
+    } else {
+      newSpeed = 1.0
+    }
+
+    this.setData({ playbackSpeed: newSpeed })
+
+    // 应用播放速度到音频上下文
+    if (audioContext) {
+      audioContext.playbackRate = newSpeed
+    }
+
+    // 保存播放速度设置
+    this.savePlaybackSpeed()
+
+    console.log('播放速度已更改为:', newSpeed)
+  },
+
+  savePlaybackSpeed() {
+    try {
+      wx.setStorageSync('playbackSpeed', this.data.playbackSpeed)
+    } catch (error) {
+      console.error('保存播放速度失败:', error)
+    }
+  },
+
+  loadPlaybackSpeed() {
+    try {
+      const speed = wx.getStorageSync('playbackSpeed')
+      if (speed) {
+        this.setData({ playbackSpeed: speed })
+
+        // 应用到音频上下文
+        if (this.data.audioContext) {
+          this.data.audioContext.playbackRate = speed
+        }
+
+        console.log('加载播放速度:', speed)
+      }
+    } catch (error) {
+      console.error('加载播放速度失败:', error)
+    }
+  },
+
+  // ========== 标题滚动相关方法 ==========
+  handleTitleScroll(e) {
+    // 记录用户手动滚动位置
+    this.setData({
+      titleScrollLeft: e.detail.scrollLeft
     })
+  },
+
+  handleTitleTouchStart(e) {
+    // 用户开始手势，暂停自动滚动
+    this.setData({ autoScrollTitle: false })
+  },
+
+  handleTitleTouchEnd(e) {
+    // 用户手势结束后延迟恢复自动滚动
+    setTimeout(() => {
+      this.setData({ autoScrollTitle: true })
+    }, 3000)
   },
 
   // 处理更多操作

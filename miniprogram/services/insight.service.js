@@ -172,6 +172,11 @@ class InsightService {
         source_type: rawInsight.source_type || 'system',
         like_count: rawInsight.like_count || 0,
         view_count: rawInsight.view_count || 0,
+        click_count: rawInsight.click_count || 0,
+        display_order: rawInsight.display_order || 0,
+        // 认知卡片专用字段（重用summary和related_authors）
+        quote_text: rawInsight.summary || '暂无摘要',
+        quote_author: this.extractAuthorName(rawInsight.related_authors),
         isLiked: rawInsight.isLiked || false,
         created_at: rawInsight.created_at,
         updated_at: rawInsight.updated_at
@@ -180,6 +185,26 @@ class InsightService {
       console.error('格式化insight数据失败:', error)
       return this.getDefaultInsightData().data
     }
+  }
+
+  // 提取作者名称（从related_authors JSONB字段）
+  extractAuthorName(relatedAuthors) {
+    if (!relatedAuthors || !Array.isArray(relatedAuthors) || relatedAuthors.length === 0) {
+      return '佚名'
+    }
+
+    const firstAuthor = relatedAuthors[0]
+
+    // 处理两种格式：
+    // 1. 对象格式：{name: "张三", institution: "xx"}
+    // 2. 字符串格式：["张三", "李四"]
+    if (typeof firstAuthor === 'object' && firstAuthor.name) {
+      return firstAuthor.name
+    } else if (typeof firstAuthor === 'string') {
+      return firstAuthor
+    }
+
+    return '佚名'
   }
 
   // 获取默认insight数据（当数据库中没有数据时使用）
@@ -344,14 +369,14 @@ class InsightService {
   async getPopularInsights(limit = 10) {
     try {
       console.log('获取热门insights')
-      
+
       const query = `status=eq.active&select=*&order=like_count.desc,view_count.desc&limit=${limit}`
-      
+
       const result = await this.supabaseRequest(`insights?${query}`)
-      
+
       if (result.success) {
         const insights = result.data.map(insight => this.formatInsightData(insight))
-        
+
         console.log(`成功获取${insights.length}条热门insights`)
         return {
           success: true,
@@ -366,6 +391,76 @@ class InsightService {
         success: false,
         error: error.message || '获取热门内容失败',
         data: []
+      }
+    }
+  }
+
+  // 按点击次数排序获取insights（智能排序 - 新增方法）
+  async getInsightsByClickCount(podcastId) {
+    try {
+      console.log('按点击次数获取insights:', podcastId)
+
+      // 按view_count降序,like_count降序,created_at降序排序
+      // 注意：数据库暂无click_count字段，使用view_count作为排序依据
+      const query = `podcast_id=eq.${podcastId}&status=eq.active&select=*&order=view_count.desc,like_count.desc,created_at.desc`
+
+      const result = await this.supabaseRequest(`insights?${query}`)
+
+      if (result.success) {
+        const insights = result.data.map(insight => this.formatInsightData(insight))
+
+        console.log(`成功获取${insights.length}条insights（按点击次数排序）`)
+        return {
+          success: true,
+          data: insights
+        }
+      } else {
+        throw new Error(result.error)
+      }
+    } catch (error) {
+      console.error('按点击次数获取insights失败:', error)
+      return {
+        success: false,
+        error: error.message || '获取认知卡片失败',
+        data: []
+      }
+    }
+  }
+
+  // 增加点击次数（新增方法）
+  async incrementClickCount(insightId) {
+    try {
+      // 先获取当前点击次数
+      const currentResult = await this.supabaseRequest(`insights?id=eq.${insightId}&select=click_count`)
+
+      if (currentResult.success && currentResult.data.length > 0) {
+        const currentCount = currentResult.data[0].click_count || 0
+        const newCount = currentCount + 1
+
+        // 更新点击次数
+        const updateResult = await this.supabaseRequest(`insights?id=eq.${insightId}`, {
+          method: 'PATCH',
+          data: { click_count: newCount }
+        })
+
+        if (updateResult.success) {
+          console.log(`insight ${insightId} 点击次数更新为 ${newCount}`)
+          return {
+            success: true,
+            data: { click_count: newCount }
+          }
+        } else {
+          throw new Error(updateResult.error)
+        }
+      } else {
+        throw new Error('未找到对应的认知提取内容')
+      }
+    } catch (error) {
+      console.error('更新点击次数失败:', error)
+      // 非关键操作,失败不影响主流程
+      return {
+        success: false,
+        error: error.message || '更新点击次数失败'
       }
     }
   }
