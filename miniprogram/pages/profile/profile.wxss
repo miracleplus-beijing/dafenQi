@@ -1,6 +1,6 @@
 /* 我的页面样式 */
 .profile-container {
-  width: 100%;
+  width: 100vw;
   min-height: 100vh;
   background: white;
   position: relative;
@@ -18,14 +18,15 @@
   z-index: 1;
 }
 
-/* 用户区域 */
 .user-section {
   position: relative;
   z-index: 2;
   padding: 60px 35px 40px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 20rpx;
 }
 
 .login-prompt {
@@ -33,7 +34,7 @@
   font-size: 22px;
   font-family: 'Times New Roman', 'SF Pro', serif;
   font-weight: 510;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
 }
 
 .user-info {
@@ -42,14 +43,13 @@
 }
 
 .user-name {
-  font-size: 22px;
+  font-size: 44rpx;
   font-family: 'Times New Roman', 'SF Pro', serif;
   font-weight: 510;
-  margin-bottom: 4px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  margin-bottom: 12rpx;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 8px;
+  border-radius: 16rpx;
   transition: background-color 0.2s ease;
 }
 
@@ -58,13 +58,18 @@
 }
 
 .user-id {
-  font-size: 14px;
+  font-size: 28rpx;
   font-family: 'Times New Roman', 'SF Pro', serif;
   font-weight: 400;
+  display: -webkit-box;
   opacity: 0.8;
+  -webkit-line-clamp: 2; 
+  -webkit-box-orient: vertical; 
+  overflow: hidden;
 }
 
 .avatar-container {
+  margin-left: auto;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -97,10 +102,10 @@
   position: relative;
   z-index: 2;
   background: white;
-  border-radius: 16px 16px 0 0;
-  margin-top: -20px;
-  padding-top: 20px;
-  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.1);
+  border-radius: 30rpx 30rpx 0 0;
+  margin-top: -40rpx;
+  padding-top: 40rpx;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.1);
 }
 
 .menu-item {
@@ -144,7 +149,8 @@
 
 /* 退出登录特殊样式 */
 .logout-item {
-  margin-top: 20px;
+  box-shadow: 0 1rpx 20rpx rgba(0, 0, 0, 0.1);
+  z-index: 999;
 }
 
 .logout-text {
@@ -275,4 +281,21 @@
 
 .swipe-indicator.active {
   opacity: 1;
+}
+.avatar-btn {
+  background-color: inherit;
+  width: auto;
+  border: none;
+  outline: none;
+}
+
+#profileChooseAvatarBtn::after,
+.avatar-btn::after {
+  border: 0 !important;
+  content: none !important;     /* 不再渲染伪元素 */
+  transform: none !important;   /* 防止缩放影响点击区域 */
+  -webkit-transform: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  box-shadow: none !important;
 }

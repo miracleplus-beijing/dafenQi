@@ -127,3 +127,32 @@ user-data/
 broadcast/
 example/
 documents/
+
+# 包管理器相关
+
+# 代码质量工具缓存
+.eslintcache
+.prettiercache
+
+# ===============================
+# 构建和依赖文件
+# ===============================
+
+# Node.js 依赖
+node_modules/
+
+# npm 锁文件
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# npm 缓存
+.npm
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.pnp
+.pnp.js
+
+miniprogram/miniprogram_npm/
+miniprogram_dist/

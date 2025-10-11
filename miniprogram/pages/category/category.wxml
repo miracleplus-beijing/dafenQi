@@ -84,7 +84,7 @@
       </view>
       
       <view wx:for="{{featuredPodcasts}}" wx:key="id" class="podcast-item">
-        <view class="podcast-cover"></view>
+        <image class="podcast-cover" src="{{item.cover_url}}"/>
         <view class="podcast-info">
           <view class="podcast-channel">{{item.channel}}</view>
           <view class="podcast-title">{{item.title}}</view>

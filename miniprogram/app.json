@@ -14,6 +14,11 @@
     "pages/service-agreement/service-agreement",
     "pages/personal-info/personal-info"
   ],
+  "permission": {
+    "scope.userAvatar": {
+      "desc": "用于展示用户个人资料，便于其他用户识别"
+    }
+  },
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#ffffff",
@@ -49,11 +54,20 @@
     ]
   },
   "sitemapLocation": "sitemap.json",
-  "style": "v2",
   "componentFramework": "glass-easel",
   "lazyCodeLoading": "requiredComponents",
   "__usePrivacyCheck__": true,
   "useExtendedLib": {
     "weui": true
+  },
+  
+  "usingComponents": {
+    "t-button": "tdesign-miniprogram/button/button",
+    "t-tag": "tdesign-miniprogram/tag/tag",
+    "t-check-tag": "tdesign-miniprogram/check-tag/check-tag",
+    "t-toast": "tdesign-miniprogram/toast/toast",
+    "t-image": "tdesign-miniprogram/image/image",
+    "t-avatar": "tdesign-miniprogram/avatar/avatar",
+    "t-avatar-group": "tdesign-miniprogram/avatar-group/avatar-group"
   }
 }

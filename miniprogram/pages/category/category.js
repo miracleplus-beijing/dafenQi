@@ -87,6 +87,7 @@ Page({
         newRankings: newResult.success ? newResult.data : [],
         reviewRankings: reviewResult.success ? reviewResult.data : []
       })
+      console.log(this.data.hotRankings)
     } catch (error) {
       console.error('加载排行榜数据失败:', error)
       // 如果出错，使用空数组
@@ -365,6 +366,7 @@ Page({
       this.setData({
         featuredPodcasts: result.success ? result.data : []
       })
+      console.log(result)
     } catch (error) {
       console.error('加载精选播客失败:', error)
       // 降级到空数组

@@ -83,7 +83,7 @@ Page({
       this.setData({
         avatarUrl: avatarUrl
       })
-      
+      console.log(avatarUrl)
       wx.showToast({
         title: '头像已选择',
         icon: 'success',

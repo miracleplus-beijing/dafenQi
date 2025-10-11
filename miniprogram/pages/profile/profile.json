@@ -1,5 +1,11 @@
 {
-  "usingComponents": {},
+  "usingComponents": {
+    "t-cell": "tdesign-miniprogram/cell/cell",
+    "t-cell-group": "tdesign-miniprogram/cell-group/cell-group",
+    "t-avatar": "tdesign-miniprogram/avatar/avatar",
+    "t-image": "tdesign-miniprogram/image/image",
+    "t-divider": "tdesign-miniprogram/divider/divider"
+  },
   "navigationBarTitleText": "达芬Qi说",
   "navigationBarBackgroundColor": "#0884FF",
   "navigationBarTextStyle": "white",

@@ -79,7 +79,7 @@ Core authentication service handling WeChat OAuth2 integration with Supabase bac
 
 ### Storage Service (services/storage.service.js)
 File storage abstraction layer for Supabase Storage:
-- **Private User Files**: `uploadUserFileToPrivateBucket()` - Secure user content storage
+- **Public User Files**: `uploadUserFileToPublicBucket()` - Secure user content storage
 - **Signed URLs**: `generateUserFileSignedUrl()` - Temporary access to private files
 - **File Management**: Upload, delete, and list operations for various file types
 - **Image Processing**: Compression and optimization for WeChat constraints
@@ -372,7 +372,7 @@ When modifying services, follow these patterns:
 4. Handle Supabase PostgREST query parameters
 
 ### File Upload Implementation
-1. For user files: Use `storageService.uploadUserFileToPrivateBucket(userId, fileType, filePath)`
+1. For user files: Use `storageService.uploadUserFileToPublicBucket(userId, fileType, filePath)`
 2. For public files: Use `storageService.uploadFile(bucketName, filePath, fileName)`
 3. Generate signed URLs for private files: `storageService.generateUserFileSignedUrl()`
 

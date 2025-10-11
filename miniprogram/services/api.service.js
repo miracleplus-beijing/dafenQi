@@ -107,7 +107,7 @@ class ApiService {
   // 用户相关 API
   user = {
     // 获取用户收藏
-    getFavorites: async (userId) => {
+    getFavorites: async (userId) => {v
       try {
         const result = await requestUtil.get('/rest/v1/user_favorites', {
           user_id: `eq.${userId}`,

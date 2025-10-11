@@ -9,7 +9,7 @@ class AuthService {
   constructor() {
     this.supabaseUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co'
     this.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmZjYWZnbmh6amlhdXVrc3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0MjY4NjAsImV4cCI6MjA3MTAwMjg2MH0.uxO5eyw0Usyd59UKz-S7bTrmOnNPg9Ld9wJ6pDMIQUA'
-    this.storageService = storageService
+    this.storageService = require('./storage.service.js')
 
     // Initialize Supabase client-like functionality
     this.currentSession = null
@@ -455,15 +455,14 @@ class AuthService {
       let finalAvatarUrl = null
       if (userInfo.avatarUrl) {
         if (userInfo.avatarUrl.includes('tmp') || userInfo.avatarUrl.includes('temp') || userInfo.avatarUrl.includes('wxfile://')) {
-          console.log('准备上传头像到private storage')
 
-          console.log('开始调用uploadUserFileToPrivateBucket:', {
+          console.log('开始调用uploadUserFileToBucket:', {
             userId: currentUser.id,
             fileType: 'avatar',
             tempFilePath: userInfo.avatarUrl
           })
 
-          const uploadResult = await this.storageService.uploadUserFileToPrivateBucket(
+          const uploadResult = await this.storageService.uploadUserFileToPublicBucket(
             currentUser.id,
             'avatar',
             userInfo.avatarUrl
@@ -472,8 +471,8 @@ class AuthService {
           console.log('头像上传结果:', uploadResult)
 
           if (uploadResult.success) {
-            // 存储文件路径而不是签名URL（因为签名URL会过期）
-            finalAvatarUrl = `storage:user_profile/${uploadResult.path}`
+          
+            finalAvatarUrl = uploadResult.publicUrl
             console.log('头像上传成功，存储路径:', finalAvatarUrl)
           } else {
             console.error('头像上传失败:', uploadResult.error)
@@ -481,7 +480,7 @@ class AuthService {
             finalAvatarUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
           }
         } else {
-          finalAvatarUrl = userInfo.avatarUrl
+          finalAvatarUrl =  uploadResult.publicUrl
         }
       }
 
@@ -609,52 +608,6 @@ class AuthService {
     } catch (error) {
       console.error('更新用户详细资料失败:', error)
       return { success: false, error: error.message }
-    }
-  }
-
-  /**
-   * 上传头像到Supabase Storage
-   * @param {string} tempFilePath - 微信临时文件路径
-   * @param {string} userId - 用户ID
-   * @returns {Promise<Object>} 上传结果
-   */
-  async uploadAvatar(tempFilePath, userId) {
-    try {
-      // 读取临时文件
-      const fileData = await this.readTempFile(tempFilePath)
-      
-      // 生成文件名
-      const fileName = `avatars/${userId}_${Date.now()}.jpg`
-      
-      // 上传到Supabase Storage
-      const uploadResponse = await this.supabaseStorageRequest({
-        bucket: 'user-avatars',
-        path: fileName,
-        file: fileData,
-        options: {
-          contentType: 'image/jpeg',
-          upsert: true
-        }
-      })
-      
-      if (uploadResponse.error) {
-        throw new Error(uploadResponse.error.message)
-      }
-      
-      // 获取公共URL
-      const publicUrl = `${this.supabaseUrl}/storage/v1/object/public/user-avatars/${fileName}`
-      
-      return {
-        success: true,
-        url: publicUrl,
-        path: fileName
-      }
-    } catch (error) {
-      console.error('头像上传失败:', error)
-      return {
-        success: false,
-        error: error.message
-      }
     }
   }
 
@@ -978,10 +931,12 @@ class AuthService {
   async getCurrentUser() {
     // 优先从Supabase Auth获取
     const userResult = await this.getUser()
+    console.log(userResult)
     if (userResult.data.user) {
       const user = userResult.data.user
 
       // 动态生成头像URL
+      console.log(user.user_metadata)
       const avatarUrl = await this.getAvatarDisplayUrl({
         avatar_url: user.user_metadata?.avatar_url
       })
@@ -1113,73 +1068,13 @@ class AuthService {
    * @returns {Promise<string>} 头像显示URL
    */
   async getAvatarDisplayUrl(user) {
-    try {
       // 如果没有avatar_url，返回默认头像
       if (!user.avatar_url) {
         return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
       }
 
-      // 如果是已过期的签名URL，需要重新生成
-      if (user.avatar_url.includes('/object/sign/user_profile/')) {
-        console.log('检测到签名URL，需要重新生成...')
+      return user.avatar_url
 
-        // 从签名URL中提取文件路径
-        const urlMatch = user.avatar_url.match(/\/object\/sign\/user_profile\/([^?]+)/);
-        if (urlMatch && urlMatch[1]) {
-          const filePath = urlMatch[1]
-          console.log('提取文件路径:', filePath)
-
-          // 生成新的签名URL (7天有效期)，重试机制
-          const signedUrlResult = await this.retryGenerateSignedUrl(filePath, 3)
-
-          if (signedUrlResult.success) {
-            console.log('成功生成新的签名URL')
-            return signedUrlResult.signedUrl
-          } else {
-            console.warn('生成头像签名URL失败:', signedUrlResult.error)
-            return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
-          }
-        }
-      }
-
-      // 如果是storage引用格式，生成签名URL
-      if (user.avatar_url && user.avatar_url.startsWith('storage:user_profile/')) {
-        const storagePath = user.avatar_url.replace('storage:user_profile/', '')
-        console.log('检测到storage引用，生成签名URL:', storagePath)
-
-        // 生成签名URL (7天有效期)，重试机制
-        const signedUrlResult = await this.retryGenerateSignedUrl(storagePath, 3)
-
-        if (signedUrlResult.success) {
-          console.log('签名URL生成成功')
-          return signedUrlResult.signedUrl
-        } else {
-          console.warn('生成头像签名URL失败:', signedUrlResult.error)
-          return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
-        }
-      }
-
-      // 如果是公共URL，直接返回
-      if (user.avatar_url.startsWith('https://') || user.avatar_url.startsWith('http://')) {
-        // 检查是否是公共storage URL
-        if (user.avatar_url.includes('/storage/v1/object/public/')) {
-          return user.avatar_url
-        }
-
-        // 如果是微信头像URL，直接返回
-        if (user.avatar_url.includes('qlogo.cn') || user.avatar_url.includes('wx.qlogo.cn')) {
-          return user.avatar_url
-        }
-      }
-
-      // 回退到默认头像
-      console.warn('无法处理的头像URL格式:', user.avatar_url)
-      return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
-
-    } catch (error) {
-      console.error('获取头像显示URL失败:', error)
-      return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
-    }
   }
 
   /**
@@ -1190,7 +1085,7 @@ class AuthService {
    */
   async retryGenerateSignedUrl(filePath, maxRetries = 3) {
     let lastError = null
-
+    
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`尝试生成签名URL (第${attempt}次尝试):`, filePath)

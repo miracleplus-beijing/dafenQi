@@ -1,6 +1,8 @@
 // 文件存储服务
 const requestUtil = require('../utils/request.js')
 const { STORAGE_BUCKETS } = require('../config/supabase.config.js')
+let authService;
+import Toast from 'tdesign-miniprogram/toast';
 
 class StorageService {
   constructor() {
@@ -8,7 +10,7 @@ class StorageService {
     this.supabaseUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co'
     this.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmZjYWZnbmh6amlhdXVrc3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0MjY4NjAsImV4cCI6MjA3MTAwMjg2MH0.uxO5eyw0Usyd59UKz-S7bTrmOnNPg9Ld9wJ6pDMIQUA'
     this.userProfileBucket = 'user_profile'
-    
+    this.authService =  require('./auth.service.js')
     // 文件类型配置
     this.fileTypes = {
       avatar: 'avatars',
@@ -84,13 +86,6 @@ class StorageService {
     })
   }
 
-  // 上传用户头像到private bucket
-  async uploadAvatar(filePath, userId) {
-    const fileName = `avatar_${userId}_${Date.now()}.jpg`
-    return this.uploadUserFileToPrivateBucket(userId, 'avatar', filePath, {
-      contentType: 'image/jpeg'
-    })
-  }
 
   // 批量上传本地 SVG 文件
   async batchUploadLocalSVGs() {
@@ -206,8 +201,8 @@ class StorageService {
 
   // 获取文件公共访问 URL
   getPublicUrl(bucketName, fileName) {
-    const { getCurrentConfig } = require('../config/supabase.config.js')
-    const config = getCurrentConfig()
+    const { config } = require('../config/supabase.config.js')
+    console.log(config)
     return `${config.url}/storage/v1/object/public/${bucketName}/${fileName}`
   }
 
@@ -239,24 +234,15 @@ class StorageService {
    * @param {Object} options - 上传选项
    * @returns {Promise<Object>} 上传结果
    */
-  async uploadUserFileToPrivateBucket(userId, fileType, tempFilePath, options = {}) {
+  async uploadUserFileToPublicBucket(userId, fileType, tempFilePath, bucketName, options = {}) {
+    authService = require('./auth.service.js')
+
     try {
       // 验证文件类型
       if (!this.fileTypes[fileType]) {
         throw new Error(`不支持的文件类型: ${fileType}`)
       }
-
-      // 严格的用户认证检查
-      const authService = require('./auth.service.js')
-      const authCheck = await this.validateUserAuthentication(authService, userId)
-
-      if (!authCheck.isValid) {
-        throw new Error(authCheck.error)
-      }
-
-      const userToken = authCheck.token
-
-      console.log('开始上传文件，用户认证验证通过')
+      
 
       // 读取临时文件
       const fileData = await this.readTempFile(tempFilePath)
@@ -269,30 +255,46 @@ class StorageService {
 
       console.log('准备上传文件到private bucket:', fileName)
 
-      // 使用带认证的上传方法
-      const uploadResponse = await this.supabaseStorageRequestWithAuth({
+      // 使用带认证的上传方法（带一次性重试）
+      let uploadResponse = await this.supabaseStorageRequest({
         method: 'POST',
         path: fileName,
         file: fileData,
         options: {
           contentType: options.contentType || 'image/jpeg',
           upsert: true
-        },
-        authToken: userToken
+        }
       })
 
       if (uploadResponse.error) {
-        console.error('文件上传失败:', uploadResponse.error)
-        throw new Error(uploadResponse.error.message || '文件上传失败')
+        const msg = String(uploadResponse.error.message || '')
+        console.warn('文件上传失败，检查是否为token过期导致，错误信息:', msg)
+        const maybeAuthError = /401|403|Unauthorized|exp/i.test(msg)
+        if (maybeAuthError) {
+          console.warn('刷新后重试上传异常:', e)
+          
+          Toast({
+            context: this,
+            selector: '#t-toast',
+            message: '错误文案',
+            theme: 'error',
+            direction: 'column',
+          });
+        }
+
+        if (uploadResponse.error) {
+          console.error('文件上传失败(最终):', uploadResponse.error)
+          throw new Error(uploadResponse.error.message || '文件上传失败')
+        }
       }
 
       console.log('文件上传成功:', uploadResponse)
 
       return {
         success: true,
-        path: fileName,
+        path: `${this.userProfileBucket}/${fileName}`,
         bucket: this.userProfileBucket,
-        fullPath: `${this.userProfileBucket}/${fileName}`,
+        publicUrl: this.getPublicUrl(this.userProfileBucket, fileName),
         uploadResponse
       }
 
@@ -306,107 +308,14 @@ class StorageService {
   }
 
   /**
-   * 验证用户认证状态 (使用getUser()方法，遵循Supabase最佳实践)
-   * @param {Object} authService - 认证服务实例
-   * @param {string} expectedUserId - 期望的用户ID
-   * @returns {Promise<Object>} 验证结果
-   */
-  async validateUserAuthentication(authService, expectedUserId) {
-    try {
-      console.log('开始验证用户认证状态，期望用户ID:', expectedUserId)
-
-      // 使用getUser()方法，遵循Supabase最佳实践
-      const userResult = await authService.getUser()
-      console.log('getUser()结果:', userResult)
-
-      if (!userResult.data.user) {
-        console.error('用户验证失败 - 用户为空:', {
-          userResult: userResult,
-          hasData: !!userResult.data,
-          userExists: !!userResult.data.user
-        })
-        return {
-          isValid: false,
-          error: '用户未登录，无法上传文件'
-        }
-      }
-
-      const currentUser = userResult.data.user
-
-      // 获取access_token用于文件操作认证
-      const sessionResult = authService.getSession()
-      const userToken = sessionResult.data.session?.access_token
-
-      console.log('用户验证通过，检查token:', {
-        hasToken: !!userToken,
-        tokenType: typeof userToken,
-        tokenLength: userToken ? userToken.length : 0,
-        userId: currentUser.id
-      })
-
-      // 验证token格式
-      if (!userToken || typeof userToken !== 'string' || userToken.trim() === '') {
-        console.error('用户token为空或格式无效')
-        return {
-          isValid: false,
-          error: '用户认证状态无效，请重新登录'
-        }
-      }
-
-      // 验证用户ID匹配
-      const currentUserId = currentUser.id
-      if (expectedUserId && currentUserId !== expectedUserId) {
-        console.error('用户ID不匹配:', {
-          expected: expectedUserId,
-          current: currentUserId
-        })
-        return {
-          isValid: false,
-          error: '用户身份不匹配，请重新登录'
-        }
-      }
-
-      // 简单的JWT格式检查
-      const tokenParts = userToken.split('.')
-      if (tokenParts.length !== 3) {
-        console.error('JWT token格式无效，parts:', tokenParts.length)
-        return {
-          isValid: false,
-          error: '用户认证token格式无效，请重新登录'
-        }
-      }
-
-      console.log('用户认证验证通过:', {
-        tokenParts: tokenParts.length,
-        tokenStart: userToken.substring(0, 20) + '...',
-        userId: currentUserId
-      })
-
-      return {
-        isValid: true,
-        token: userToken,
-        userId: currentUserId
-      }
-
-    } catch (error) {
-      console.error('验证用户认证时出错:', error)
-      return {
-        isValid: false,
-        error: '认证验证失败，请重新登录'
-      }
-    }
-  }
-
-  /**
    * 为private bucket文件生成签名URL (遵循Supabase最佳实践)
    * @param {string} filePath - 文件路径
    * @param {number} expiresIn - 过期时间(秒)，默认7天
    * @returns {Promise<Object>} 签名URL结果
    */
   async generateUserFileSignedUrl(filePath, expiresIn = 604800) { // 默认7天
+    authService = require('./auth.service.js')
     try {
-      // 获取用户认证token
-      const authService = require('./auth.service.js')
 
       // 使用getUser()检查用户状态，遵循Supabase最佳实践
       const userResult = await authService.getUser()
@@ -456,7 +365,7 @@ class StorageService {
       const signedUrl = `${this.supabaseUrl}${response.signedURL}`
 
       console.log('签名URL生成成功:', {
-        signedUrlStart: signedUrl.substring(0, 80) + '...',
+        signedUrl: signedUrl,
         expiresIn: expiresIn,
         expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString()
       })
@@ -494,7 +403,6 @@ class StorageService {
   async clearInvalidSession() {
     try {
       console.log('清理无效的本地session...')
-      const authService = require('./auth.service.js')
 
       // 清理本地存储
       wx.removeStorageSync('supabase_session')

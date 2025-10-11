@@ -4,6 +4,7 @@ const { getCurrentConfig } = require('../config/supabase.config.js')
 class RequestUtil {
   constructor() {
     this.config = getCurrentConfig()
+    console.log(this.config)
     this.baseURL = this.config.url
     this.timeout = this.config.timeout
     this.defaultHeaders = {

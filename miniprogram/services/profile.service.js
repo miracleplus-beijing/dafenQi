@@ -45,8 +45,6 @@ class ProfileService {
         ...user,
         display_name: user.nickname || user.username,
         avatar_url: avatarDisplayUrl,
-        avatar_storage_path: user.avatar_url?.startsWith('storage:') ? 
-          user.avatar_url.replace('storage:user_profile/', '') : null,
         has_user_info: !!(user.nickname && user.nickname !== '微信用户' && avatarDisplayUrl && !avatarDisplayUrl.includes('default-avatar')),
         storage_stats: storageStats.success ? {
           total_files: storageStats.count,
@@ -86,7 +84,8 @@ class ProfileService {
         )
         
         if (avatarUpdateResult.success) {
-          updates.avatar_url = avatarUpdateResult.storageReference
+          updates.avatar_url = avatarUpdateResult.fullPath
+
           // 清理旧头像文件
           await this.cleanupOldAvatars(userId)
         } else {
@@ -152,10 +151,8 @@ class ProfileService {
     try {
       // 如果是微信临时文件或选择的文件
       if (avatarSource.includes('tmp') || avatarSource.includes('temp') || avatarSource.startsWith('wxfile://')) {
-        console.log('上传头像到private storage:', avatarSource)
         
-        // 上传到private bucket
-        const uploadResult = await this.storageService.uploadUserFileToPrivateBucket(
+        const uploadResult = await this.storageService.uploadUserFileToPublicBucket(
           userId,
           'avatar',
           avatarSource
@@ -164,19 +161,21 @@ class ProfileService {
         if (uploadResult.success) {
           return {
             success: true,
-            storageReference: `storage:user_profile/${uploadResult.path}`,
-            storagePath: uploadResult.path
+            ...uploadResult
           }
         } else {
-          return { success: false, error: uploadResult.error }
+          return { 
+            success: false, 
+            error: uploadResult.error,       
+            ...uploadResult
+          }
         }
       }
 
       // 如果是已有的URL，直接使用
       return {
         success: true,
-        storageReference: avatarSource,
-        storagePath: null
+        ...uploadResult
       }
 
     } catch (error) {
@@ -394,33 +393,12 @@ class ProfileService {
    * @returns {Promise<string>} 头像显示URL
    */
   async getAvatarDisplayUrl(user) {
-    try {
-      // 如果没有avatar_url，返回默认头像
       if (!user.avatar_url) {
         return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
       }
 
-      // 如果是storage引用格式，生成签名URL
-      if (user.avatar_url.startsWith('storage:user_profile/')) {
-        const storagePath = user.avatar_url.replace('storage:user_profile/', '')
-        const signedUrlResult = await this.storageService.generateUserFileSignedUrl(storagePath, 86400)
-        
-        if (signedUrlResult.success) {
-          return signedUrlResult.signedUrl
-        } else {
-          console.warn('生成头像签名URL失败:', signedUrlResult.error)
-          // 回退到默认头像
-          return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
-        }
-      }
-
       // 如果是普通URL，直接返回
       return user.avatar_url
-      
-    } catch (error) {
-      console.error('获取头像显示URL失败:', error)
-      return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
-    }
   }
 
   /**

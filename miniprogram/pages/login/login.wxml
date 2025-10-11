@@ -30,7 +30,8 @@
       <view class="form-title">{{mode === 'register' ? '填写注册信息' : '完善个人信息'}}</view>
 
       <!-- 头像选择 - 完全复刻avatar_nickname -->
-      <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+      <button class="avatar-wrapper" id="chooseAvatarBtn" open-type="chooseAvatar"
+       bind:chooseavatar="onChooseAvatar">
         <image class="avatar" src="{{avatarUrl}}"></image>
       </button>
 

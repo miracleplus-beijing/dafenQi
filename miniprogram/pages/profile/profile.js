@@ -1,7 +1,6 @@
 // 我的页面逻辑
 const app = getApp()
 const authService = require('../../services/auth.service.js')
-
 Page({
   data: {
     // 用户登录状态
@@ -33,12 +32,10 @@ Page({
     this.initPageData()
   },
 
-  onShow: function () {
-    console.log('我的页面显示')
-    
-    // 每次显示时检查登录状态
-    this.checkLoginStatus()
-    
+  onShow: async function () {
+    console.log("onShow周期触发")
+
+    await this.checkLoginStatus()
     // 页面进入动画
     this.enterAnimation()
   },
@@ -53,59 +50,10 @@ Page({
 
   // 初始化页面数据
   initPageData: function() {
-    // 检查登录状态
-    this.checkLoginStatus()
+    // 检查登录状态 (没有必要因为， show会执行)
+    // this.checkLoginStatus()
   },
 
-  // 检查登录状态
-  checkLoginStatus: async function() {
-    console.log('检查登录状态...')
-
-    try {
-      // 优先检查Supabase Auth状态
-      const isLoggedIn = await authService.checkLoginStatus()
-      const currentUser = await authService.getCurrentUser() // 现在是异步调用
-
-      console.log('Supabase Auth登录状态:', isLoggedIn)
-      console.log('当前用户信息:', currentUser)
-
-      // 更新页面数据
-      this.setData({
-        isLoggedIn: isLoggedIn,
-        userInfo: currentUser || {
-          nickName: '',
-          avatarUrl: '',
-          id: ''
-        }
-      })
-
-      // 同步到全局数据（确保一致性）
-      try {
-        const app = getApp()
-        if (app && app.globalData) {
-          app.globalData.isLoggedIn = isLoggedIn
-          app.globalData.userInfo = currentUser
-        }
-      } catch (error) {
-        console.warn('同步到全局数据失败:', error)
-      }
-
-      console.log('页面登录状态更新完成:', { isLoggedIn, userInfo: currentUser })
-
-    } catch (error) {
-      console.error('检查登录状态失败:', error)
-
-      // 出错时设置为未登录状态
-      this.setData({
-        isLoggedIn: false,
-        userInfo: {
-          nickName: '',
-          avatarUrl: '',
-          id: ''
-        }
-      })
-    }
-  },
 
   // 页面进入动画
   enterAnimation: function() {
@@ -336,7 +284,20 @@ Page({
     
     this.resetSwipeState()
   },
+  async checkLoginStatus() {
+    const currentUser = await authService.getCurrentUser()
+    const isLoggedIn = await authService.checkLoginStatus()
 
+    this.setData({
+      isLoggedIn: isLoggedIn,
+      userInfo: currentUser || {
+        nickName: '',
+        avatarUrl: '',
+        id: ''
+      }
+    })
+
+  },
   // 重置滑动状态
   resetSwipeState: function() {
     this.setData({
@@ -349,76 +310,12 @@ Page({
       swipeDirection: ''
     })
   },
-
-  // 获取用户信息
-  getUserInfo: async function(e) {
-    if (e.detail.userInfo) {
-      // 用户允许获取用户信息
-      const userInfo = e.detail.userInfo
-      const authService = require('../../services/auth.service.js')
-      
-      try {
-        // 使用auth service更新用户信息，包括微信头像
-        const result = await authService.updateUserInfo({
-          nickName: userInfo.nickName,
-          avatarUrl: userInfo.avatarUrl
-        })
-        
-        if (result.success) {
-          // 更新页面数据
-          this.setData({
-            userInfo: result.user
-          })
-          
-          // 更新全局数据
-          app.globalData.userInfo = result.user
-          
-          console.log('微信用户信息更新成功', result.user)
-        } else {
-          // 回退到本地更新
-          const newUserInfo = {
-            ...this.data.userInfo,
-            nickName: userInfo.nickName,
-            avatarUrl: userInfo.avatarUrl
-          }
-          
-          this.setData({
-            userInfo: newUserInfo
-          })
-          
-          app.globalData.userInfo = newUserInfo
-          wx.setStorageSync('userInfo', newUserInfo)
-          
-          console.warn('用户信息更新失败，使用本地更新:', result.error)
-        }
-      } catch (error) {
-        console.error('更新用户信息失败:', error)
-        
-        // 回退到本地更新
-        const newUserInfo = {
-          ...this.data.userInfo,
-          nickName: userInfo.nickName,
-          avatarUrl: userInfo.avatarUrl
-        }
-        
-        this.setData({
-          userInfo: newUserInfo
-        })
-        
-        app.globalData.userInfo = newUserInfo
-        wx.setStorageSync('userInfo', newUserInfo)
-      }
-    } else {
-      console.log('用户拒绝授权用户信息')
-    }
-  },
-
   // 下拉刷新
-  onPullDownRefresh: function() {
+  onPullDownRefresh: async function() {
     console.log('下拉刷新')
     
     // 重新检查登录状态和用户信息
-    this.checkLoginStatus()
+    await this.checkLoginStatus()
     
     // 延迟停止刷新
     setTimeout(() => {
@@ -448,13 +345,16 @@ Page({
     }
   },
 
-  // 更换头像
-  changeAvatar: async function() {
-    console.log('尝试更换头像，当前登录状态:', this.data.isLoggedIn)
+  // 选择头像（使用微信新隐私协议方式）
+  onChooseAvatar: async function(e) {
+    console.log('选择头像事件触发:', e)
+    
+    // 尝试预授权隐私（在部分环境中可避免 buttonId 错误）
+    await this.ensurePrivacyAuthorization()
 
-    // 重新检查登录状态
+    // 检查登录状态
     await this.checkLoginStatus()
-
+    
     if (!this.data.isLoggedIn) {
       wx.showModal({
         title: '需要登录',
@@ -490,61 +390,76 @@ Page({
       return
     }
 
-    console.log('开始选择头像，用户ID:', currentUser.id)
+    // 获取选择的头像临时路径（button open-type=chooseAvatar 返回 e.detail.avatarUrl）
+    const { avatarUrl } = e.detail
+    console.log("avatarUrl: " + avatarUrl)
 
-    wx.showActionSheet({
-      itemList: ['从相册选择', '拍照'],
-      success: (res) => {
-        const sourceType = res.tapIndex === 0 ? ['album'] : ['camera']
-        
-        wx.chooseImage({
-          count: 1,
-          sizeType: ['compressed'],
-          sourceType: sourceType,
-          success: (res) => {
-            const tempFilePath = res.tempFilePaths[0]
-            
-            // 显示加载中
-            wx.showLoading({
-              title: '上传中...'
-            })
-            
-            // 模拟上传过程
-            setTimeout(() => {
-              this.updateAvatar(tempFilePath)
-            }, 1000)
-          },
-          fail: (err) => {
-            console.error('选择图片失败:', err)
-            wx.showToast({
-              title: '选择图片失败',
-              icon: 'none',
-              duration: 1500
-            })
-          }
-        })
-      }
+    if (!avatarUrl) {
+      console.error('未获取到头像路径')
+      wx.showToast({
+        title: '获取头像失败',
+        icon: 'none',
+        duration: 1500
+      })
+      return
+    }
+    
+    console.log('获取到头像路径:', avatarUrl)
+
+    // 显示加载中
+    wx.showLoading({
+      title: '上传中...'
     })
+
+    // 上传头像
+    this.updateAvatar(avatarUrl)
   },
 
+  // 预处理隐私授权：在需要隐私授权时主动拉起授权弹窗
+  ensurePrivacyAuthorization: async function() {
+    try {
+      if (!wx.getPrivacySetting || !wx.requirePrivacyAuthorize) {
+        // 低版本基础库不支持，直接返回
+        return
+      }
+      const setting = await new Promise((resolve) => {
+        wx.getPrivacySetting({ success: resolve, fail: () => resolve({ needAuthorization: false }) })
+      })
+      if (setting && setting.needAuthorization) {
+        await new Promise((resolve) => {
+          wx.requirePrivacyAuthorize({
+            success: () => resolve(true),
+            fail: () => resolve(false)
+          })
+        })
+      }
+    } catch (err) {
+      console.warn('ensurePrivacyAuthorization 执行失败（忽略继续）:', err)
+    }
+  },
+  
   // 更新头像
   updateAvatar: async function(avatarUrl) {
-    const authService = require('../../services/auth.service.js')
-    
     try {
       const result = await authService.updateUserInfo({
         avatarUrl: avatarUrl
+      }).catch(e => {
+        console.log(e)
       })
+      console.log(result)
       
       if (result.success) {
+        // 统一字段为 camelCase，兼容后端返回的 snake_case
+        const u = result.user || {}
+        const normalized = {
+          nickName: u.nickName || u.nickname || this.data.userInfo.nickName || '',
+          avatarUrl: u.avatarUrl || u.avatar_url || this.data.userInfo.avatarUrl || '',
+          id: u.id || this.data.userInfo.id || ''
+        }
         // 更新页面数据
-        const newUserInfo = result.user
-        this.setData({
-          userInfo: newUserInfo
-        })
-        
+        this.setData({ userInfo: normalized })
         // 更新全局数据
-        app.globalData.userInfo = newUserInfo
+        app.globalData.userInfo = normalized
         
         wx.hideLoading()
         wx.showToast({
@@ -553,7 +468,7 @@ Page({
           duration: 1500
         })
         
-        console.log('头像更新成功:', newUserInfo.avatar_url)
+        console.log('头像更新成功:', normalized.avatarUrl)
       } else {
         wx.hideLoading()
         wx.showToast({
@@ -562,6 +477,9 @@ Page({
           duration: 2000
         })
       }
+
+
+      
     } catch (error) {
       wx.hideLoading()
       wx.showToast({
@@ -621,7 +539,6 @@ Page({
 
   // 更新用户名
   updateUserName: async function(nickName) {
-    const authService = require('../../services/auth.service.js')
 
     wx.showLoading({
       title: '更新中...'
@@ -633,14 +550,18 @@ Page({
       })
 
       if (result.success) {
+        // 统一字段为 camelCase，兼容后端返回的 snake_case
+        const u = result.user || {}
+        const normalized = {
+          nickName: u.nickName || u.nickname || this.data.userInfo.nickName || '',
+          avatarUrl: u.avatarUrl || u.avatar_url || this.data.userInfo.avatarUrl || '',
+          id: u.id || this.data.userInfo.id || ''
+        }
         // 更新页面数据
-        const newUserInfo = result.user
-        this.setData({
-          userInfo: newUserInfo
-        })
+        this.setData({ userInfo: normalized })
 
         // 更新全局数据
-        app.globalData.userInfo = newUserInfo
+        app.globalData.userInfo = normalized
 
         wx.hideLoading()
         wx.showToast({
@@ -649,7 +570,7 @@ Page({
           duration: 1500
         })
 
-        console.log('用户名更新成功:', newUserInfo.nickname)
+        console.log('用户名更新成功:', normalized.nickName)
       } else {
         wx.hideLoading()
         wx.showToast({
@@ -666,6 +587,43 @@ Page({
         duration: 1500
       })
       console.error('用户名更新失败:', error)
+    }
+  },
+
+  // 页面级隐私授权处理（与 app.js 协同工作）
+  // 当调用隐私受限能力（如 chooseAvatar）且需要授权时，微信会触发此回调
+  handleGlobalPrivacyAuth: function(resolve, eventInfo) {
+    try {
+      const ref = (eventInfo && eventInfo.referrer) ? `“${eventInfo.referrer}”` : '该功能'
+      wx.showModal({
+        title: '隐私保护指引',
+        content: `为了正常使用${ref}，需要您同意隐私保护指引。我们将严格保护您的个人信息，仅用于提供对应服务。`,
+        confirmText: '同意',
+        cancelText: '拒绝',
+        success: (res) => {
+          if (res.confirm) {
+            try {
+              console.log('页面隐私弹窗: 用户同意, 调用 resolve()')
+              resolve()
+            } catch (e) {
+              console.warn('页面隐私弹窗 resolve() 执行异常(同意):', e)
+            }
+            wx.showToast({ title: '已同意，请再次点击以继续', icon: 'success', duration: 1200 })
+          } else {
+            try {
+              console.log('页面隐私弹窗: 用户拒绝, 调用 resolve()')
+              resolve()
+            } catch (e) {
+              console.warn('页面隐私弹窗 resolve() 执行异常(拒绝):', e)
+            }
+            wx.showToast({ title: '已拒绝', icon: 'none', duration: 1500 })
+          }
+        }
+      })
+    } catch (e) {
+      // 兜底处理：若弹窗失败，默认拒绝
+      try { resolve() } catch (_) {}
+      console.warn('隐私授权弹窗失败:', e)
     }
   }
 })
