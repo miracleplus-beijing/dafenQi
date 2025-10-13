@@ -1,0 +1,28 @@
+{
+  "version": "1",
+  "privacyDesc": "你的隐私保护指引",
+  "privacyList": {
+    "chooseAvatar": {
+      "code": "chooseAvatar",
+      "desc": "用于更换用户头像",
+      "privacyList": [
+        {
+          "type": "Image",
+          "scene": "用户点击头像更换按钮时获取",
+          "purpose": "用于展示用户个人资料，便于其他用户识别"
+        }
+      ]
+    },
+    "userNickName": {
+      "code": "userNickName",
+      "desc": "用于设置用户昵称",
+      "privacyList": [
+        {
+          "type": "Text",
+          "scene": "用户输入昵称时获取",
+          "purpose": "用于展示用户个人信息"
+        }
+      ]
+    }
+  }
+}
