@@ -1,12 +1,10 @@
-<!-- 漫游页面 -->
+<!-- 漫游页面 - 简约博客美学重设计 -->
 <view class="browse-page">
   <!-- 主要内容区域 -->
   <view wx:if="{{!loading && podcastList.length > 0}}">
-    <swiper class="browse-swiper" 
-            vertical="true" 
+    <swiper class="browse-swiper"
+            vertical="true"
             indicator-dots="false"
-            indicator-color="rgba(0,0,0,0)"
-            indicator-active-color="rgba(0,0,0,0)" 
             autoplay="{{false}}"
             interval="999999"
             circular="false"
@@ -16,161 +14,130 @@
             bindchange="handleSwiperChange"
             bindtouchstart="handleTouchStart"
             bindtouchmove="handleTouchMove">
-  <swiper-item wx:for="{{podcastList}}" wx:key="id" class="browse-container">
-    <!-- 播客封面 -->
-    <view class="podcast-cover">
-      <image wx:if="{{item.cover_url}}" 
-             src="{{item.cover_url}}" 
-             class="cover-image" 
-             mode="aspectFill" 
-             alt="{{item.title}}" />
-      <view wx:else class="cover-placeholder">
-        <view class="cover-icon">🎵</view>
-        <view class="cover-title">{{item.title}}</view>
-      </view>
-      <!-- 加载指示器 - 只在音频加载时显示 -->
-      <view wx:if="{{index === currentIndex && isPlaying && audioLoading}}" 
-            class="podcast-loader">
-        <image src="{{cdnImages.loadingIcon}}" class="loader-icon" alt="加载中"></image>
-      </view>
-    </view>
 
-    <!-- 播客标题 - 支持手动拖拽和自动滚动 -->
-    <view class="podcast-title-wrapper">
-      <scroll-view
-        scroll-x
-        class="title-scroll-view {{autoScrollTitle ? 'auto-scrolling' : ''}}"
-        scroll-left="{{titleScrollLeft}}"
-        bindscroll="handleTitleScroll"
-        bindtouchstart="handleTitleTouchStart"
-        bindtouchend="handleTitleTouchEnd">
-        <view class="title-content" style="width: {{titleWidth}}px;">
-          <text class="title-text">{{item.title}}</text>
-        </view>
-      </scroll-view>
-    </view>
+      <swiper-item wx:for="{{podcastList}}" wx:key="id" class="browse-container">
 
-    <!-- 认知卡片滑动区域 -->
-    <view class="insight-cards-container">
-      <swiper
-        class="insight-swiper"
-        indicator-dots="{{false}}"
-        autoplay="{{autoPlayInsights}}"
-        interval="5000"
-        circular="{{insightList.length > 1}}"
-        current="{{currentInsightIndex}}"
-        bindchange="handleInsightChange"
-        bindtouchstart="handleInsightTouchStart"
-        bindtouchend="handleInsightTouchEnd">
-        <swiper-item wx:for="{{insightList}}" wx:key="id" wx:for-item="insightItem" class="insight-card-wrapper">
-          <view class="insight-card" bindtap="handleInsightCardClick" data-insight-id="{{insightItem.id}}">
-            <view class="insight-header">
-              <text class="insight-label">认知提取</text>
-              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/insight.svg"
-                     class="insight-icon" />
+        <!-- 内容展示区域 (60%) -->
+        <view class="content-display">
+
+          <!-- 播客封面 -->
+          <view class="podcast-cover {{index === currentIndex && isPlaying ? 'playing' : ''}}">
+            <image wx:if="{{item.cover_url}}"
+                   src="{{item.cover_url}}"
+                   class="cover-image"
+                   mode="aspectFill"
+                   alt="{{item.title}}" />
+            <view wx:else class="cover-placeholder">
+              <view class="cover-icon">🎵</view>
+              <view class="cover-title">{{item.title}}</view>
             </view>
-            <text class="quote-text">{{insightItem.quote_text}}</text>
-            <text class="quote-author">——{{insightItem.quote_author}}</text>
+
+            <!-- 播放状态覆盖层 -->
+            <view wx:if="{{index === currentIndex && isPlaying}}" class="play-overlay">
+              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/pause.svg"
+                     class="overlay-icon" />
+            </view>
+
+            <!-- 加载指示器 -->
+            <view wx:if="{{index === currentIndex && isPlaying && audioLoading}}"
+                  class="podcast-loader">
+              <image src="{{cdnImages.loadingIcon}}" class="loader-icon" alt="加载中"></image>
+            </view>
           </view>
-        </swiper-item>
-      </swiper>
-    </view>
 
-    <!-- 智能分块缓冲进度条 -->
-    <view class="progress-container">
-      <view class="progress-time-info">
-        <text class="current-time">{{currentTimeFormatted}}</text>
-        <!-- 网络状态指示器 -->
-        <view class="network-indicator {{networkStatus.isSlowNetwork ? 'slow' : 'fast'}}">
-        </view>
-        <text class="total-time">{{totalTimeFormatted}}</text>
-      </view>
-      
-      <view class="progress-bar" bindtap="handleProgressClick">
-        <!-- 背景轨道 -->
-        <view class="progress-track"></view>
-        
-        <!-- 分块缓冲显示层 -->
-        <view class="chunk-buffer-layer">
-          <view wx:for="{{chunkDistribution}}" wx:key="index" 
-                class="chunk-segment {{item.cached ? 'cached' : ''}} {{item.loading ? 'loading' : ''}}"
-                style="left: {{item.left}}%; width: {{item.width}}%;">
+          <!-- 标题区域 -->
+          <view class="title-section">
+            <text class="main-title">{{item.title}}</text>
+            <text class="sub-title">{{item.channel_name || '达芬Qi说'}}</text>
+          </view>
+
+          <!-- 内容摘要区域 (替代认知卡片) -->
+          <view class="content-summary">
+            <view class="summary-label">
+              <text>内容摘要</text>
+              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/insight.svg"
+                     class="summary-icon" />
+            </view>
+            <text class="summary-text">{{item.description || '这是一期精彩的播客内容，包含了丰富的知识点和深度思考。'}}</text>
           </view>
         </view>
-        
-        <!-- 传统缓冲进度条(作为备选显示) -->
-        <view class="progress-buffer {{chunkDistribution.length > 0 ? 'hidden' : ''}}" 
-              style="width: {{bufferProgress}}%"></view>
-        
-        <!-- 当前播放进度条 -->
-        <view class="progress-fill" style="width: {{currentProgress}}%"></view>
-        
-        <!-- 拖拽手柄 -->
-        <view class="progress-thumb {{isDraggingThumb ? 'dragging' : ''}}" 
-              style="left: {{currentProgress}}%" 
-              catchtouchstart="handleThumbTouchStart"
-              catchtouchmove="handleThumbMove"
-              catchtouchend="handleThumbEnd">
+
+        <!-- 播放控制区域 (40%) -->
+        <view class="playback-section">
+
+          <!-- 进度控制 -->
+          <view class="progress-section">
+            <view class="time-info">
+              <text class="current-time">{{currentTimeFormatted}}</text>
+              <text class="total-time">{{totalTimeFormatted}}</text>
+            </view>
+
+            <view class="progress-container" bindtap="handleProgressClick">
+              <t-progress 
+                percentage="{{currentProgress}}" 
+                theme="line"
+                stroke-width="4"
+                color="linear-gradient(90deg, #1a365d 0%, #ed8936 100%)"
+                track-color="#e2e8f0"
+                class="custom-progress"
+              />
+            </view>
+          </view>
+
+          <!-- 播放控制按钮 -->
+          <view class="playback-controls">
+            <!-- 播放速度 -->
+            <view class="control-btn" bindtap="handleSpeedChange">
+              <text class="speed-display">{{playbackSpeed}}×</text>
+            </view>
+
+            <!-- 后退15秒 -->
+            <view class="control-btn" bindtap="handleRewind">
+              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/backward-15s.svg"
+                     class="control-icon" />
+            </view>
+
+            <!-- 播放/暂停按钮 -->
+            <view class="play-btn" bindtap="handlePlayPause">
+              <image src="{{isPlaying ? 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/pause.svg' : 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-large.svg'}}"
+                     class="control-icon" />
+            </view>
+
+            <!-- 前进30秒 -->
+            <view class="control-btn" bindtap="handleFastForward">
+              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/forward-30s.svg"
+                     class="control-icon" />
+            </view>
+
+            <!-- 更多操作 -->
+            <view class="control-btn" bindtap="handleMore">
+              <text class="more-icon">⋯</text>
+            </view>
+          </view>
+
+          <!-- 底部操作栏 -->
+          <view class="bottom-actions">
+            <view class="action-btn {{item.isFavorited ? 'favorited' : ''}}" bindtap="handleFavorite">
+              <image src="{{item.isFavorited ? 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/collection_selected.svg' : 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/collection_unselected.svg'}}"
+                     class="action-icon" />
+              <text class="action-text">收藏</text>
+            </view>
+
+            <view class="action-btn" bindtap="handleOpenComments">
+              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/comment_quote.svg"
+                     class="action-icon" />
+              <text class="action-text">评论</text>
+            </view>
+
+            <view class="action-btn">
+              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/share.svg"
+                     class="action-icon" />
+              <text class="action-text">分享</text>
+            </view>
+          </view>
         </view>
-      </view>
-    </view>
 
-    <!-- 悬浮评论卡片（新位置：进度条和控制按钮之间）-->
-    <view class="floating-playbar" bindtap="handleOpenComments">
-      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/comment_quote.svg"
-             class="playbar-quote-icon" />
-
-      <image wx:if="{{floatingComment && floatingComment.user_avatar}}"
-             src="{{floatingComment.user_avatar}}"
-             class="playbar-avatar" />
-      <image wx:else
-             src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-avatar.png"
-             class="playbar-avatar" />
-
-      <text class="playbar-comment-text">
-        {{floatingComment ? floatingComment.content : '惠人达己，守正出奇'}}
-      </text>
-    </view>
-
-    <!-- 播放控制 -->
-    <view class="playback-controls">
-      <!-- 播放速度按钮 -->
-      <view class="control-btn speed-btn" bindtap="handleSpeedChange">
-        <text class="speed-text">{{playbackSpeed}}×</text>
-      </view>
-
-      <!-- 后退15秒 -->
-      <view class="control-btn" bindtap="handleRewind">
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/backward-15s.svg"
-               class="icon" />
-      </view>
-
-      <!-- 播放/暂停按钮 -->
-      <view class="play-pause-btn" bindtap="handlePlayPause">
-        <image src="{{isPlaying ? 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/pause.svg' : 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-large.svg'}}"
-               class="play-pause-icon" />
-      </view>
-
-      <!-- 前进30秒 -->
-      <view class="control-btn" bindtap="handleFastForward">
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/forward-30s.svg"
-               class="icon" />
-      </view>
-
-      <!-- 收藏按钮（金色星星）-->
-      <view class="control-btn favorite-btn" bindtap="handleFavorite">
-        <image src="{{item.isFavorited ? 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/collection_selected.svg' : 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/collection_unselected.svg'}}"
-               class="icon" />
-      </view>
-    </view>
-
-    <!-- 更多操作按钮 -->
-    <view class="more-actions">
-      <view class="more-btn" bindtap="handleMore">
-        <text>⋯</text>
-      </view>
-    </view>
-    </swiper-item>
+      </swiper-item>
     </swiper>
   </view>
 

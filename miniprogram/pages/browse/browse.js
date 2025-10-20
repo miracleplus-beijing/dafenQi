@@ -46,16 +46,6 @@ Page({
     autoPlayOnSwipe: true, // 控制下滑后是否自动播放
     userGestureActive: false, // 是否有用户手势正在进行
 
-    // 智能分块缓冲进度条数据
-    progressBarRect: null, // 缓存进度条位置信息
-    chunkDistribution: [], // 分块分布数据
-
-    // 网络状态指示器（仅用于视觉指示，不显示文字）
-    networkStatus: {
-      networkType: 'wifi',
-      isSlowNetwork: false
-    },
-
     // 节流控制
     lastThrottleTime: 0, // 节流时间戳
     throttleInterval: 16, // 约60fps的节流间隔
@@ -66,20 +56,10 @@ Page({
       pauseIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/pause.svg',
       favoriteIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/favorite-unselected.svg',
       favoriteActiveIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/favorite-selected.svg',
-      insightIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/insight.svg',
       rewindIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/backward-15s.svg',
       forwardIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/forward-30s.svg',
       loadingIcon: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/loading.svg'
     },
-
-    // 认知卡片相关状态
-    insightList: [{
-      id: 'default',
-      quote_text: '人之一生唯有两种活法：要么视万物皆为奇迹，要么视一切皆属寻常',
-      quote_author: '阿尔伯特·爱因斯坦'
-    }], // 认知卡片列表（带默认值）
-    currentInsightIndex: 0, // 当前显示的insight索引
-    autoPlayInsights: true, // 是否自动轮播insight卡片
 
     // 评论相关状态
     commentList: [], // 评论列表
@@ -92,18 +72,12 @@ Page({
     // 播放速度相关
     playbackSpeed: 1.0, // 当前播放速度
 
-    // 标题滚动相关
-    titleScrollLeft: 0, // 标题滚动位置
-    titleWidth: 375, // 标题宽度(px)
-    autoScrollTitle: false, // 是否自动滚动标题
-    titleScrollTimer: null, // 标题滚动定时器
-
     // 智能降级和用户体验相关
     isLoggedIn: false, // 登录状态
     showLoginTip: false, // 显示登录提示
     loginTipMessage: '', // 登录提示消息
     isPersonalized: true, // 是否为个性化推荐
-    
+
     // 个性化推荐相关
     personalizedRecommendations: [], // 个性化推荐列表
     recommendationsLoading: false, // 推荐加载状态
@@ -411,18 +385,7 @@ Page({
     
     // 页面进入动画
     this.enterAnimation()
-    
-    // 初始化网络状态监听
-    this.initNetworkStatusMonitoring()
-    
-    // 预缓存进度条位置信息
-    setTimeout(() => {
-      this.updateProgressBarRect()
-    }, 100) // 等待DOM渲染完成
-    
-    // 检查是否首次访问，显示自动播放提示
-    this.checkAutoPlayFirstTime()
-    
+
     // 延迟检查全局播客状态，确保数据加载完成
     setTimeout(() => {
       this.checkGlobalPodcastState()
@@ -647,10 +610,7 @@ Page({
       if (duration > 0 && !this.data.isDraggingThumb) {
         const progress = (currentTime / duration) * 100
         const progressRatio = currentTime / duration
-        
-        // 更新分块缓冲进度条数据（仅可视化，不显示文字）
-        this.updateChunkBufferData(audioContext)
-        
+
         this.setData({
           currentProgress: Math.min(100, Math.max(0, progress)),
           audioPosition: currentTime,
@@ -658,7 +618,7 @@ Page({
           currentTimeFormatted: this.formatTime(currentTime),
           totalTimeFormatted: this.formatTime(duration)
         })
-        
+
         // 触发预加载检查（增强版：支持分块预加载）
         audioPreloader.onProgressUpdate(progressRatio, this.data.currentIndex, currentTime)
       }
@@ -966,9 +926,8 @@ Page({
       userGestureActive: false // 重置手势状态
     })
 
-    // 加载新播客的认知卡片和评论
+    // 加载新播客的评论
     if (currentPodcast && currentPodcast.id) {
-      this.loadInsightsForCurrentPodcast(currentPodcast.id)
       this.loadFloatingComment(currentPodcast.id)
     }
 
@@ -1197,29 +1156,30 @@ Page({
     })
   },
 
-  // 处理progress-bar点击
+  // 处理进度条点击 - 优化版本
   handleProgressClick: function(e) {
     const { audioContext, audioDuration } = this.data
-    
+
     if (!audioContext || !audioDuration) return
-    
+
     const query = this.createSelectorQuery()
-    query.select('.progress-bar').boundingClientRect()
+    query.select('.progress-container').boundingClientRect()
     query.exec((res) => {
       if (res[0]) {
         const rect = res[0]
         const clickX = e.detail.x - rect.left
-        const percentage = (clickX / rect.width) * 100
+        const percentage = Math.max(0, Math.min(100, (clickX / rect.width) * 100))
         const seekTime = (percentage / 100) * audioDuration
-        
+
         // 跳转到指定时间
         audioContext.seek(seekTime)
-        
+
         this.setData({
           currentProgress: percentage,
-          audioPosition: seekTime
+          audioPosition: seekTime,
+          currentTimeFormatted: this.formatTime(seekTime)
         })
-        
+
         console.log('跳转到时间:', seekTime + '秒')
       }
     })
@@ -1344,91 +1304,6 @@ Page({
         isFavorited: !updatedPodcastList[index].isFavorited
       }
       this.setData({ podcastList: updatedPodcastList })
-    }
-  },
-
-  // ========== 认知卡片相关方法 ==========
-  handleInsightChange: function(e) {
-    const currentIndex = e.detail.current
-    this.setData({
-      currentInsightIndex: currentIndex
-    })
-    console.log('Insight卡片切换到:', currentIndex)
-  },
-
-  handleInsightTouchStart: function(e) {
-    // 用户开始手势，暂停自动轮播
-    this.setData({ autoPlayInsights: false })
-  },
-
-  handleInsightTouchEnd: function(e) {
-    // 用户手势结束后延迟恢复自动轮播
-    setTimeout(() => {
-      this.setData({ autoPlayInsights: true })
-    }, 5000)
-  },
-
-  handleInsightCardClick: function(e) {
-    const insightId = e.currentTarget.dataset.insightId
-    console.log('点击了Insight卡片:', insightId)
-
-    // 记录点击统计
-    if (insightId && insightId !== 'default') {
-      insightService.incrementViewCount(insightId).catch(err => {
-        console.error('记录insight点击失败:', err)
-      })
-    }
-
-    // 可以在这里添加跳转到详情页的逻辑
-    wx.showToast({
-      title: '认知详情开发中',
-      icon: 'none',
-      duration: 1500
-    })
-  },
-
-  // 加载当前播客的insights
-  async loadInsightsForCurrentPodcast(podcastId) {
-    try {
-      const result = await insightService.getInsightsByPodcastId(podcastId)
-
-      if (result.success && result.data && result.data.length > 0) {
-        // 将insights数据转换为卡片格式
-        const insightCards = result.data.map(insight => ({
-          id: insight.id,
-          quote_text: insight.summary || insight.detailed_content || '',
-          quote_author: insight.related_authors && insight.related_authors.length > 0
-            ? insight.related_authors[0]
-            : '未知'
-        }))
-
-        this.setData({
-          insightList: insightCards,
-          currentInsightIndex: 0
-        })
-        console.log(`成功加载${insightCards.length}个认知卡片`)
-      } else {
-        // 没有数据时使用默认卡片
-        this.setData({
-          insightList: [{
-            id: 'default',
-            quote_text: '人之一生唯有两种活法：要么视万物皆为奇迹，要么视一切皆属寻常',
-            quote_author: '阿尔伯特·爱因斯坦'
-          }],
-          currentInsightIndex: 0
-        })
-      }
-    } catch (error) {
-      console.error('加载认知卡片失败:', error)
-      // 出错时也使用默认卡片
-      this.setData({
-        insightList: [{
-          id: 'default',
-          quote_text: '人之一生唯有两种活法：要么视万物皆为奇迹，要么视一切皆属寻常',
-          quote_author: '阿尔伯特·爱因斯坦'
-        }],
-        currentInsightIndex: 0
-      })
     }
   },
 
@@ -1881,45 +1756,47 @@ Page({
   handleThumbTouchStart: function(e) {
     console.log('进度条拖拽开始')
     this.setData({ isDraggingThumb: true })
-    
-    // 立即同步获取进度条位置信息
-    this.updateProgressBarRect()
   },
 
-  // 处理进度条拖拽移动 - 高性能版本
+  // 处理进度条拖拽移动 - 优化版本
   handleThumbMove: function(e) {
     if (!this.data.isDraggingThumb) return
-    
+
     const { audioContext, audioDuration } = this.data
     if (!audioContext || !audioDuration) return
-    
+
     // 节流优化：限制更新频率到60fps
     const now = Date.now()
-    if (now - this.lastThrottleTime < this.throttleInterval) {
+    if (now - this.data.lastThrottleTime < this.data.throttleInterval) {
       return
     }
-    this.lastThrottleTime = now
-    
-    // 使用缓存的位置信息或实时计算
-    const rect = this.progressBarRect || this.getProgressBarRectSync()
-    if (!rect) return
-    
-    const touchX = e.touches[0].clientX - rect.left
-    const percentage = Math.max(0, Math.min(100, (touchX / rect.width) * 100))
-    const seekTime = (percentage / 100) * audioDuration
-    
-    // 使用更高效的局部更新
-    this.updateProgressUI(percentage, seekTime)
+    this.setData({ lastThrottleTime: now })
+
+    // 动态获取进度条实际位置
+    const query = this.createSelectorQuery()
+    query.select('.progress-container').boundingClientRect()
+    query.exec((res) => {
+      if (res[0]) {
+        const rect = res[0]
+        const touchX = e.touches[0].clientX - rect.left
+        const percentage = Math.max(0, Math.min(100, (touchX / rect.width) * 100))
+        const seekTime = (percentage / 100) * audioDuration
+
+        // 更新进度UI
+        this.setData({
+          currentProgress: percentage,
+          audioPosition: seekTime,
+          currentTimeFormatted: this.formatTime(seekTime)
+        })
+      }
+    })
   },
 
   // 处理进度条拖拽结束
   handleThumbEnd: function(e) {
     console.log('进度条拖拽结束')
     this.setData({ isDraggingThumb: false })
-    
-    // 清理缓存的位置信息
-    this.progressBarRect = null
-    
+
     const { audioContext, audioPosition } = this.data
     if (audioContext) {
       audioContext.seek(audioPosition)
@@ -1980,149 +1857,23 @@ Page({
     audioPreloader.cleanDistantPreloads(this.data.currentIndex)
   },
 
-  // 获取音频缓冲进度 (增强版)
+  // 获取音频缓冲进度 (简化版)
   getBufferProgress(audioContext) {
     if (!audioContext || !audioContext.duration) return 0
-    
+
     try {
       const currentTime = audioContext.currentTime || 0
       const duration = audioContext.duration || 0
-      const audioUrl = audioContext.src || ''
-      
+
       if (duration === 0) return 0
-      
-      // 使用分块预加载服务获取精确的缓冲进度
-      return audioPreloader.getBufferProgress(audioUrl, currentTime, duration, audioContext)
-      
+
+      // 简化：返回当前播放位置作为缓冲进度
+      return (currentTime / duration) * 100
+
     } catch (error) {
       console.error('获取缓冲进度失败:', error)
       return 0
     }
-  },
-
-  // 更新分块缓冲进度条数据 (新增)
-  updateChunkBufferData(audioContext) {
-    if (!audioContext || !audioContext.src) return
-    
-    try {
-      const audioUrl = audioContext.src
-      const currentTime = audioContext.currentTime || 0
-      const duration = audioContext.duration || 0
-      
-      // 获取分块分布数据
-      const chunkDistribution = audioPreloader.getChunkDistribution(audioUrl)
-      
-      if (chunkDistribution.length > 0) {
-        // 计算每个分块在进度条上的位置和宽度
-        const totalChunks = chunkDistribution.length
-        const chunkWidth = 100 / totalChunks // 每个分块的宽度百分比
-        
-        const processedDistribution = chunkDistribution.map((chunk, index) => ({
-          ...chunk,
-          left: index * chunkWidth,
-          width: chunkWidth
-        }))
-        
-        // 计算统计信息
-        const cachedChunks = chunkDistribution.filter(chunk => chunk.cached).length
-        const loadingChunks = chunkDistribution.filter(chunk => chunk.loading).length
-        
-        // 获取预加载统计信息
-        const stats = audioPreloader.getStats()
-        
-        this.setData({
-          chunkDistribution: processedDistribution,
-          networkStatus: {
-            networkType: stats.networkAdaptive?.networkSpeed || 'wifi',
-            isSlowNetwork: stats.networkAdaptive?.isSlowNetwork || false
-          }
-        })
-      }
-      
-    } catch (error) {
-      console.warn('更新分块缓冲数据失败:', error)
-    }
-  },
-
-  // 初始化网络状态监听（仅用于视觉指示）
-  initNetworkStatusMonitoring() {
-    // 获取当前网络类型
-    wx.getNetworkType({
-      success: (res) => {
-        const isSlowNetwork = ['2g', 'slow-2g', '3g'].includes(res.networkType)
-        this.setData({
-          networkStatus: {
-            networkType: 'wifi', // 统一显示为wifi，不显示具体网络类型
-            isSlowNetwork
-          }
-        })
-      }
-    })
-
-    // 监听网络状态变化
-    wx.onNetworkStatusChange((res) => {
-      const isSlowNetwork = ['2g', 'slow-2g', '3g'].includes(res.networkType)
-      this.setData({
-        networkStatus: {
-          networkType: 'wifi', // 统一显示为wifi，不显示具体网络类型
-          isSlowNetwork
-        }
-      })
-    })
-  },
-
-  // 更新进度条位置信息 - 异步版本
-  updateProgressBarRect() {
-    const query = this.createSelectorQuery()
-    query.select('.progress-bar').boundingClientRect()
-    query.exec((res) => {
-      if (res[0]) {
-        this.progressBarRect = res[0]
-      }
-    })
-  },
-
-  // 同步获取进度条位置信息 - 应急方案
-  getProgressBarRectSync() {
-    // 如果没有缓存的位置信息，使用估算值
-    if (!this.progressBarRect) {
-      // 基于屏幕宽度和padding的估算
-      let screenWidth = 375 // 默认值，用于兜底
-      try {
-        const windowInfo = wx.getWindowInfo()
-        screenWidth = windowInfo.screenWidth || windowInfo.windowWidth
-      } catch (error) {
-        console.warn('获取窗口信息失败，使用默认宽度:', error)
-        // 兼容模式：如果新API不可用，使用旧API
-        try {
-          screenWidth = wx.getSystemInfoSync().screenWidth
-        } catch (fallbackError) {
-          console.warn('获取屏幕宽度失败，使用默认值375:', fallbackError)
-        }
-      }
-      
-      const paddingHorizontal = 32 // 16px * 2
-      return {
-        left: paddingHorizontal,
-        width: screenWidth - paddingHorizontal,
-        top: 0,
-        height: 6
-      }
-    }
-    return this.progressBarRect
-  },
-
-  // 高效的进度UI更新方法
-  updateProgressUI(percentage, seekTime) {
-    // 批量更新相关状态，减少setData调用次数
-    const updateData = {
-      currentProgress: percentage,
-      audioPosition: seekTime,
-      currentTimeFormatted: this.formatTime(seekTime)
-    }
-    
-    // 使用更高效的局部更新
-    this.setData(updateData)
   },
 
   // 自定义loading控制方法

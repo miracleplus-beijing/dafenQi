@@ -1,0 +1,177 @@
+/**
+ * 字体管理统一配置文件
+ * 作用：统一管理全局字体，避免分散定义
+ * 使用：在 app.wxss 中引入此文件
+ */
+
+/* ==================== CSS 变量定义 ==================== */
+page {
+    /* 中文字体栈 - 优先使用 PingFang SC */
+    --font-family-cn: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+
+    /* 英文字体栈 - 优先使用系统字体 */
+    --font-family-en: 'SF Pro Text', 'SF Pro', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+
+    /* 混合字体栈 - 中英文通用（推荐使用） */
+    --font-family-base: 'PingFang SC', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', sans-serif;
+
+    /* 标题字体 - 加粗效果更好 */
+    --font-family-title: '黑体', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+
+    /* 等宽字体 - 用于代码、数字 */
+    --font-family-mono: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+
+    /* 字体权重 */
+    --font-weight-light: 300;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* 字号变量 */
+    --font-size-xs: 24rpx;
+    --font-size-sm: 28rpx;
+    --font-size-base: 34rpx;
+    --font-size-lg: 36rpx;
+    --font-size-xl: 40rpx;
+    --font-size-2xl: 44rpx;
+    --font-size-3xl: 48rpx;
+}
+
+/* ==================== 全局默认字体 ==================== */
+page {
+    font-family: var(--font-family-base);
+    font-weight: var(--font-weight-regular);
+    font-size: var(--font-size-base);
+}
+
+/* ==================== 工具类 ==================== */
+
+/* 字体家族工具类 */
+.font-base {
+    font-family: var(--font-family-base);
+}
+
+.font-cn {
+    font-family: var(--font-family-cn);
+}
+
+.font-en {
+    font-family: var(--font-family-en);
+}
+
+.font-title {
+    font-family: var(--font-family-title);
+}
+
+.font-mono {
+    font-family: var(--font-family-mono);
+}
+
+/* 字重工具类 */
+.font-light {
+    font-weight: var(--font-weight-light);
+}
+
+.font-regular {
+    font-weight: var(--font-weight-regular);
+}
+
+.font-medium {
+    font-weight: var(--font-weight-medium);
+}
+
+.font-semibold {
+    font-weight: var(--font-weight-semibold);
+}
+
+.font-bold {
+    font-weight: var(--font-weight-bold);
+}
+
+/* 字号工具类 */
+.text-xs {
+    font-size: var(--font-size-xs);
+}
+
+.text-sm {
+    font-size: var(--font-size-sm);
+}
+
+.text-base {
+    font-size: var(--font-size-base);
+}
+
+.text-lg {
+    font-size: var(--font-size-lg);
+}
+
+.text-xl {
+    font-size: var(--font-size-xl);
+}
+
+.text-2xl {
+    font-size: var(--font-size-2xl);
+}
+
+.text-3xl {
+    font-size: var(--font-size-3xl);
+}
+
+/* ==================== 组合样式类 ==================== */
+
+/* 页面标题 */
+.page-title {
+    font-family: var(--font-family-title);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-2xl);
+    color: #000000;
+}
+
+/* 章节标题 */
+.section-title {
+    font-family: var(--font-family-title);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-xl);
+    color: #000000;
+}
+
+/* 正文文本 */
+.body-text {
+    font-family: var(--font-family-base);
+    font-weight: var(--font-weight-regular);
+    font-size: var(--font-size-base);
+    color: #333333;
+}
+
+/* 次要文本 */
+.secondary-text {
+    font-family: var(--font-family-base);
+    font-weight: var(--font-weight-regular);
+    font-size: var(--font-size-sm);
+    color: #888888;
+}
+
+/* 说明文本 */
+.caption-text {
+    font-family: var(--font-family-base);
+    font-weight: var(--font-weight-regular);
+    font-size: var(--font-size-xs);
+    color: #999999;
+}
+
+/* 按钮文本 */
+.button-text {
+    font-family: var(--font-family-base);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-base);
+}
+
+/* 链接文本 */
+.link-text {
+    font-family: var(--font-family-base);
+    font-weight: var(--font-weight-regular);
+    font-size: var(--font-size-base);
+    color: #0884FF;
+    text-decoration: underline;
+}

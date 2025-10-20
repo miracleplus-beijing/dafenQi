@@ -1,10 +1,12 @@
-/* 全局样式 */
+/* 引入字体管理配置 */
+@import './styles/font.wxss';
 
+/* 全局样式 */
 page {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Times New Roman', 'SF Pro', 'WeChat Sans Std', -apple-system, BlinkMacSystemFont, serif;
+  /* font-family 已在 font.wxss 中统一管理 */
   background: #ffffff;
   color: #333;
   line-height: 1.4;
@@ -15,7 +17,13 @@ view, text, image, button, input, textarea {
   padding: 0;
   box-sizing: border-box;
 }
+/* 全页面 text 样式 */
 
+text {
+  font-family: var(--font-family-base);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-base);
+} 
 /* 容器样式 */
 .container {
   width: 100%;

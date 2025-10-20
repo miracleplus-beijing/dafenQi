@@ -65,6 +65,7 @@
     "t-button": "tdesign-miniprogram/button/button",
     "t-tag": "tdesign-miniprogram/tag/tag",
     "t-check-tag": "tdesign-miniprogram/check-tag/check-tag",
+    "t-icon": "tdesign-miniprogram/icon/icon",
     "t-toast": "tdesign-miniprogram/toast/toast",
     "t-image": "tdesign-miniprogram/image/image",
     "t-avatar": "tdesign-miniprogram/avatar/avatar",

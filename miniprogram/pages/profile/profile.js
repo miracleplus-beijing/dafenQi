@@ -110,6 +110,15 @@ Page({
         })
         break
       
+      case 'comments':
+        console.log('我的评论 - 功能待开发')
+        wx.showToast({
+          title: '功能开发中，敬请期待',
+          icon: 'none',
+          duration: 1500
+        })
+        break
+      
       default:
         console.log('未知菜单项:', type)
         wx.showToast({
@@ -349,8 +358,9 @@ Page({
   onChooseAvatar: async function(e) {
     console.log('选择头像事件触发:', e)
     
-    // 尝试预授权隐私（在部分环境中可避免 buttonId 错误）
-    await this.ensurePrivacyAuthorization()
+    // 注意：不需要主动调用 ensurePrivacyAuthorization
+    // 微信会在需要时自动触发 wx.onNeedPrivacyAuthorization
+    // 主动调用可能导致重复授权弹窗
 
     // 检查登录状态
     await this.checkLoginStatus()
@@ -594,7 +604,7 @@ Page({
   // 当调用隐私受限能力（如 chooseAvatar）且需要授权时，微信会触发此回调
   handleGlobalPrivacyAuth: function(resolve, eventInfo) {
     try {
-      const ref = (eventInfo && eventInfo.referrer) ? `“${eventInfo.referrer}”` : '该功能'
+      const ref = (eventInfo && eventInfo.referrer) ? `"${eventInfo.referrer}"` : '该功能'
       wx.showModal({
         title: '隐私保护指引',
         content: `为了正常使用${ref}，需要您同意隐私保护指引。我们将严格保护您的个人信息，仅用于提供对应服务。`,
@@ -604,25 +614,28 @@ Page({
           if (res.confirm) {
             try {
               console.log('页面隐私弹窗: 用户同意, 调用 resolve()')
-              resolve()
+              // 传入 { event: 'agree' } 以便微信正确处理授权状态
+              resolve({ event: 'agree', buttonId: 'profileChooseAvatarBtn' })
             } catch (e) {
               console.warn('页面隐私弹窗 resolve() 执行异常(同意):', e)
             }
-            wx.showToast({ title: '已同意，请再次点击以继续', icon: 'success', duration: 1200 })
           } else {
             try {
               console.log('页面隐私弹窗: 用户拒绝, 调用 resolve()')
-              resolve()
+              // 传入 { event: 'disagree' } 明确表示拒绝
+              resolve({ event: 'disagree' })
             } catch (e) {
               console.warn('页面隐私弹窗 resolve() 执行异常(拒绝):', e)
             }
-            wx.showToast({ title: '已拒绝', icon: 'none', duration: 1500 })
+            wx.showToast({ title: '您拒绝了隐私授权', icon: 'none', duration: 1500 })
           }
         }
       })
     } catch (e) {
       // 兜底处理：若弹窗失败，默认拒绝
-      try { resolve() } catch (_) {}
+      try { 
+        resolve({ event: 'disagree' }) 
+      } catch (_) {}
       console.warn('隐私授权弹窗失败:', e)
     }
   }

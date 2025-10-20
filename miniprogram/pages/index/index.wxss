@@ -11,7 +11,6 @@ page {
 }
 
 .title {
-  font-family: PingFang SC;
   font-weight: 500;
   color: #000000;
   font-size: 44rpx;

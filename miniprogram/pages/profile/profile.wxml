@@ -1,17 +1,17 @@
 <!-- 我的页面 -->
 <view class="profile-container">
-  <!-- 蓝色背景区域 -->
-  <view class="blue-bg"></view>
-
   <!-- 用户区域 -->
   <view class="user-section">
     <view wx:if="{{!isLoggedIn}}" class="login-prompt" bindtap="handleLogin">
       登录/注册>
     </view>
     <view wx:else class="user-info">
-      <view class="user-name" bindtap="changeUserName">{{userInfo.nickName || '用户'}}</view>
-      <view class="user-id">ID: {{userInfo.id || '未设置'}}</view>
+      <text class="user-name section-title" bindtap="changeUserName">{{userInfo.nickName || '用户'}}</text>
+      <text class="user-id">ID: {{userInfo.id || '未设置'}}</text>
     </view>
+
+
+
     <view class="avatar-container" wx:if="{{isLoggedIn}}">
       <t-button style="width: 170rpx; height: 170rpx;" width="100" height="100" class="avatar-btn" id="profileChooseAvatarBtn" shape="circle" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
         <t-image width="170rpx" height="170rpx" mode="aspectFill" shape="circle" src="{{userInfo.avatarUrl}}" />
@@ -22,29 +22,33 @@
 
   <!-- 菜单项区域 -->
   <view class="menu-section" wx:if="{{isLoggedIn}}">
-    <t-cell-group>
-      <t-cell title="我的历史" arrow bindtap="handleMenuClick" data-type="history">
-        <image slot="left-icon" class="menu-icon" src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/history.svg" alt="历史" />
-      </t-cell>
-      <t-cell title="我的收藏" arrow bindtap="handleMenuClick" data-type="favorites">
-        <image slot="left-icon" class="menu-icon" src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/collection_selected.svg" alt="收藏" />
-      </t-cell>
-    </t-cell-group>
+    <view class="menu-list">
+      <view class="menu-item" bindtap="handleMenuClick" data-type="history">
+        <text class="menu-text">收听历史</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" bindtap="handleMenuClick" data-type="favorites">
+        <text class="menu-text">我的收藏</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" bindtap="handleMenuClick" data-type="comments">
+        <text class="menu-text">我的评论</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" bindtap="handleMenuClick" data-type="settings">
+        <text class="menu-text">设置</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" bindtap="handleMenuClick" data-type="feedback">
+        <text class="menu-text">问题反馈</text>
+        <text class="menu-arrow">›</text>
+      </view>
+    </view>
 
-    <t-cell-group style="margin-top: 12px;">
-      <t-cell title="问题反馈" arrow bindtap="handleMenuClick" data-type="feedback">
-        <image slot="left-icon" class="menu-icon" src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/feedback.svg" alt="反馈" />
-      </t-cell>
-      <t-cell title="设置" arrow bindtap="handleMenuClick" data-type="settings">
-        <image slot="left-icon" class="menu-icon" src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/settings.svg" alt="设置" />
-      </t-cell>
-    </t-cell-group>
-
-    <t-cell-group style="margin-top: 12px;">
-      <t-cell title="退出登录" bindtap="handleLogout" class="logout-item">
-        <image slot="left-icon" class="menu-icon" src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/logout.svg" alt="登出" />
-      </t-cell>
-    </t-cell-group>
+    <!-- 退出登录按钮 -->
+  <view class="logout-btn" bindtap="handleLogout">
+    <text class="logout-text">退出登录</text>
+  </view>
   </view>
 
   <!-- 未登录提示 -->
