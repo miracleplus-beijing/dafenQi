@@ -90,7 +90,9 @@ text {
     z-index: 2;
     background: white;
     padding: 0 60rpx;
-    margin-top: 10rpx;
+    margin-top: -20rpx;
+    border-radius: 20rpx;
+    overflow: hidden;
 }
 
 .menu-list {

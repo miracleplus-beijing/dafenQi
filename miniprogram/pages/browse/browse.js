@@ -4,6 +4,7 @@ const apiService = require('../../services/api.service.js')
 const audioPreloader = require('../../services/audio-preloader.service.js')
 const insightService = require('../../services/insight.service.js')
 const { getImageUrl } = require('../../config/image-urls.js')
+import Toast from 'tdesign-miniprogram/toast';
 
 Page({
   data: {
@@ -1283,6 +1284,14 @@ Page({
           
           if (!userId) {
             console.warn('用户未登录，无法操作收藏')
+            
+            Toast({
+              context: this,
+              selector: '#t-toast',
+              message: '用户未登录，无法操作收藏',
+              theme: 'warning',
+              direction: 'column',
+            });
             this.rollbackFavoriteState(podcastId)
             return
           }

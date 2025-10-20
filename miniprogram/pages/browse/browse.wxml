@@ -51,6 +51,24 @@
             <text class="sub-title">{{item.channel_name || '达芬Qi说'}}</text>
           </view>
 
+          <!-- 横向操作栏 -->
+          <view class="horizontal-actions">
+            <view class="horizontal-action-btn {{item.isFavorited ? 'favorited' : ''}}" bindtap="handleFavorite">
+              <image src="{{item.isFavorited ? 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/collection_selected.svg' : 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/collection_unselected.svg'}}"
+                     class="horizontal-action-icon" />
+            </view>
+
+            <view class="horizontal-action-btn" bindtap="handleOpenComments">
+              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/comment_quote.svg"
+                     class="horizontal-action-icon" />
+            </view>
+
+            <view class="horizontal-action-btn">
+              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/share.svg"
+                     class="horizontal-action-icon" />
+            </view>
+          </view>
+
           <!-- 内容摘要区域 (替代认知卡片) -->
           <view class="content-summary">
             <view class="summary-label">
@@ -119,27 +137,6 @@
             <!-- 更多操作 -->
             <view class="control-btn" bindtap="handleMore">
               <text class="more-icon">⋯</text>
-            </view>
-          </view>
-
-          <!-- 底部操作栏 -->
-          <view class="bottom-actions">
-            <view class="action-btn {{item.isFavorited ? 'favorited' : ''}}" bindtap="handleFavorite">
-              <image src="{{item.isFavorited ? 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/collection_selected.svg' : 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/collection_unselected.svg'}}"
-                     class="action-icon" />
-              <text class="action-text">收藏</text>
-            </view>
-
-            <view class="action-btn" bindtap="handleOpenComments">
-              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/comment_quote.svg"
-                     class="action-icon" />
-              <text class="action-text">评论</text>
-            </view>
-
-            <view class="action-btn">
-              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/share.svg"
-                     class="action-icon" />
-              <text class="action-text">分享</text>
             </view>
           </view>
         </view>
@@ -226,4 +223,8 @@
       </view>
     </view>
   </view>
+
+  <t-toast id="t-toast" />
+
 </view>
+
