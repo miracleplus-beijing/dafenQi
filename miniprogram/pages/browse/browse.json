@@ -1,6 +1,6 @@
 {
   "usingComponents": {
-    "t-progress": "tdesign-miniprogram/progress/progress"
+    "t-slider": "tdesign-miniprogram/slider/slider"
   },
   "navigationBarTitleText": "达芬Qi说",
   "navigationBarBackgroundColor": "#ffffff",

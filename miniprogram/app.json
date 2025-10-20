@@ -68,6 +68,7 @@
     "t-icon": "tdesign-miniprogram/icon/icon",
     "t-toast": "tdesign-miniprogram/toast/toast",
     "t-image": "tdesign-miniprogram/image/image",
+    "t-progress": "tdesign-miniprogram/progress/progress",
     "t-avatar": "tdesign-miniprogram/avatar/avatar",
     "t-avatar-group": "tdesign-miniprogram/avatar-group/avatar-group"
   }

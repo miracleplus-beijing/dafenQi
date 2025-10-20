@@ -1156,32 +1156,61 @@ Page({
     })
   },
 
-  // 处理进度条点击 - 优化版本
-  handleProgressClick: function(e) {
+  // ========== Slider 交互事件处理 ==========
+
+  // Slider 开始拖拽
+  handleSliderTouchStart: function(e) {
+    console.log('Slider 拖拽开始')
+    this.setData({
+      isDraggingThumb: true,
+      lastUserInteraction: Date.now()
+    })
+  },
+
+  // Slider 拖拽过程中（实时反馈，类似 Vue 的 @input）
+  handleSliderChanging: function(e) {
+    if (!this.data.isDraggingThumb) return
+
+    const { audioDuration } = this.data
+    if (!audioDuration) return
+
+    const percentage = e.detail.value
+    const seekTime = (percentage / 100) * audioDuration
+
+    // 实时更新UI显示，但不seek音频（避免频繁操作）
+    this.setData({
+      currentProgress: percentage,
+      audioPosition: seekTime,
+      currentTimeFormatted: this.formatTime(seekTime)
+    })
+  },
+
+  // Slider 拖拽结束（类似 Vue 的 @change）
+  handleSliderChange: function(e) {
     const { audioContext, audioDuration } = this.data
 
     if (!audioContext || !audioDuration) return
 
-    const query = this.createSelectorQuery()
-    query.select('.progress-container').boundingClientRect()
-    query.exec((res) => {
-      if (res[0]) {
-        const rect = res[0]
-        const clickX = e.detail.x - rect.left
-        const percentage = Math.max(0, Math.min(100, (clickX / rect.width) * 100))
-        const seekTime = (percentage / 100) * audioDuration
+    const percentage = e.detail.value
+    const seekTime = (percentage / 100) * audioDuration
 
-        // 跳转到指定时间
-        audioContext.seek(seekTime)
+    // 拖拽结束时才真正seek音频
+    audioContext.seek(seekTime)
 
-        this.setData({
-          currentProgress: percentage,
-          audioPosition: seekTime,
-          currentTimeFormatted: this.formatTime(seekTime)
-        })
+    this.setData({
+      currentProgress: percentage,
+      audioPosition: seekTime,
+      currentTimeFormatted: this.formatTime(seekTime)
+    })
 
-        console.log('跳转到时间:', seekTime + '秒')
-      }
+    console.log('Slider 跳转到时间:', seekTime + '秒')
+  },
+
+  // Slider 拖拽结束
+  handleSliderTouchEnd: function(e) {
+    console.log('Slider 拖拽结束')
+    this.setData({
+      isDraggingThumb: false
     })
   },
 
@@ -1749,57 +1778,6 @@ Page({
       title: '我在达芬Qi说听到了这个有趣的内容',
       query: 'share=timeline',
       imageUrl: currentPodcast.cover_url || getImageUrl('icons/share-cover.jpg')
-    }
-  },
-
-  // 处理进度条拖拽开始
-  handleThumbTouchStart: function(e) {
-    console.log('进度条拖拽开始')
-    this.setData({ isDraggingThumb: true })
-  },
-
-  // 处理进度条拖拽移动 - 优化版本
-  handleThumbMove: function(e) {
-    if (!this.data.isDraggingThumb) return
-
-    const { audioContext, audioDuration } = this.data
-    if (!audioContext || !audioDuration) return
-
-    // 节流优化：限制更新频率到60fps
-    const now = Date.now()
-    if (now - this.data.lastThrottleTime < this.data.throttleInterval) {
-      return
-    }
-    this.setData({ lastThrottleTime: now })
-
-    // 动态获取进度条实际位置
-    const query = this.createSelectorQuery()
-    query.select('.progress-container').boundingClientRect()
-    query.exec((res) => {
-      if (res[0]) {
-        const rect = res[0]
-        const touchX = e.touches[0].clientX - rect.left
-        const percentage = Math.max(0, Math.min(100, (touchX / rect.width) * 100))
-        const seekTime = (percentage / 100) * audioDuration
-
-        // 更新进度UI
-        this.setData({
-          currentProgress: percentage,
-          audioPosition: seekTime,
-          currentTimeFormatted: this.formatTime(seekTime)
-        })
-      }
-    })
-  },
-
-  // 处理进度条拖拽结束
-  handleThumbEnd: function(e) {
-    console.log('进度条拖拽结束')
-    this.setData({ isDraggingThumb: false })
-
-    const { audioContext, audioPosition } = this.data
-    if (audioContext) {
-      audioContext.seek(audioPosition)
     }
   },
 

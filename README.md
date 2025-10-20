@@ -9,3 +9,8 @@
 ## 参考文档
 
 - [云开发文档](https://developers.weixin.qq.com/miniprogram/dev/wxcloud/basis/getting-started.html)
+
+## 初始化步骤
+由于引入了构建工具，所以在开发时，必须拥有node环境，若没有直接 [点击链接](https://nodejs.org/en/download) 下载即可, 完成后
+
+先 cd 到 miniprogram 目录下，执行 npm install，然后点击 微信开发者工具的上 tab 栏的工具 下拉点击构建npm。 即可完成项目初始化

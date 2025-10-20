@@ -33,7 +33,7 @@
             </view>
 
             <!-- 播放状态覆盖层 -->
-            <view wx:if="{{index === currentIndex && isPlaying}}" class="play-overlay">
+            <view wx:if="{{index === currentIndex && !isPlaying}}" class="play-overlay">
               <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/pause.svg"
                      class="overlay-icon" />
             </view>
@@ -72,14 +72,21 @@
               <text class="total-time">{{totalTimeFormatted}}</text>
             </view>
 
-            <view class="progress-container" bindtap="handleProgressClick">
-              <t-progress 
-                percentage="{{currentProgress}}" 
-                theme="line"
-                stroke-width="4"
-                color="linear-gradient(90deg, #1a365d 0%, #ed8936 100%)"
+            <view class="progress-container">
+              <t-slider
+                value="{{currentProgress}}"
+                min="{{0}}"
+                max="{{100}}"
+                step="{{0.1}}"
+                theme="filled"
+                color="#ed8936"
                 track-color="#e2e8f0"
-                class="custom-progress"
+                class="custom-slider"
+                bindchange="handleSliderChange"
+                bindchanging="handleSliderChanging"
+                bindtouchstart="handleSliderTouchStart"
+                bindtouchend="handleSliderTouchEnd"
+                show-value="{{false}}"
               />
             </view>
           </view>
