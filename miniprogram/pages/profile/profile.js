@@ -354,17 +354,13 @@ Page({
     }
   },
 
-  // 选择头像（使用微信新隐私协议方式）
+  // 选择头像（简化版本，使用微信原生隐私流程）
   onChooseAvatar: async function(e) {
     console.log('选择头像事件触发:', e)
-    
-    // 注意：不需要主动调用 ensurePrivacyAuthorization
-    // 微信会在需要时自动触发 wx.onNeedPrivacyAuthorization
-    // 主动调用可能导致重复授权弹窗
 
     // 检查登录状态
     await this.checkLoginStatus()
-    
+
     if (!this.data.isLoggedIn) {
       wx.showModal({
         title: '需要登录',
@@ -400,9 +396,9 @@ Page({
       return
     }
 
-    // 获取选择的头像临时路径（button open-type=chooseAvatar 返回 e.detail.avatarUrl）
+    // 获取选择的头像临时路径
     const { avatarUrl } = e.detail
-    console.log("avatarUrl: " + avatarUrl)
+    console.log("获取到头像路径:", avatarUrl)
 
     if (!avatarUrl) {
       console.error('未获取到头像路径')
@@ -413,8 +409,6 @@ Page({
       })
       return
     }
-    
-    console.log('获取到头像路径:', avatarUrl)
 
     // 显示加载中
     wx.showLoading({
@@ -425,29 +419,6 @@ Page({
     this.updateAvatar(avatarUrl)
   },
 
-  // 预处理隐私授权：在需要隐私授权时主动拉起授权弹窗
-  ensurePrivacyAuthorization: async function() {
-    try {
-      if (!wx.getPrivacySetting || !wx.requirePrivacyAuthorize) {
-        // 低版本基础库不支持，直接返回
-        return
-      }
-      const setting = await new Promise((resolve) => {
-        wx.getPrivacySetting({ success: resolve, fail: () => resolve({ needAuthorization: false }) })
-      })
-      if (setting && setting.needAuthorization) {
-        await new Promise((resolve) => {
-          wx.requirePrivacyAuthorize({
-            success: () => resolve(true),
-            fail: () => resolve(false)
-          })
-        })
-      }
-    } catch (err) {
-      console.warn('ensurePrivacyAuthorization 执行失败（忽略继续）:', err)
-    }
-  },
-  
   // 更新头像
   updateAvatar: async function(avatarUrl) {
     try {
@@ -598,45 +569,6 @@ Page({
       })
       console.error('用户名更新失败:', error)
     }
-  },
-
-  // 页面级隐私授权处理（与 app.js 协同工作）
-  // 当调用隐私受限能力（如 chooseAvatar）且需要授权时，微信会触发此回调
-  handleGlobalPrivacyAuth: function(resolve, eventInfo) {
-    try {
-      const ref = (eventInfo && eventInfo.referrer) ? `"${eventInfo.referrer}"` : '该功能'
-      wx.showModal({
-        title: '隐私保护指引',
-        content: `为了正常使用${ref}，需要您同意隐私保护指引。我们将严格保护您的个人信息，仅用于提供对应服务。`,
-        confirmText: '同意',
-        cancelText: '拒绝',
-        success: (res) => {
-          if (res.confirm) {
-            try {
-              console.log('页面隐私弹窗: 用户同意, 调用 resolve()')
-              // 传入 { event: 'agree' } 以便微信正确处理授权状态
-              resolve({ event: 'agree', buttonId: 'profileChooseAvatarBtn' })
-            } catch (e) {
-              console.warn('页面隐私弹窗 resolve() 执行异常(同意):', e)
-            }
-          } else {
-            try {
-              console.log('页面隐私弹窗: 用户拒绝, 调用 resolve()')
-              // 传入 { event: 'disagree' } 明确表示拒绝
-              resolve({ event: 'disagree' })
-            } catch (e) {
-              console.warn('页面隐私弹窗 resolve() 执行异常(拒绝):', e)
-            }
-            wx.showToast({ title: '您拒绝了隐私授权', icon: 'none', duration: 1500 })
-          }
-        }
-      })
-    } catch (e) {
-      // 兜底处理：若弹窗失败，默认拒绝
-      try { 
-        resolve({ event: 'disagree' }) 
-      } catch (_) {}
-      console.warn('隐私授权弹窗失败:', e)
-    }
   }
+
 })

@@ -13,10 +13,10 @@
 
 
     <view class="avatar-container" wx:if="{{isLoggedIn}}">
-      <t-button style="width: 170rpx; height: 170rpx;" width="100" height="100" class="avatar-btn" id="profileChooseAvatarBtn" shape="circle" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-        <t-image width="170rpx" height="170rpx" mode="aspectFill" shape="circle" src="{{userInfo.avatarUrl}}" />
-      </t-button>
-      <view class="avatar-edit-hint">点击更换</view>
+      <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+        <image src="{{userInfo.avatarUrl || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/user.svg'}}" mode="aspectFill" />
+      </button>
+      <view class="avatar-edit-hint">点击更换头像</view>
     </view>
   </view>
 

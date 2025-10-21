@@ -281,17 +281,35 @@ text {
 }
 
 .avatar-btn {
-    background-color: inherit;
-    width: auto;
+    background-color: transparent;
+    width: 170rpx;
+    height: 170rpx;
     border: none;
     outline: none;
+    padding: 0;
+    margin: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s ease;
 }
 
-#profileChooseAvatarBtn::after,
+.avatar-btn:active {
+    transform: scale(0.95);
+}
+
+.avatar-btn image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3rpx solid rgba(255, 255, 255, 0.3);
+}
+
 .avatar-btn::after {
     border: 0 !important;
-    content: none !important; /* 不再渲染伪元素 */
-    transform: none !important; /* 防止缩放影响点击区域 */
+    content: none !important;
+    transform: none !important;
     -webkit-transform: none !important;
     width: 0 !important;
     height: 0 !important;
