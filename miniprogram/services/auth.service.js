@@ -152,6 +152,76 @@ class AuthService {
   }
 
   /**
+   * 智能登录 - 自动判断用户是否需要跳转到login页面
+   * @returns {Promise<Object>} 智能登录结果
+   */
+  async smartLogin() {
+    try {
+      console.log('开始智能登录流程...')
+
+      // 1. 尝试进行微信登录
+      const loginResult = await this.loginWithWechat()
+
+      if (!loginResult.success) {
+        return {
+          success: false,
+          action: 'error',
+          error: loginResult.error
+        }
+      }
+
+      const user = loginResult.user
+
+      // 2. 检查用户信息是否完整
+      const isProfileComplete = this.checkProfileCompleteness(user)
+
+      if (isProfileComplete) {
+        // 老用户，信息完整，直接跳转到profile
+        console.log('检测到老用户，直接登录')
+        return {
+          success: true,
+          action: 'goto_profile',
+          user: user,
+          message: '欢迎回来！'
+        }
+      } else {
+        // 新用户或信息不完整，需要跳转到login页面
+        console.log('检测到新用户或信息不完整，需要完善信息')
+        return {
+          success: true,
+          action: 'goto_login',
+          user: user,
+          message: '请完善您的个人信息'
+        }
+      }
+
+    } catch (error) {
+      console.error('智能登录失败:', error)
+      return {
+        success: false,
+        action: 'error',
+        error: error.message
+      }
+    }
+  }
+
+  /**
+   * 检查用户信息完整性
+   * @param {Object} user - 用户信息
+   * @returns {boolean} 是否完整
+   */
+  checkProfileCompleteness(user) {
+    if (!user) return false
+
+    // 检查必要的用户信息字段
+    const hasNickname = user.nickname || user.nickName
+    const hasAvatar = user.avatar_url || user.avatarUrl
+
+    // 可以根据业务需求调整完整性标准
+    return !!(hasNickname && hasAvatar && user.id)
+  }
+
+  /**
    * 设置Supabase Auth会话
    * @param {Object} session - 会话信息
    */
