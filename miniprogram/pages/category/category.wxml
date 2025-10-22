@@ -1,270 +1,186 @@
-<!-- 分类页面 -->
-<view class="container">
-  <!-- Header -->
-  <view class="header">
+<!-- 分类页面 - iOS 风格重设计 -->
+<view class="category-container">
+  <!-- 搜索区域 -->
+  <view class="search-section">
     <view class="search-bar" bindtap="goToSearch">
-      <view class="search-input-fake">
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/search.svg" class="search-icon" alt="Search"></image>
-        <text class="search-placeholder">听你想听的论文</text>
-      </view>
-    </view>
-    
-    <view class="tab-nav">
-      <view class="tab {{currentTab === 'hot' ? 'active' : ''}}" 
-            data-tab="hot" bindtap="switchTab">最热榜</view>
-      <view class="tab {{currentTab === 'new' ? 'active' : ''}}" 
-            data-tab="new" bindtap="switchTab">最新榜</view>
-      <view class="tab {{currentTab === 'review' ? 'active' : ''}}" 
-            data-tab="review" bindtap="switchTab">综述榜</view>
+      <t-icon name="{{icons.search}}" class="search-icon" />
+      <text class="search-placeholder">听你想听的论文</text>
     </view>
   </view>
 
-  <!-- 最热榜内容 -->
-  <view wx:if="{{currentTab === 'hot'}}" class="tab-content">
-    <!-- 排行榜 -->
-    <view class="section">
-      <text class="section-title">最热榜 TOP 10</text>
-      
-      <view wx:for="{{hotRankings}}" wx:for-index="idx" wx:key="id" wx:if="{{idx < 3}}" class="ranking-item">
-        <view class="ranking-number">{{idx + 1}}</view>
-        <image src="{{item.channel_cover_url}}" class="ranking-cover" mode="aspectFill" alt="{{item.channel}}"></image>
-        <view class="ranking-content">
-          <view class="ranking-title">{{item.title}}</view>
-          <view class="ranking-channel">{{item.channel}}</view>
+  <!-- 学术分类 - 横向滚动两行布局 -->
+  <view class="academic-section">
+    <view class="section-header">
+      <text class="section-title">学术领域</text>
+      <text class="section-subtitle">向右滑动查看更多</text>
+    </view>
+
+    <scroll-view wx:if="{{!loading.categories}}" class="categories-scroll" scroll-x enable-flex>
+      <view class="categories-grid">
+        <!-- 第一行 -->
+        <view class="category-row">
+          <view wx:for="{{academicCategories}}" wx:key="id" wx:if="{{index < 4}}"
+                class="category-card"
+                bindtap="selectCategory"
+                data-category="{{item}}">
+            <view class="category-icon-wrapper">
+              <t-icon name="{{item.iconName}}" class="category-icon" />
+            </view>
+            <view class="category-info">
+              <text class="category-name">{{item.displayName}}</text>
+              <text class="category-code">{{item.name}}</text>
+            </view>
+          </view>
         </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
-               class="ranking-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
+        <!-- 第二行 -->
+        <view class="category-row">
+          <view wx:for="{{academicCategories}}" wx:key="id" wx:if="{{index >= 4}}"
+                class="category-card"
+                bindtap="selectCategory"
+                data-category="{{item}}">
+            <view class="category-icon-wrapper">
+              <t-icon name="{{item.iconName}}" class="category-icon" />
+            </view>
+            <view class="category-info">
+              <text class="category-name">{{item.displayName}}</text>
+              <text class="category-code">{{item.name}}</text>
+            </view>
+          </view>
+        </view>
       </view>
-      
-      <view class="view-more" bindtap="viewMoreRankings" data-type="hot">
+    </scroll-view>
+
+    <!-- 分类加载状态 - 骨架屏 -->
+    <view wx:if="{{loading.categories}}" class="categories-scroll">
+      <view class="categories-grid">
+        <view class="category-row">
+          <view wx:for="{{[1,2,3,4]}}" wx:key="index" class="skeleton-card">
+            <view class="skeleton skeleton-icon"></view>
+            <view class="skeleton skeleton-title"></view>
+          </view>
+        </view>
+        <view class="category-row">
+          <view wx:for="{{[1,2,3]}}" wx:key="index" class="skeleton-card">
+            <view class="skeleton skeleton-icon"></view>
+            <view class="skeleton skeleton-title"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 精选推荐区域 -->
+  <view class="featured-section">
+    <view class="section-header">
+      <text class="section-title">编辑精选</text>
+      <view class="refresh-btn" bindtap="refreshContent">
+        <t-icon name="refresh" class="refresh-icon" />
+        <text>换一换</text>
+      </view>
+    </view>
+
+    <view wx:if="{{!loading.featured}}" class="featured-content">
+      <view wx:for="{{featuredContent}}" wx:key="id" class="featured-card">
+        <view class="featured-cover">
+          <image src="{{item.podcast.cover_url}}"
+                 class="cover-image"
+                 mode="aspectFill"
+                 lazy-load="{{lazyLoadEnabled}}" />
+          <view class="play-overlay" bindtap="playPodcast" data-item="{{item.podcast}}">
+            <t-icon name="play" class="play-icon" />
+          </view>
+        </view>
+        <view class="featured-info">
+          <text class="featured-title">{{item.podcast.title}}</text>
+          <text class="featured-description">{{item.recommendationText}}</text>
+          <view class="featured-meta">
+            <text class="channel-name">{{item.podcast.channels.name}}</text>
+            <text class="duration">{{item.podcast.duration}}分钟</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 如果没有精选内容 -->
+      <view wx:if="{{featuredContent.length === 0}}" class="empty-placeholder">
+        <t-icon name="help-circle" class="empty-icon" />
+        <text>暂无精选内容</text>
+      </view>
+    </view>
+
+    <!-- 精选加载状态 - 骨架屏 -->
+    <view wx:if="{{loading.featured}}" class="featured-content">
+      <view wx:for="{{[1,2,3]}}" wx:key="index" class="skeleton-featured">
+        <view class="skeleton skeleton-cover"></view>
+        <view class="skeleton-info">
+          <view class="skeleton skeleton-line long"></view>
+          <view class="skeleton skeleton-line medium"></view>
+          <view class="skeleton skeleton-line short"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 排行榜区域 - Tab切换 -->
+  <view class="rankings-section">
+    <view class="section-header">
+      <text class="section-title">排行榜</text>
+    </view>
+
+    <view wx:if="{{!loading.rankings}}" class="rankings-content">
+      <!-- Tab栏 -->
+      <t-tabs value="{{currentRankingTab}}" bind:change="onRankingTabChange" theme="tag" space-evenly="{{false}}">
+        <t-tab-panel label="最热" value="hot"></t-tab-panel>
+        <t-tab-panel label="最新" value="new"></t-tab-panel>
+        <t-tab-panel label="综述" value="review"></t-tab-panel>
+      </t-tabs>
+
+      <!-- 榜单列表 -->
+      <view class="ranking-list">
+        <view wx:for="{{rankings[currentRankingTab]}}" wx:for-index="idx" wx:key="id"
+              class="ranking-item"
+              bindtap="playPodcast"
+              data-item="{{item}}">
+          <text class="rank-number">{{idx + 1}}</text>
+          <view class="rank-content">
+            <text class="rank-title">{{item.title}}</text>
+            <text class="rank-play-count">{{item.play_count}}次播放</text>
+          </view>
+          <t-icon name="play-circle" class="rank-play-icon" />
+        </view>
+      </view>
+
+      <!-- 查看完整榜单按钮 -->
+      <view class="view-full-ranking-btn" bindtap="viewFullRanking">
         <text>查看完整榜单</text>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow-circle.svg" alt="View More"></image>
       </view>
     </view>
-    
-    <!-- 推荐论文 -->
-    <view class="section">
-      <text class="section-title">为你推荐</text>
-      
-      <view wx:for="{{recommendedPapers}}" wx:key="id" class="paper-item" 
-            bindtap="readPaper" data-item="{{item}}">
-        <image src="{{item.channel_cover_url}}" class="paper-thumbnail" mode="aspectFill" alt="{{item.team}}"></image>
-        <view class="paper-info">
-          <view class="paper-title">{{item.title}}</view>
-          <view class="paper-team">{{item.team}}</view>
-          <view class="paper-abstract">{{item.abstract}}</view>
-        </view>
-      </view>
-    </view>
-    
-    <!-- 按领域分类 -->
-    <view class="section categories">
-      <text class="section-title">按领域听论文</text>
-      
-      <scroll-view class="category-grid" scroll-x="true" enhanced="true" 
-                   show-scrollbar="false">
-        <view wx:for="{{categories}}" wx:key="id" class="category-item" 
-              bindtap="selectCategory" data-category="{{item}}">
-          <view class="category-icon">
-            <image src="{{item.icon}}" alt="{{item.name}}"></image>
-          </view>
-          <view class="category-label">{{item.name}}</view>
-        </view>
-      </scroll-view>
-    </view>
-    
-    <!-- 奇绩精选 -->
-    <view class="featured-section">
-      <view class="featured-header">
-        <text class="section-title">奇绩精选</text>
-        <view class="refresh-btn" bindtap="refreshFeatured">
-          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/refresh.svg" alt="Refresh"></image>
-          <text>换一换</text>
-        </view>
-      </view>
-      
-      <view wx:for="{{featuredPodcasts}}" wx:key="id" class="podcast-item">
-        <image class="podcast-cover" src="{{item.cover_url}}"/>
-        <view class="podcast-info">
-          <view class="podcast-channel">{{item.channel}}</view>
-          <view class="podcast-title">{{item.title}}</view>
-          <view class="podcast-description">
-            <text class="highlight">编辑推荐语：</text>{{item.recommendation}}
-          </view>
-        </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
-               class="podcast-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
+
+    <!-- 排行榜加载状态 - 骨架屏 -->
+    <view wx:if="{{loading.rankings}}" class="rankings-content">
+      <view class="skeleton skeleton-line long" style="margin-bottom: 16px;"></view>
+      <view wx:for="{{[1,2,3]}}" wx:key="index" style="margin-bottom: 12px;">
+        <view class="skeleton skeleton-line medium"></view>
       </view>
     </view>
   </view>
 
-  <!-- 最新榜内容 -->
-  <view wx:elif="{{currentTab === 'new'}}" class="tab-content">
-    <!-- 排行榜 -->
-    <view class="section">
-      <text class="section-title">最新榜 TOP 10</text>
-      
-      <view wx:for="{{newRankings}}" wx:for-index="idx" wx:key="id" wx:if="{{idx < 3}}" class="ranking-item">
-        <view class="ranking-number">{{idx + 1}}</view>
-        <image src="{{item.channel_cover_url}}" class="ranking-cover" mode="aspectFill" alt="{{item.channel}}"></image>
-        <view class="ranking-content">
-          <view class="ranking-title">{{item.title}}</view>
-          <view class="ranking-channel">{{item.channel}}</view>
-        </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
-               class="ranking-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
-      </view>
-      
-      <view class="view-more" bindtap="viewMoreRankings" data-type="new">
-        <text>查看完整榜单</text>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow-circle.svg" alt="View More"></image>
-      </view>
-    </view>
-    
-    <!-- 推荐论文 -->
-    <view class="section">
-      <text class="section-title">为你推荐</text>
-      
-      <view wx:for="{{recommendedPapers}}" wx:key="id" class="paper-item" 
-            bindtap="readPaper" data-item="{{item}}">
-        <image src="{{item.channel_cover_url}}" class="paper-thumbnail" mode="aspectFill" alt="{{item.team}}"></image>
-        <view class="paper-info">
-          <view class="paper-title">{{item.title}}</view>
-          <view class="paper-team">{{item.team}}</view>
-          <view class="paper-abstract">{{item.abstract}}</view>
-        </view>
-      </view>
-    </view>
-    
-    <!-- 按领域分类 -->
-    <view class="section categories">
-      <text class="section-title">按领域听论文</text>
-      
-      <scroll-view class="category-grid" scroll-x="true" enhanced="true" 
-                   show-scrollbar="false">
-        <view wx:for="{{categories}}" wx:key="id" class="category-item" 
-              bindtap="selectCategory" data-category="{{item}}">
-          <view class="category-icon">
-            <image src="{{item.icon}}" alt="{{item.name}}"></image>
-          </view>
-          <view class="category-label">{{item.name}}</view>
-        </view>
-      </scroll-view>
-    </view>
-    
-    <!-- 奇绩精选 -->
-    <view class="featured-section">
-      <view class="featured-header">
-        <text class="section-title">奇绩精选</text>
-        <view class="refresh-btn" bindtap="refreshFeatured">
-          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/refresh.svg" alt="Refresh"></image>
-          <text>换一换</text>
-        </view>
-      </view>
-      
-      <view wx:for="{{featuredPodcasts}}" wx:key="id" class="podcast-item">
-        <view class="podcast-cover"></view>
-        <view class="podcast-info">
-          <view class="podcast-channel">{{item.channel}}</view>
-          <view class="podcast-title">{{item.title}}</view>
-          <view class="podcast-description">
-            <text class="highlight">编辑推荐语：</text>{{item.recommendation}}
-          </view>
-        </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
-               class="podcast-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
-      </view>
+  <!-- 底部区域 -->
+  <view class="bottom-section">
+    <view class="brand-message">
+      <t-icon name="sparkles" class="brand-icon" />
+      <text>从源头最大化驱动创新</text>
     </view>
   </view>
 
-  <!-- 综述榜内容 -->
-  <view wx:elif="{{currentTab === 'review'}}" class="tab-content">
-    <!-- 排行榜 -->
-    <view class="section">
-      <text class="section-title">综述榜 TOP 10</text>
-      
-      <view wx:for="{{reviewRankings}}" wx:for-index="idx" wx:key="id" wx:if="{{idx < 3}}" class="ranking-item">
-        <view class="ranking-number">{{idx + 1}}</view>
-        <image src="{{item.channel_cover_url}}" class="ranking-cover" mode="aspectFill" alt="{{item.channel}}"></image>
-        <view class="ranking-content">
-          <view class="ranking-title">{{item.title}}</view>
-          <view class="ranking-channel">{{item.channel}}</view>
-        </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
-               class="ranking-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
-      </view>
-      
-      <view class="view-more" bindtap="viewMoreRankings" data-type="review">
-        <text>查看完整榜单</text>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow-circle.svg" alt="View More"></image>
-      </view>
+  <!-- 手势反馈指示器 -->
+  <view class="gesture-feedback" wx:if="{{showSwipeIndicator}}">
+    <view class="swipe-indicator left {{swipeDirection === 'left' ? 'active' : ''}}">
+      <t-icon name="chevron-left" class="swipe-icon" />
+      <text>个人中心</text>
     </view>
-
-    <!-- 推荐论文 -->
-    <view class="section">
-      <text class="section-title">为你推荐</text>
-      
-      <view wx:for="{{recommendedPapers}}" wx:key="id" class="paper-item" 
-            bindtap="readPaper" data-item="{{item}}">
-        <image src="{{item.channel_cover_url}}" class="paper-thumbnail" mode="aspectFill" alt="{{item.team}}"></image>
-        <view class="paper-info">
-          <view class="paper-title">{{item.title}}</view>
-          <view class="paper-team">{{item.team}}</view>
-          <view class="paper-abstract">{{item.abstract}}</view>
-        </view>
-      </view>
+    <view class="swipe-indicator right {{swipeDirection === 'right' ? 'active' : ''}}">
+      <text>浏览</text>
+      <t-icon name="chevron-right" class="swipe-icon" />
     </view>
-
-    <!-- 按领域分类 -->
-    <view class="section categories">
-      <text class="section-title">按领域听论文</text>
-      
-      <scroll-view class="category-grid" scroll-x="true" enhanced="true" 
-                   show-scrollbar="false">
-        <view wx:for="{{categories}}" wx:key="id" class="category-item" 
-              bindtap="selectCategory" data-category="{{item}}">
-          <view class="category-icon">
-            <image src="{{item.icon}}" alt="{{item.name}}"></image>
-          </view>
-          <view class="category-label">{{item.name}}</view>
-        </view>
-      </scroll-view>
-    </view>
-
-    <!-- 奇绩精选 -->
-    <view class="featured-section">
-      <view class="featured-header">
-        <text class="section-title">奇绩精选</text>
-        <view class="refresh-btn" bindtap="refreshFeatured">
-          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/refresh.svg" alt="Refresh"></image>
-          <text>换一换</text>
-        </view>
-      </view>
-      
-      <view wx:for="{{featuredPodcasts}}" wx:key="id" class="podcast-item">
-        <view class="podcast-cover"></view>
-        <view class="podcast-info">
-          <view class="podcast-channel">{{item.channel}}</view>
-          <view class="podcast-title">{{item.title}}</view>
-          <view class="podcast-description">
-            <text class="highlight">编辑推荐语：</text>{{item.recommendation}}
-          </view>
-        </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
-               class="podcast-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
-      </view>
-    </view>
-  </view>
-
-  <!-- 底部加载区域 -->
-  <view class="bottom-loader">
-    <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/loading.svg" class="loader-icon" alt="加载中"></image>
-    <view class="loader-text">从源头最大化驱动创新</view>
-  </view>
-
-  <!-- 触摸反馈 -->
-  <view class="touch-feedback" wx:if="{{showSwipeIndicator}}">
-    <view class="swipe-indicator left {{swipeDirection === 'left' ? 'active' : ''}}"></view>
-    <view class="swipe-indicator right {{swipeDirection === 'right' ? 'active' : ''}}"></view>
   </view>
 </view>

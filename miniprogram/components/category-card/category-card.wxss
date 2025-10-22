@@ -1,0 +1,160 @@
+/* 学术分类卡片组件样式 */
+
+.category-card {
+  position: relative;
+  padding: var(--space-xl, 32rpx);
+  border-radius: var(--radius-xl, 20rpx);
+  background: var(--bg-card, rgba(255, 255, 255, 0.9));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-glass, 0 8px 32px 0 rgba(31, 38, 135, 0.1));
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  min-height: 200rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 顶部渐变条 */
+.category-card__top-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6rpx;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* 渐变样式类 */
+.gradient-1 .category-card__top-bar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.gradient-2 .category-card__top-bar { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.gradient-3 .category-card__top-bar { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.gradient-4 .category-card__top-bar { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+.gradient-5 .category-card__top-bar { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+.gradient-6 .category-card__top-bar { background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%); }
+.gradient-7 .category-card__top-bar { background: linear-gradient(135deg, #fad0c4 0%, #ffd1ff 100%); }
+
+/* 悬浮激活状态 */
+.category-card:active {
+  transform: translateY(-8rpx) scale(1.02);
+  box-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05));
+}
+
+.category-card:active .category-card__top-bar {
+  opacity: 1;
+}
+
+/* 图标容器 */
+.category-card__icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 112rpx;
+  height: 112rpx;
+  margin-bottom: var(--space-md, 16rpx);
+  border-radius: var(--radius-lg, 16rpx);
+  background: var(--bg-glass, rgba(255, 255, 255, 0.7));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+/* 图标样式 */
+.category-card__icon {
+  font-size: 56rpx !important;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+/* 加载状态 */
+.category-card__loading {
+  color: var(--text-secondary, rgba(100, 116, 139, 0.8));
+}
+
+/* 不同渐变对应的图标颜色 */
+.gradient-1 .category-card__icon { color: #667eea; }
+.gradient-2 .category-card__icon { color: #f093fb; }
+.gradient-3 .category-card__icon { color: #4facfe; }
+.gradient-4 .category-card__icon { color: #a8edea; }
+.gradient-5 .category-card__icon { color: #ffecd2; }
+.gradient-6 .category-card__icon { color: #a8e6cf; }
+.gradient-7 .category-card__icon { color: #fad0c4; }
+
+/* 激活状态的图标 */
+.category-card:active .category-card__icon {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* 内容区域 */
+.category-card__content {
+  text-align: center;
+  width: 100%;
+}
+
+/* 分类名称 */
+.category-card__name {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: var(--text-primary, rgba(30, 41, 59, 0.9));
+  margin-bottom: var(--space-xs, 4rpx);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+/* 分类代码 */
+.category-card__code {
+  font-size: 28rpx;
+  color: var(--text-secondary, rgba(100, 116, 139, 0.8));
+  font-weight: 500;
+  font-family: 'Monaco', 'Menlo', 'SF Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+/* 水波纹效果 */
+.category-card__ripple {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.category-card:active .category-card__ripple {
+  opacity: 0.1;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
+}
+
+/* 响应式适配 */
+@media (max-width: 375px) {
+  .category-card {
+    padding: var(--space-lg, 24rpx);
+    min-height: 160rpx;
+  }
+
+  .category-card__icon-wrapper {
+    width: 80rpx;
+    height: 80rpx;
+  }
+
+  .category-card__icon {
+    font-size: 40rpx !important;
+  }
+
+  .category-card__name {
+    font-size: 32rpx;
+  }
+
+  .category-card__code {
+    font-size: 24rpx;
+  }
+}

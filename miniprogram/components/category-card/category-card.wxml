@@ -1,0 +1,28 @@
+<!-- 学术分类卡片组件 -->
+<view class="category-card {{gradientClass}}"
+      style="{{cardStyle}}"
+      bindtap="onCategoryTap"
+      bindlongpress="onCategoryLongPress">
+
+  <!-- 卡片顶部渐变条 -->
+  <view class="category-card__top-bar"></view>
+
+  <!-- 图标区域 -->
+  <view class="category-card__icon-wrapper">
+    <t-icon wx:if="{{!loading && category.iconName}}"
+            name="{{category.iconName}}"
+            class="category-card__icon" />
+    <t-loading wx:if="{{loading}}"
+               class="category-card__loading"
+               size="28rpx" />
+  </view>
+
+  <!-- 内容区域 -->
+  <view class="category-card__content">
+    <text class="category-card__name">{{category.displayName || '加载中...'}}</text>
+    <text class="category-card__code">{{category.name || '---'}}</text>
+  </view>
+
+  <!-- 交互反馈动画 -->
+  <view class="category-card__ripple"></view>
+</view>

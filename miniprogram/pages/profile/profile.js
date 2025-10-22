@@ -66,92 +66,14 @@ Page({
     })
   },
 
-  // 处理登录 - 使用智能登录逻辑
-  handleLogin: async function() {
-    console.log('开始智能登录流程')
+  // 处理登录
+  handleLogin: function() {
+    console.log('跳转到登录页面')
 
-    // 显示加载状态
-    wx.showLoading({
-      title: '检查登录状态...'
+    // 跳转到登录页面
+    wx.navigateTo({
+      url: '/pages/login/login'
     })
-
-    try {
-      // 调用智能登录
-      const smartLoginResult = await authService.smartLogin()
-
-      wx.hideLoading()
-
-      if (!smartLoginResult.success) {
-        // 登录失败，显示错误信息
-        wx.showModal({
-          title: '登录失败',
-          content: smartLoginResult.error || '登录过程中发生错误，请重试',
-          showCancel: false
-        })
-        return
-      }
-
-      // 根据智能登录结果执行相应操作
-      switch (smartLoginResult.action) {
-        case 'goto_profile':
-          // 老用户，直接刷新当前页面状态
-          console.log('老用户登录成功，刷新页面状态')
-          await this.checkLoginStatus() // 刷新页面登录状态
-          wx.showToast({
-            title: smartLoginResult.message || '登录成功',
-            icon: 'success',
-            duration: 2000
-          })
-          break
-
-        case 'goto_login':
-          // 新用户，跳转到登录页面完善信息
-          console.log('新用户，跳转到登录页面')
-          wx.showToast({
-            title: smartLoginResult.message || '请完善信息',
-            icon: 'none',
-            duration: 1500,
-            success: () => {
-              setTimeout(() => {
-                wx.navigateTo({
-                  url: '/pages/login/login'
-                })
-              }, 1500)
-            }
-          })
-          break
-
-        default:
-          // 未知操作，回退到原有流程
-          console.log('未知操作，回退到登录页面')
-          wx.navigateTo({
-            url: '/pages/login/login'
-          })
-      }
-
-    } catch (error) {
-      wx.hideLoading()
-      console.error('智能登录过程中发生错误:', error)
-
-      // 发生错误时回退到原有流程
-      wx.showModal({
-        title: '登录异常',
-        content: '登录过程中发生异常，是否重试？',
-        confirmText: '重试',
-        cancelText: '取消',
-        success: (res) => {
-          if (res.confirm) {
-            // 重试智能登录
-            this.handleLogin()
-          } else {
-            // 回退到登录页面
-            wx.navigateTo({
-              url: '/pages/login/login'
-            })
-          }
-        }
-      })
-    }
   },
 
   // 处理菜单项点击
@@ -432,7 +354,7 @@ Page({
     }
   },
 
-  // 选择头像（简化版本，使用智能登录流程）
+  // 选择头像（简化版本，使用微信原生隐私流程）
   onChooseAvatar: async function(e) {
     console.log('选择头像事件触发:', e)
 
@@ -440,15 +362,37 @@ Page({
     await this.checkLoginStatus()
 
     if (!this.data.isLoggedIn) {
-      // 使用智能登录逻辑
-      await this.handleSmartLoginForFeature('修改头像')
+      wx.showModal({
+        title: '需要登录',
+        content: '请先登录后再修改头像',
+        confirmText: '去登录',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({
+              url: '/pages/login/login'
+            })
+          }
+        }
+      })
       return
     }
 
     const currentUser = await authService.getCurrentUser()
     if (!currentUser || !currentUser.id) {
-      // 登录状态异常，使用智能登录逻辑
-      await this.handleSmartLoginForFeature('修改头像', '登录状态异常，请重新登录')
+      wx.showModal({
+        title: '登录状态异常',
+        content: '请重新登录后再试',
+        confirmText: '重新登录',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({
+              url: '/pages/login/login'
+            })
+          }
+        }
+      })
       return
     }
 
@@ -473,99 +417,6 @@ Page({
 
     // 上传头像
     this.updateAvatar(avatarUrl)
-  },
-
-  /**
-   * 为特定功能执行智能登录
-   * @param {string} featureName - 功能名称
-   * @param {string} customMessage - 自定义提示信息
-   */
-  handleSmartLoginForFeature: async function(featureName, customMessage = null) {
-    const message = customMessage || `请先登录后再${featureName}`
-
-    wx.showModal({
-      title: '需要登录',
-      content: message,
-      confirmText: '去登录',
-      cancelText: '取消',
-      success: async (res) => {
-        if (res.confirm) {
-          // 显示加载状态
-          wx.showLoading({
-            title: '检查登录状态...'
-          })
-
-          try {
-            // 调用智能登录
-            const smartLoginResult = await authService.smartLogin()
-
-            wx.hideLoading()
-
-            if (!smartLoginResult.success) {
-              wx.showModal({
-                title: '登录失败',
-                content: smartLoginResult.error || '登录过程中发生错误，请重试',
-                showCancel: false
-              })
-              return
-            }
-
-            // 根据智能登录结果执行相应操作
-            switch (smartLoginResult.action) {
-              case 'goto_profile':
-                // 老用户登录成功，刷新页面状态
-                await this.checkLoginStatus()
-                wx.showToast({
-                  title: smartLoginResult.message || '登录成功',
-                  icon: 'success',
-                  duration: 2000,
-                  success: () => {
-                    // 提示用户可以重新尝试功能
-                    setTimeout(() => {
-                      wx.showToast({
-                        title: `现在可以${featureName}了`,
-                        icon: 'none',
-                        duration: 1500
-                      })
-                    }, 2000)
-                  }
-                })
-                break
-
-              case 'goto_login':
-                // 新用户，跳转到登录页面
-                wx.showToast({
-                  title: smartLoginResult.message || '请完善信息',
-                  icon: 'none',
-                  duration: 1500,
-                  success: () => {
-                    setTimeout(() => {
-                      wx.navigateTo({
-                        url: '/pages/login/login'
-                      })
-                    }, 1500)
-                  }
-                })
-                break
-
-              default:
-                // 回退到原有流程
-                wx.navigateTo({
-                  url: '/pages/login/login'
-                })
-            }
-
-          } catch (error) {
-            wx.hideLoading()
-            console.error('智能登录失败:', error)
-            // 回退到原有流程
-            wx.navigateTo({
-              url: '/pages/login/login'
-            })
-          }
-        }
-      }
-    })
   },
 
   // 更新头像

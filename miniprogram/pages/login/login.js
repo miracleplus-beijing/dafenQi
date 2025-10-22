@@ -48,7 +48,8 @@ Page({
   },
 
   // 微信登录处理 - 使用Supabase Auth
-  handleWechatLogin: function() {
+  // 处理微信登录 - 使用智能登录逻辑
+  handleWechatLogin: async function() {
     if (!this.data.isAgreed) {
       wx.showModal({
         title: '提示',
@@ -59,19 +60,120 @@ Page({
       return
     }
 
-    console.log('开始微信登录流程')
+    console.log('开始智能微信登录流程')
 
-    // 显示用户信息完善表单
-    this.setData({
-      showUserInfoForm: true,
-      mode: 'login'
+    // 显示加载状态
+    wx.showLoading({
+      title: '正在登录中...'
     })
 
-    wx.showToast({
-      title: '请完善个人信息',
-      icon: 'none',
-      duration: 2000
-    })
+    try {
+      // 调用智能登录
+      const smartLoginResult = await authService.smartLogin()
+
+      wx.hideLoading()
+
+      if (!smartLoginResult.success) {
+        // 登录失败，显示错误信息
+        wx.showModal({
+          title: '登录失败',
+          content: smartLoginResult.error || '登录过程中发生错误，请重试',
+          showCancel: false
+        })
+        return
+      }
+
+      // 根据智能登录结果执行相应操作
+      switch (smartLoginResult.action) {
+        case 'goto_profile':
+          // 老用户，信息完整，直接登录成功
+          console.log('老用户登录成功，直接跳转')
+          wx.showToast({
+            title: smartLoginResult.message || '登录成功',
+            icon: 'success',
+            duration: 2000,
+            success: () => {
+              setTimeout(() => {
+                // 跳转回来源页面或profile页面
+                wx.navigateBack({
+                  fail: () => {
+                    wx.switchTab({
+                      url: '/pages/profile/profile'
+                    })
+                  }
+                })
+              }, 2000)
+            }
+          })
+          break
+
+        case 'goto_login':
+          // 新用户或信息不完整，显示信息完善表单
+          console.log('新用户或信息不完整，显示完善表单')
+
+          // 如果已经有部分用户信息，预填充表单
+          const user = smartLoginResult.user
+          if (user) {
+            this.setData({
+              avatarUrl: user.avatar_url || user.avatarUrl || this.data.avatarUrl,
+              nickname: user.nickname || user.nickName || this.data.nickname
+            })
+          }
+
+          this.setData({
+            showUserInfoForm: true,
+            mode: 'login'
+          })
+
+          wx.showToast({
+            title: smartLoginResult.message || '请完善个人信息',
+            icon: 'none',
+            duration: 2000
+          })
+          break
+
+        default:
+          // 未知操作，显示信息完善表单
+          console.log('未知操作，显示信息完善表单')
+          this.setData({
+            showUserInfoForm: true,
+            mode: 'login'
+          })
+
+          wx.showToast({
+            title: '请完善个人信息',
+            icon: 'none',
+            duration: 2000
+          })
+      }
+
+    } catch (error) {
+      wx.hideLoading()
+      console.error('智能登录过程中发生错误:', error)
+
+      // 发生错误时回退到原有流程
+      wx.showModal({
+        title: '登录异常',
+        content: '登录过程中发生异常，是否继续完善信息？',
+        confirmText: '继续',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) {
+            // 显示用户信息完善表单
+            this.setData({
+              showUserInfoForm: true,
+              mode: 'login'
+            })
+
+            wx.showToast({
+              title: '请完善个人信息',
+              icon: 'none',
+              duration: 2000
+            })
+          }
+        }
+      })
+    }
   },
 
   // 头像选择 - 完全复刻avatar_nickname逻辑
@@ -105,7 +207,7 @@ Page({
     })
   },
 
-  // 完成用户信息设置
+  // 完成用户信息设置 - 优化避免重复登录
   completeUserInfo: async function() {
     console.log('完成用户信息设置')
     console.log('当前头像:', this.data.avatarUrl)
@@ -126,20 +228,32 @@ Page({
     try {
       // 显示加载中
       wx.showLoading({
-        title: this.data.mode === 'register' ? '注册中...' : '登录中...'
+        title: this.data.mode === 'register' ? '注册中...' : '完善信息中...'
       })
 
-      // 第一步：微信登录（调用新的Supabase Auth流程）
-      console.log('开始Supabase Auth微信登录...')
-      const loginResult = await authService.loginWithWechat()
+      // 检查用户是否已经登录
+      const isLoggedIn = await authService.checkLoginStatus()
+      const currentUser = await authService.getCurrentUser()
 
-      if (!loginResult.success) {
-        throw new Error(loginResult.error || '登录失败')
+      let loginResult = null
+
+      if (!isLoggedIn || !currentUser) {
+        // 用户未登录，执行完整的登录流程
+        console.log('用户未登录，开始微信登录...')
+        loginResult = await authService.loginWithWechat()
+
+        if (!loginResult.success) {
+          throw new Error(loginResult.error || '登录失败')
+        }
+
+        console.log('微信登录成功:', loginResult)
+      } else {
+        // 用户已登录，跳过登录步骤
+        console.log('用户已登录，直接更新信息:', currentUser)
+        loginResult = { success: true, user: currentUser }
       }
 
-      console.log('Supabase Auth登录成功:', loginResult)
-
-      // 第二步：更新用户信息（头像和昵称）
+      // 更新用户信息（头像和昵称）
       console.log('开始更新用户信息...')
       const userInfo = {
         nickName: this.data.nickname.trim(),
@@ -159,19 +273,19 @@ Page({
       wx.hideLoading()
 
       // 显示成功提示
-      const successTitle = this.data.mode === 'register' ? '注册成功' : '登录成功'
+      const successTitle = this.data.mode === 'register' ? '注册成功' : '信息完善成功'
       wx.showToast({
         title: successTitle,
         icon: 'success',
         duration: 2000,
         success: () => {
           setTimeout(() => {
-            // 第三步：跳转页面
+            // 跳转页面
             wx.navigateBack({
               fail: () => {
-                // 如果没有上一页，跳转到首页
+                // 如果没有上一页，跳转到profile页面（因为用户刚登录）
                 wx.switchTab({
-                  url: '/pages/browse/browse'
+                  url: '/pages/profile/profile'
                 })
               }
             })
@@ -180,11 +294,11 @@ Page({
       })
 
     } catch (error) {
-      console.error('登录/注册流程失败:', error)
+      console.error('信息完善流程失败:', error)
       wx.hideLoading()
 
       // 显示错误信息
-      const errorTitle = this.data.mode === 'register' ? '注册失败' : '登录失败'
+      const errorTitle = this.data.mode === 'register' ? '注册失败' : '信息完善失败'
       wx.showModal({
         title: errorTitle,
         content: error.message || '网络连接异常，请重试',
@@ -192,7 +306,7 @@ Page({
         cancelText: '取消',
         success: (res) => {
           if (res.confirm) {
-            // 用户选择重试，重新调用登录
+            // 用户选择重试
             setTimeout(() => {
               this.completeUserInfo()
             }, 500)

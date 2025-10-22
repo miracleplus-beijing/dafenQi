@@ -1,0 +1,76 @@
+<!-- 排行榜列表组件 -->
+<view class="ranking-list {{typeClass}}">
+
+  <!-- 排行榜头部 -->
+  <view class="ranking-list__header">
+    <view class="ranking-list__title-wrapper">
+      <t-icon name="{{iconName}}" class="ranking-list__icon {{iconColorClass}}" />
+      <text class="ranking-list__title">{{title}}</text>
+    </view>
+
+    <!-- 查看更多按钮 -->
+    <view wx:if="{{showMoreButton && !loading}}"
+          class="ranking-list__more-btn"
+          bindtap="onMoreTap">
+      <t-icon name="chevron-right" class="ranking-list__more-icon" />
+    </view>
+  </view>
+
+  <!-- 排行榜内容 -->
+  <view class="ranking-list__content">
+
+    <!-- 加载状态 -->
+    <view wx:if="{{loading}}" class="ranking-list__loading">
+      <view wx:for="{{[1,2,3]}}" wx:key="index" class="ranking-item ranking-item--skeleton">
+        <view class="ranking-item__rank ranking-item__rank--skeleton"></view>
+        <view class="ranking-item__content ranking-item__content--skeleton">
+          <view class="ranking-item__title--skeleton"></view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 排行榜列表 -->
+    <view wx:if="{{!loading && items.length > 0}}" class="ranking-list__items">
+      <view wx:for="{{items}}"
+            wx:for-index="index"
+            wx:key="id"
+            wx:if="{{index < maxItems}}"
+            class="ranking-item {{getRankClass(index)}}"
+            data-item="{{item}}"
+            data-index="{{index}}"
+            bindtap="onItemTap">
+
+        <!-- 排名数字 -->
+        <view class="ranking-item__rank">
+          <text class="ranking-item__rank-text">{{getRankText(index)}}</text>
+        </view>
+
+        <!-- 内容信息 -->
+        <view class="ranking-item__content">
+          <text class="ranking-item__title">{{item.title}}</text>
+
+          <!-- 额外信息 -->
+          <view wx:if="{{item.play_count || item.like_count}}" class="ranking-item__meta">
+            <text wx:if="{{item.play_count}}" class="ranking-item__meta-item">
+              {{item.play_count}}播放
+            </text>
+            <text wx:if="{{item.like_count}}" class="ranking-item__meta-item">
+              {{item.like_count}}赞
+            </text>
+          </view>
+        </view>
+
+        <!-- 播放图标 -->
+        <view class="ranking-item__action">
+          <t-icon name="play" class="ranking-item__play-icon" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:if="{{!loading && items.length === 0}}" class="ranking-list__empty">
+      <t-icon name="help-circle" class="ranking-list__empty-icon" />
+      <text class="ranking-list__empty-text">暂无{{title}}数据</text>
+    </view>
+  </view>
+</view>

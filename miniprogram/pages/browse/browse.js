@@ -231,99 +231,11 @@ Page({
     }, 3000)
   },
 
-  // 用户点击登录提示
-  // 处理登录提示点击 - 使用智能登录逻辑
-  handleLoginTip: async function() {
-    console.log('开始智能登录流程')
-
-    // 显示加载状态
-    wx.showLoading({
-      title: '检查登录状态...'
+  // 处理登录提示点击
+  handleLoginTip: function() {
+    wx.navigateTo({
+      url: '/pages/login/login'
     })
-
-    try {
-      // 调用智能登录
-      const smartLoginResult = await authService.smartLogin()
-
-      wx.hideLoading()
-
-      if (!smartLoginResult.success) {
-        // 登录失败，显示错误信息
-        wx.showModal({
-          title: '登录失败',
-          content: smartLoginResult.error || '登录过程中发生错误，请重试',
-          showCancel: false
-        })
-        return
-      }
-
-      // 根据智能登录结果执行相应操作
-      switch (smartLoginResult.action) {
-        case 'goto_profile':
-          // 老用户，直接跳转到profile页面
-          console.log('老用户登录成功，跳转到profile页面')
-          wx.showToast({
-            title: smartLoginResult.message || '登录成功',
-            icon: 'success',
-            duration: 2000,
-            success: () => {
-              setTimeout(() => {
-                wx.switchTab({
-                  url: '/pages/profile/profile'
-                })
-              }, 2000)
-            }
-          })
-          break
-
-        case 'goto_login':
-          // 新用户，跳转到登录页面完善信息
-          console.log('新用户，跳转到登录页面')
-          wx.showToast({
-            title: smartLoginResult.message || '请完善信息',
-            icon: 'none',
-            duration: 1500,
-            success: () => {
-              setTimeout(() => {
-                wx.navigateTo({
-                  url: '/pages/login/login'
-                })
-              }, 1500)
-            }
-          })
-          break
-
-        default:
-          // 未知操作，回退到原有流程
-          console.log('未知操作，回退到登录页面')
-          wx.navigateTo({
-            url: '/pages/login/login'
-          })
-      }
-
-    } catch (error) {
-      wx.hideLoading()
-      console.error('智能登录过程中发生错误:', error)
-
-      // 发生错误时回退到原有流程
-      wx.showModal({
-        title: '登录异常',
-        content: '登录过程中发生异常，是否重试？',
-        confirmText: '重试',
-        cancelText: '取消',
-        success: (res) => {
-          if (res.confirm) {
-            // 重试智能登录
-            this.handleLoginTip()
-          } else {
-            // 回退到登录页面
-            wx.navigateTo({
-              url: '/pages/login/login'
-            })
-          }
-        }
-      })
-    }
   },
 
 
@@ -1089,7 +1001,7 @@ Page({
     console.log('目标音频源:', currentPodcast.audio_url)
     
     // 显示加载状态
-    this.showCustomLoading('加载播客...')
+    // this.showCustomLoading('加载播客...')
     
     // 检查是否需要切换音频源
     const currentSrc = audioContext.src || ''

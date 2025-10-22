@@ -34,13 +34,13 @@ page {
     --font-size-md: 14px;
     --font-size-sm: 12px;
     --font-size-xs: 10px;
+    --font-color-primary: #0883fd;
 
     /* 字重 */
     --font-weight-normal: 400;
     --font-weight-medium: 500;
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
-
     /* 间距系统 */
     --spacing-xs: 8rpx;
     --spacing-sm: 16rpx;
@@ -48,6 +48,8 @@ page {
     --spacing-lg: 48rpx;
     --spacing-xl: 64rpx;
     --spacing-2xl: 96rpx;
+    --spacing-3xl: 128rpx;
+    --spacing-4xl: 160rpx;
 
     /* 圆角系统 */
     --border-radius-sm: 8rpx;
@@ -60,6 +62,7 @@ page {
     --shadow-sm: 0 1px 3px rgba(26, 54, 93, 0.1);
     --shadow-md: 0 4px 12px rgba(26, 54, 93, 0.15);
     --shadow-lg: 0 8px 25px rgba(26, 54, 93, 0.15);
+
     --shadow-xl: 0 12px 35px rgba(26, 54, 93, 0.2);
 }
 
@@ -473,16 +476,15 @@ page {
 .playback-controls {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 64rpx;
+    justify-content: space-around;
     width: 100%;
-    margin: 32rpx auto;
+    margin: 32rpx 10rpx;
 }
 
 .control-btn {
-    width: 80rpx;
-    height: 80rpx;
-    border-radius: 40rpx;
+    width: var(--spacing-2xl);
+    height: var(--spacing-2xl);
+    border-radius: 50%;
     background: var(--bg-secondary);
     border: 1px solid var(--secondary-color);
     display: flex;
@@ -496,44 +498,33 @@ page {
     box-shadow: var(--shadow-sm);
 }
 
+
+.play-icon {
+    color: var(--font-color-primary);
+    scale: 1.2;
+
+}
 .control-icon {
-    width: 40rpx;
-    height: 40rpx;
-    color: var(--text-secondary);
+    color: var(--font-color-primary);
+    width: 70%;
+    height: 70%;
+
 }
 
 /* 播放按钮特殊样式 */
 .play-btn {
-    width: 80rpx;
-    height: 80rpx;
-    border-radius: 40rpx;
+    width: var(--spacing-3xl);
+    height: var(--spacing-3xl);
+    border-radius: 50%;
     border: none;
     box-shadow: var(--shadow-lg);
     position: relative;
     overflow: hidden;
-    padding: 16rpx;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-
-.play-btn .control-icon {
-    width: 48rpx;
-    height: 48rpx;
-    color: white;
-}
-
-/* 播放按钮点击效果 */
-.play-btn::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    transition: all 0.6s ease;
-}
 
 .play-btn:active::before {
     width: 100px;
@@ -592,16 +583,7 @@ page {
         margin: 24rpx auto;
     }
 
-    .control-btn {
-        width: 80rpx;
-        height: 80rpx;
-        border-radius: 50%;
-    }
 
-    .control-icon {
-        width: 32rpx;
-        height: 32rpx;
-    }
 
     .play-btn {
         width: 88rpx;
@@ -610,11 +592,6 @@ page {
         padding: 26rpx;
         padding-left: 28rpx;
         padding-right: 22rpx;
-    }
-
-    .play-btn .control-icon {
-        width: 36rpx;
-        height: 36rpx;
     }
 
     .progress-section {

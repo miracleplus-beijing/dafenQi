@@ -124,14 +124,19 @@
 
             <!-- 播放/暂停按钮 -->
             <view class="play-btn" bindtap="handlePlayPause">
-              <image src="{{isPlaying ? 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/pause.svg' : 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-large.svg'}}"
-                     class="control-icon" />
+<!--              <image src="{{isPlaying ? 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/pause.svg' : 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-large.svg'}}"-->
+<!--                     class="control-icon" />-->
+
+              <t-icon style="scale: 1.2" wx-if="{{ isPlaying }}" size="90rpx" name="pause" class="play-icon"  data-name="pause" bind:click="onIconTap" class="control-icon"/>
+              <t-icon style="scale: 1.2" wx-if="{{ !isPlaying }}" name="play" size="90rpx" class="play-icon"  data-name="play" bind:click="onIconTap" class="control-icon"/>
+
             </view>
 
             <!-- 前进30秒 -->
             <view class="control-btn" bindtap="handleFastForward">
               <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/forward-30s.svg"
                      class="control-icon" />
+
             </view>
 
             <!-- 更多操作 -->

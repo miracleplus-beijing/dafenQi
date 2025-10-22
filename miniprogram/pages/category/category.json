@@ -1,10 +1,14 @@
 {
-  "usingComponents": {},
-  "navigationBarTitleText": "达芬Qi说",
-  "navigationBarBackgroundColor": "#ffffff",
+  "navigationBarTitleText": "分类",
+  "navigationBarBackgroundColor": "#f0f9ff",
   "navigationBarTextStyle": "black",
-  "backgroundColor": "#ffffff",
+  "backgroundColor": "#f0f9ff",
   "backgroundTextStyle": "light",
   "enablePullDownRefresh": true,
-  "onReachBottomDistance": 50
+  "onReachBottomDistance": 50,
+  "usingComponents": {
+    "t-icon": "tdesign-miniprogram/icon/icon",
+    "t-tabs": "tdesign-miniprogram/tabs/tabs",
+    "t-tab-panel": "tdesign-miniprogram/tab-panel/tab-panel"
+  }
 }

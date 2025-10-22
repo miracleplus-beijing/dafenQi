@@ -1,0 +1,74 @@
+<!-- 精选推荐卡片组件 -->
+<view class="featured-card {{loading ? 'featured-card--loading' : ''}}"
+      bindtap="onCardTap">
+
+  <!-- 封面图片区域 -->
+  <view class="featured-card__cover"
+        bindtouchstart="showPlayOverlay"
+        bindtouchend="hidePlayOverlay">
+
+    <!-- 封面图片 -->
+    <t-image wx:if="{{!loading && item.podcast.cover_url}}"
+             src="{{item.podcast.cover_url}}"
+             class="featured-card__image"
+             mode="aspectFill"
+             loading="lazy"
+             bindload="onImageLoad"
+             binderror="onImageError" />
+
+    <!-- 加载状态骨架屏 -->
+    <view wx:if="{{loading}}" class="featured-card__image-skeleton">
+      <t-loading size="32rpx" />
+    </view>
+
+    <!-- 默认封面 -->
+    <view wx:if="{{!loading && !item.podcast.cover_url}}" class="featured-card__default-cover">
+      <t-icon name="music" class="featured-card__default-icon" />
+    </view>
+
+    <!-- 播放覆盖层 -->
+    <view class="featured-card__play-overlay {{showPlayOverlay || isPlaying ? 'active' : ''}}"
+          wx:if="{{showPlayButton && !loading}}"
+          bindtap="onPlayTap">
+      <t-icon name="{{isPlaying ? 'pause' : 'play'}}" class="featured-card__play-icon" />
+    </view>
+
+    <!-- 播放状态指示器 -->
+    <view wx:if="{{isPlaying}}" class="featured-card__playing-indicator">
+      <view class="featured-card__wave-bar"></view>
+      <view class="featured-card__wave-bar"></view>
+      <view class="featured-card__wave-bar"></view>
+    </view>
+  </view>
+
+  <!-- 内容信息区域 -->
+  <view class="featured-card__content">
+    <!-- 标题 -->
+    <text class="featured-card__title">
+      {{loading ? '加载中...' : (item.podcast.title || '未知标题')}}
+    </text>
+
+    <!-- 推荐描述 -->
+    <text class="featured-card__description"
+          wx:if="{{!loading && item.recommendationText}}">
+      {{item.recommendationText}}
+    </text>
+
+    <!-- 元信息 -->
+    <view class="featured-card__meta">
+      <text class="featured-card__channel">
+        {{loading ? '---' : (item.podcast.channels?.name || '未知频道')}}
+      </text>
+      <text class="featured-card__duration">
+        {{loading ? '---' : formattedDuration}}
+      </text>
+    </view>
+
+    <!-- 加载时的占位内容 -->
+    <view wx:if="{{loading}}" class="featured-card__skeleton">
+      <view class="featured-card__skeleton-line featured-card__skeleton-line--short"></view>
+      <view class="featured-card__skeleton-line featured-card__skeleton-line--long"></view>
+      <view class="featured-card__skeleton-line featured-card__skeleton-line--medium"></view>
+    </view>
+  </view>
+</view>

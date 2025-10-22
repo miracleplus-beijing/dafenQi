@@ -97,7 +97,8 @@
       "Bash(python:*)",
       "Bash(for:*)",
       "Bash(echo:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "WebFetch(domain:yesicon.app)"
     ],
     "deny": [],
     "ask": []
