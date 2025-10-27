@@ -199,7 +199,7 @@ class CategoryService {
       console.log('加载精选推荐内容...')
 
       // 获取编辑推荐
-      const result = await requestUtil.get('/rest/v1/editorial_recommendations', {
+      const result = await requestUtil.get(`/rest/v1/editorial_recommendations`, {
         select: 'id,recommendation_text,podcasts(id,title,description,cover_url,duration,channels(name))',
         order: 'created_at.desc',
         limit: limit

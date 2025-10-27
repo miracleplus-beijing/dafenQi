@@ -138,8 +138,6 @@ Page({
   onShow: function () {
     console.log('分类页面显示')
 
-    // 检查数据是否需要刷新（基于缓存时间）
-    this.checkDataFreshness()
 
     // 页面进入动画
     this.enterAnimation()
@@ -211,6 +209,9 @@ Page({
   async loadFeaturedContent() {
     try {
       const result = await categoryService.getFeaturedContent(6)
+
+
+      console.log(result)
 
       if (result.success) {
         this.setData({
@@ -308,18 +309,6 @@ Page({
     })
   },
 
-  // 检查数据新鲜度
-  checkDataFreshness() {
-    // 获取缓存统计信息
-    const cacheStats = categoryService.getCacheStats()
-    console.log('缓存统计:', cacheStats)
-
-    // 如果缓存为空，重新加载数据
-    if (cacheStats.rankings === 0 && cacheStats.featured === 0) {
-      console.log('缓存为空，重新加载数据')
-      this.initializePageData()
-    }
-  },
 
   // 显示数据加载错误
   showDataLoadError() {

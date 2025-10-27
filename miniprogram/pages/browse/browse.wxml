@@ -1,5 +1,11 @@
 <!-- 漫游页面 - 简约博客美学重设计 -->
 <view class="browse-page">
+
+  <!-- 加载指示器 -->
+  <view wx:if="{{index === currentIndex && isPlaying && audioLoading}}"
+          class="podcast-loader">
+      <image src="{{cdnImages.loadingIcon}}" class="loader-icon" alt="加载中"></image>
+  </view>
   <!-- 主要内容区域 -->
   <view wx:if="{{!loading && podcastList.length > 0}}">
     <swiper class="browse-swiper"
@@ -22,6 +28,7 @@
 
           <!-- 播客封面 -->
           <view class="podcast-cover {{index === currentIndex && isPlaying ? 'playing' : ''}}">
+   
             <image wx:if="{{item.cover_url}}"
                    src="{{item.cover_url}}"
                    class="cover-image"
@@ -31,18 +38,14 @@
               <view class="cover-icon">🎵</view>
               <view class="cover-title">{{item.title}}</view>
             </view>
-
-            <!-- 播放状态覆盖层 -->
-            <view wx:if="{{index === currentIndex && !isPlaying}}" class="play-overlay">
-              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/pause.svg"
-                     class="overlay-icon" />
+            <view class="podcast-card">
+            博客脚本占位符
             </view>
 
-            <!-- 加载指示器 -->
-            <view wx:if="{{index === currentIndex && isPlaying && audioLoading}}"
-                  class="podcast-loader">
-              <image src="{{cdnImages.loadingIcon}}" class="loader-icon" alt="加载中"></image>
-            </view>
+   
+
+  
+
           </view>
 
           <!-- 标题区域 -->
@@ -123,12 +126,10 @@
             </view>
 
             <!-- 播放/暂停按钮 -->
-            <view class="play-btn" bindtap="handlePlayPause">
-<!--              <image src="{{isPlaying ? 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/pause.svg' : 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-large.svg'}}"-->
-<!--                     class="control-icon" />-->
+            <view class="play-btn" s bindtap="handlePlayPause">
 
-              <t-icon style="scale: 1.2" wx-if="{{ isPlaying }}" size="90rpx" name="pause" class="play-icon"  data-name="pause" bind:click="onIconTap" class="control-icon"/>
-              <t-icon style="scale: 1.2" wx-if="{{ !isPlaying }}" name="play" size="90rpx" class="play-icon"  data-name="play" bind:click="onIconTap" class="control-icon"/>
+              <t-icon wx-if="{{ isPlaying }}" size="80rpx" name="pause" class="play-icon"  data-name="pause" bind:click="onIconTap" />
+              <t-icon  wx-if="{{ !isPlaying }}" name="play" size="80rpx" class="play-icon"  data-name="play" bind:click="onIconTap" />
 
             </view>
 

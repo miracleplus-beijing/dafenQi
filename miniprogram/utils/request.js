@@ -5,7 +5,7 @@ class RequestUtil {
   constructor() {
     this.config = getCurrentConfig()
     console.log(this.config)
-    this.baseURL = this.config.url
+    this.baseURL = this.config.baseURL
     this.timeout = this.config.timeout
     this.defaultHeaders = {
       'Content-Type': 'application/json',
