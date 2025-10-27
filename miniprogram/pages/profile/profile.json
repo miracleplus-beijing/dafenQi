@@ -7,10 +7,11 @@
     "t-divider": "tdesign-miniprogram/divider/divider"
   },
   "navigationBarTitleText": "达芬Qi说",
-  "navigationBarBackgroundColor": "#0884FF",
   "navigationBarTextStyle": "white",
-  "backgroundColor": "#0884FF",
   "backgroundTextStyle": "light",
   "enablePullDownRefresh": true,
-  "onReachBottomDistance": 50
+  "onReachBottomDistance": 50,
+  
+  "navigationBarBackgroundColor": "#f0f9ff",
+  "backgroundColor": "#f0f9ff"
 }

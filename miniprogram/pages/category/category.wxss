@@ -70,7 +70,6 @@ page {
   min-height: 100vh;
   background: var(--bg-primary);
   position: relative;
-  padding-bottom: 90px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -685,38 +684,29 @@ page {
   width: 40%;
 }
 
-/* 底部区域 */
-.bottom-section {
-  padding: var(--space-2xl) var(--space-lg);
+
+/* 底部加载区域 */
+.bottom-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px 60px;
+}
+
+.loader-icon {
+  width: 86px;
+  height: 53px;
+  margin-bottom: 20px;
+}
+
+.loader-text {
+  font-size: 14px;
+  color: #0884FF;
+  font-weight: 400;
   text-align: center;
 }
 
-.brand-message {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-lg);
-  background: var(--bg-glass);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: var(--radius-xl);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.brand-icon {
-  font-size: 20px !important;
-  color: #667eea;
-  margin-right: var(--space-sm);
-}
-
-.brand-message text {
-  font-size: 16px;
-  font-weight: 500;
-  background: var(--primary-gradient);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
 
 /* 手势反馈 */
 .gesture-feedback {

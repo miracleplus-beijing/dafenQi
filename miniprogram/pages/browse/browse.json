@@ -1,12 +1,13 @@
 {
   "usingComponents": {
-    "t-slider": "tdesign-miniprogram/slider/slider"
+    "t-slider": "tdesign-miniprogram/slider/slider",
+    "t-icon": "tdesign-miniprogram/icon/icon"
   },
   "navigationBarTitleText": "达芬Qi说",
-  "navigationBarBackgroundColor": "#ffffff",
   "navigationBarTextStyle": "black",
-  "backgroundColor": "#ffffff",
   "backgroundTextStyle": "light",
   "enablePullDownRefresh": false,
-  "onReachBottomDistance": 50
+  "onReachBottomDistance": 50,
+  "navigationBarBackgroundColor": "#f0f9ff",
+  "backgroundColor": "#f0f9ff"
 }

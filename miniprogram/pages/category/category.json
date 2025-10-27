@@ -1,8 +1,8 @@
 {
   "navigationBarTitleText": "分类",
   "navigationBarBackgroundColor": "#f0f9ff",
-  "navigationBarTextStyle": "black",
   "backgroundColor": "#f0f9ff",
+  "navigationBarTextStyle": "black",
   "backgroundTextStyle": "light",
   "enablePullDownRefresh": true,
   "onReachBottomDistance": 50,

@@ -28,15 +28,22 @@
 
           <!-- 播客封面 -->
           <view class="podcast-cover {{index === currentIndex && isPlaying ? 'playing' : ''}}">
-   
-            <image wx:if="{{item.cover_url}}"
-                   src="{{item.cover_url}}"
-                   class="cover-image"
-                   mode="aspectFill"
-                   alt="{{item.title}}" />
-            <view wx:else class="cover-placeholder">
-              <view class="cover-icon">🎵</view>
-              <view class="cover-title">{{item.title}}</view>
+
+            <view class="cover-image-container">
+              <image wx:if="{{item.cover_url}}"
+                     src="{{item.cover_url}}"
+                     class="cover-image"
+                     mode="aspectFill"
+                     alt="{{item.title}}" />
+              <view wx:else class="cover-placeholder">
+                <view class="cover-icon">🎵</view>
+                <view class="cover-title">{{item.title}}</view>
+              </view>
+
+              <!-- 暂停遮罩效果 -->
+              <view wx:if="{{index === currentIndex && !isPlaying}}" class="pause-overlay" bindtap="handlePlayPause">
+                <t-icon name="play" size="128rpx" class="pause-icon" />
+              </view>
             </view>
             <view class="podcast-card">
             博客脚本占位符
@@ -124,12 +131,11 @@
               <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/backward-15s.svg"
                      class="control-icon" />
             </view>
-
             <!-- 播放/暂停按钮 -->
-            <view class="play-btn" s bindtap="handlePlayPause">
+            <view class="play-btn" bindtap="handlePlayPause">
 
-              <t-icon wx-if="{{ isPlaying }}" size="80rpx" name="pause" class="play-icon"  data-name="pause" bind:click="onIconTap" />
-              <t-icon  wx-if="{{ !isPlaying }}" name="play" size="80rpx" class="play-icon"  data-name="play" bind:click="onIconTap" />
+              <t-icon wx:if="{{ isPlaying }}" size="80rpx" name="pause" class="play-icon"  data-name="pause" bind:click="onIconTap" />
+              <t-icon wx:else name="play" size="80rpx" class="play-icon"  data-name="play" bind:click="onIconTap" />
 
             </view>
 

@@ -95,7 +95,7 @@
           <text class="featured-description">{{item.recommendationText}}</text>
           <view class="featured-meta">
             <text class="channel-name">{{item.podcast.channels.name}}</text>
-            <text class="duration">{{item.podcast.duration}}分钟</text>
+            <text class="duration">{{item.podcast.duration || "时长未知"}}</text>
           </view>
         </view>
       </view>
@@ -165,11 +165,9 @@
   </view>
 
   <!-- 底部区域 -->
-  <view class="bottom-section">
-    <view class="brand-message">
-      <t-icon name="sparkles" class="brand-icon" />
-      <text>从源头最大化驱动创新</text>
-    </view>
+  <view class="bottom-loader">
+    <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/loading.svg" class="loader-icon" alt="加载中"></image>
+    <view class="loader-text">从源头最大化驱动创新</view>
   </view>
 
   <!-- 手势反馈指示器 -->
