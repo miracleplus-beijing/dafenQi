@@ -270,19 +270,25 @@ Page({
       }, 500)
     }
     
-    // 记录推荐点击行为，用于优化推荐算法
+    // 记录推荐点击行为，用于优化推荐算法（使用防护代码）
     if (app.globalData.userInfo && app.globalData.userInfo.id) {
       try {
-        await apiService.recommendation.recordClick(
-          app.globalData.userInfo.id,
-          podcast.id,
-          null, // recommendationId
-          null, // position
-          podcast.algorithm || 'unknown'
-        )
-        console.log('推荐点击行为已记录:', podcast.id)
+        // 防护检查：确保方法存在
+        if (apiService && apiService.recommendation && typeof apiService.recommendation.recordClick === 'function') {
+          await apiService.recommendation.recordClick(
+            app.globalData.userInfo.id,
+            podcast.id,
+            null, // recommendationId
+            null, // position
+            podcast.algorithm || 'unknown'
+          )
+          console.log('推荐点击行为已记录:', podcast.id)
+        } else {
+          console.warn('推荐服务未完全初始化，跳过点击记录')
+        }
       } catch (error) {
         console.error('记录推荐点击失败:', error)
+        // 点击记录失败不影响主要功能
       }
     }
   },
@@ -690,9 +696,36 @@ Page({
           !this.data.loadedPodcastIds.includes(podcast.id)
         )
         
-        // 转换数据格式
-        const newPodcastList = newPodcasts.map(podcast => {
+        // 转换数据格式并检查收藏状态
+        const newPodcastList = await Promise.all(newPodcasts.map(async podcast => {
           const channelName = podcast.channels ? podcast.channels.name : (podcast.channel_name || '奇绩前沿信号')
+
+          // 检查收藏状态
+          let isFavorited = false
+          try {
+            // 首先检查全局状态
+            const app = getApp()
+            const favoriteList = app.globalData.favoriteList || []
+            isFavorited = favoriteList.some(fav => fav.id === podcast.id)
+
+            // 如果用户已登录，也检查数据库状态（但不等待）
+            const userId = this.getCurrentUserId()
+            if (userId && !isFavorited) {
+              const audioService = require('../../services/audio.service.js')
+              audioService.checkIsFavorited(userId, podcast.id).then(dbFavorited => {
+                if (dbFavorited && !isFavorited) {
+                  // 如果数据库显示已收藏但本地没有，更新本地状态
+                  console.log('发现数据库收藏状态不同步，更新本地状态:', podcast.title)
+                  this.updatePodcastFavoriteState(podcast.id, true)
+                }
+              }).catch(error => {
+                console.warn('检查数据库收藏状态失败:', error)
+              })
+            }
+          } catch (error) {
+            console.warn('检查收藏状态失败:', error)
+          }
+
           return {
             id: podcast.id,
             title: podcast.title,
@@ -701,11 +734,15 @@ Page({
             cover_url: this.getPodcastCoverUrl(channelName, podcast.cover_url),
             channel_name: channelName,
             duration: podcast.duration || 0,
+            play_count: podcast.play_count || 0,
+            like_count: podcast.like_count || 0,
+            favorite_count: podcast.favorite_count || 0,
+            created_at: podcast.created_at,
             isLiked: false,
-            isFavorited: false,
+            isFavorited: isFavorited,
             isThumbsUp: false
           }
-        })
+        }))
         
         // 更新已加载的播客ID数组
         const updatedIds = [...this.data.loadedPodcastIds]
@@ -1254,56 +1291,101 @@ Page({
     console.log('前进30秒到:', newPosition)
   },
 
-  // 处理收藏 - 优化响应速度
+  // 处理收藏 - 要求用户先登录
   handleFavorite() {
     const { currentIndex, podcastList } = this.data
     const currentPodcast = podcastList[currentIndex]
+
+    if (!currentPodcast) {
+      wx.showToast({
+        title: '播客信息获取失败',
+        icon: 'none',
+        duration: 1500
+      })
+      return
+    }
+
+    // 检查用户登录状态
+    const userId = this.getCurrentUserId()
+    if (!userId) {
+      // 未登录用户，引导登录
+      wx.showModal({
+        title: '需要登录',
+        content: '收藏功能需要登录后使用，是否前往登录？',
+        confirmText: '去登录',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({
+              url: '/pages/login/login'
+            })
+          }
+        }
+      })
+      return
+    }
+
     const newIsFavorited = !currentPodcast.isFavorited
-    
+
     // 立即更新UI状态（乐观更新）
     const updatedPodcastList = [...podcastList]
     updatedPodcastList[currentIndex] = {
       ...currentPodcast,
       isFavorited: newIsFavorited
     }
-    
+
     this.setData({
       podcastList: updatedPodcastList
     })
-    
-    // 异步处理后台操作，不阻塞用户交互（无提示窗口）
-    this.updateFavoriteStatus(currentPodcast.id, newIsFavorited)
+
+    // 立即给用户轻提示反馈
+    wx.showToast({
+      title: newIsFavorited ? '已添加到收藏' : '已取消收藏',
+      icon: 'success',
+      duration: 1500
+    })
+
+    // 同时更新全局状态
+    const app = getApp()
+    if (newIsFavorited) {
+      app.addToFavorites({
+        id: currentPodcast.id,
+        title: currentPodcast.title,
+        cover_url: currentPodcast.cover_url,
+        channel: currentPodcast.channel_name,
+        favoriteTime: Date.now()
+      })
+    } else {
+      app.removeFromFavorites(currentPodcast.id)
+    }
+
+    // 异步处理数据库操作
+    this.updateFavoriteStatus(currentPodcast.id, newIsFavorited, userId)
   },
-  
-  // 异步更新收藏状态
-  async updateFavoriteStatus(podcastId, isFavorited) {
+
+  // 异步更新收藏状态到数据库（仅登录用户）
+  async updateFavoriteStatus(podcastId, isFavorited, userId) {
     try {
-      setTimeout(async () => {
-        try {
-          const audioService = require('../../services/audio.service.js')
-          const userId = this.getCurrentUserId()
-          
-          if (!userId) {
-            console.warn('用户未登录，无法操作收藏')
-            
-            Toast({
-              context: this,
-              selector: '#t-toast',
-              message: '用户未登录，无法操作收藏',
-              theme: 'warning',
-              direction: 'column',
-            });
-            this.rollbackFavoriteState(podcastId)
-            return
-          }
-          
-          if (isFavorited) {
-            await audioService.addToFavorites(userId, podcastId)
-            
-            // 记录推荐转化行为
-            const currentPodcast = this.data.podcastList[this.data.currentIndex]
-            if (currentPodcast) {
-              try {
+      const audioService = require('../../services/audio.service.js')
+
+      // 执行数据库操作
+      let result
+      if (isFavorited) {
+        result = await audioService.addToFavorites(userId, podcastId)
+      } else {
+        result = await audioService.removeFromFavorites(userId, podcastId)
+      }
+
+      if (result.success) {
+        console.log('收藏状态同步到数据库成功:', { podcastId, isFavorited })
+
+        // 记录推荐转化行为（使用防护代码避免方法不存在错误）
+        if (isFavorited) {
+          const currentPodcast = this.data.podcastList[this.data.currentIndex]
+          if (currentPodcast) {
+            try {
+              // 防护检查：确保方法存在
+              if (apiService && apiService.recommendation && typeof apiService.recommendation.recordConversion === 'function') {
                 await apiService.recommendation.recordConversion(
                   userId,
                   podcastId,
@@ -1311,31 +1393,52 @@ Page({
                   null,
                   currentPodcast.algorithm || 'unknown'
                 )
-              } catch (error) {
-                console.error('记录收藏转化失败:', error)
+                console.log('收藏转化已记录:', podcastId)
+              } else {
+                console.warn('推荐服务未完全初始化，跳过转化记录')
               }
+            } catch (error) {
+              console.error('记录收藏转化失败:', error)
+              // 转化记录失败不影响主要功能
             }
-          } else {
-            await audioService.removeFromFavorites(userId, podcastId)
           }
-          
-          console.log('收藏状态更新成功:', { podcastId, isFavorited })
-          
-        } catch (error) {
-          console.error('收藏操作失败:', error)
-          // 失败时回滚UI状态（无提示窗口）
-          this.rollbackFavoriteState(podcastId)
         }
-      }, 0)
+      } else {
+        // 数据库操作失败，回滚UI状态并提示用户
+        console.error('数据库收藏操作失败:', result.error)
+        this.rollbackFavoriteState(podcastId)
+
+        // 延迟提示用户
+        setTimeout(() => {
+          wx.showToast({
+            title: '收藏失败，请重试',
+            icon: 'none',
+            duration: 2000
+          })
+        }, 500)
+      }
+
     } catch (error) {
       console.error('收藏状态更新异常:', error)
+
+      // 网络或其他异常，回滚UI状态并提示用户
+      this.rollbackFavoriteState(podcastId)
+
+      setTimeout(() => {
+        wx.showToast({
+          title: '网络异常，请重试',
+          icon: 'none',
+          duration: 2000
+        })
+      }, 500)
     }
   },
-  
-  // 回滚收藏状态
+
+  // 回滚收藏状态（登录用户操作失败时使用）
   rollbackFavoriteState(podcastId) {
     const { podcastList } = this.data
     const index = podcastList.findIndex(p => p.id === podcastId)
+
     if (index !== -1) {
       const updatedPodcastList = [...podcastList]
       updatedPodcastList[index] = {
@@ -1343,6 +1446,51 @@ Page({
         isFavorited: !updatedPodcastList[index].isFavorited
       }
       this.setData({ podcastList: updatedPodcastList })
+
+      // 同时回滚全局状态
+      const app = getApp()
+      const podcast = updatedPodcastList[index]
+      if (podcast.isFavorited) {
+        app.addToFavorites({
+          id: podcast.id,
+          title: podcast.title,
+          cover_url: podcast.cover_url,
+          channel: podcast.channel_name,
+          favoriteTime: Date.now()
+        })
+      } else {
+        app.removeFromFavorites(podcast.id)
+      }
+    }
+  },
+
+  // 更新单个播客的收藏状态（用于同步数据库状态）
+  updatePodcastFavoriteState(podcastId, isFavorited) {
+    const { podcastList } = this.data
+    const index = podcastList.findIndex(p => p.id === podcastId)
+
+    if (index !== -1) {
+      const updatedPodcastList = [...podcastList]
+      updatedPodcastList[index] = {
+        ...updatedPodcastList[index],
+        isFavorited: isFavorited
+      }
+      this.setData({ podcastList: updatedPodcastList })
+
+      // 同时更新全局状态
+      const app = getApp()
+      const podcast = updatedPodcastList[index]
+      if (isFavorited) {
+        app.addToFavorites({
+          id: podcast.id,
+          title: podcast.title,
+          cover_url: podcast.cover_url,
+          channel: podcast.channel_name,
+          favoriteTime: Date.now()
+        })
+      } else {
+        app.removeFromFavorites(podcast.id)
+      }
     }
   },
 

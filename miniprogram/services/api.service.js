@@ -107,7 +107,7 @@ class ApiService {
   // 用户相关 API
   user = {
     // 获取用户收藏
-    getFavorites: async (userId) => {v
+    getFavorites: async (userId) => {
       try {
         const result = await requestUtil.get('/rest/v1/user_favorites', {
           user_id: `eq.${userId}`,
@@ -149,13 +149,10 @@ class ApiService {
     // 移除收藏
     removeFavorite: async (userId, podcastId) => {
       try {
-        await requestUtil.delete('/rest/v1/user_favorites', {
+        // 构建正确的DELETE URL，使用查询参数而不是data
+        await requestUtil.delete(`/rest/v1/user_favorites?user_id=eq.${userId}&podcast_id=eq.${podcastId}`, {
           headers: {
             'Content-Type': 'application/json'
-          },
-          data: {
-            user_id: `eq.${userId}`,
-            podcast_id: `eq.${podcastId}`
           }
         })
 
@@ -197,14 +194,10 @@ class ApiService {
     // 添加播放历史
     addHistory: async (userId, podcastId, playPosition = 0) => {
       try {
-        // 先删除已存在的记录
-        await requestUtil.delete('/rest/v1/user_history', {
+        // 先删除已存在的记录 - 修复DELETE请求
+        await requestUtil.delete(`/rest/v1/user_history?user_id=eq.${userId}&podcast_id=eq.${podcastId}`, {
           headers: {
             'Content-Type': 'application/json'
-          },
-          data: {
-            user_id: `eq.${userId}`,
-            podcast_id: `eq.${podcastId}`
           }
         })
 

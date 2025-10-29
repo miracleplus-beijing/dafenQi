@@ -1,32 +1,108 @@
 <!-- 收藏页面 -->
 <view class="favorites-container">
-  <!-- 空状态 -->
-  <view class="empty-state" wx:if="{{favoriteList.length === 0}}">
-    <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/favorite-unselected.svg" class="empty-icon"></image>
-    <text class="empty-text">暂无收藏内容</text>
-    <text class="empty-desc">收藏的内容会显示在这里</text>
+  <!-- 顶部标签栏 -->
+  <view class="tab-header">
+    <view class="tab-item {{currentTab === 'episodes' ? 'active' : ''}}"
+          bindtap="switchTab" data-tab="episodes">
+      <text class="tab-text">单集</text>
+    </view>
+    <view class="tab-item {{currentTab === 'comments' ? 'active' : ''}}"
+          bindtap="switchTab" data-tab="comments">
+      <text class="tab-text">评论</text>
+    </view>
   </view>
 
-  <!-- 收藏列表 -->
-  <view class="favorites-list" wx:else>
-    <view wx:for="{{favoriteList}}" wx:key="id" class="favorite-item" 
-          bindtap="playFavoriteItem" data-item="{{item}}">
-      <view class="item-cover">
-        <image src="{{item.cover || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/pictures/default-cover.png'}}" 
-               class="cover-image" mode="aspectFill"></image>
+
+
+  <!-- 内容区域 -->
+  <view class="content-container">
+    <!-- 登录提示 -->
+    <view class="login-prompt" wx:if="{{showLoginPrompt}}">
+      <view class="login-prompt-content">
+        <t-icon name="heart" class="login-prompt-icon" />
+        <text class="login-prompt-title">请先登录</text>
+        <text class="login-prompt-desc">登录后可查看和管理您的收藏内容</text>
+        <button class="login-btn" bindtap="goToLogin">立即登录</button>
       </view>
-      
-      <view class="item-info">
-        <text class="item-title">{{item.title}}</text>
-        <text class="item-channel">{{item.channel}}</text>
-        <text class="favorite-time">{{item.favoriteTimeText}}</text>
+    </view>
+
+    <!-- 单集标签页 -->
+    <view class="episodes-content" wx:if="{{currentTab === 'episodes' && !showLoginPrompt}}">
+      <!-- 空状态 -->
+      <view class="empty-state" wx:if="{{favoriteList.length === 0}}">
+        <t-icon name="heart" class="empty-icon" />
+        <text class="empty-text">暂无收藏内容</text>
+        <text class="empty-desc">收藏的内容会显示在这里</text>
       </view>
-      
-      <view class="item-actions">
-        <view class="action-btn" bindtap="removeFromFavorites" 
-              data-id="{{item.id}}" catchtap="true">
-          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/favorite-selected.svg" class="action-icon"></image>
+
+      <!-- 收藏列表 -->
+      <view class="favorites-list" wx:else>
+        <view wx:for="{{favoriteList}}" wx:key="id" class="favorite-item">
+          <view class="item-cover">
+            <image src="{{item.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/default-cover.png'}}"
+                   class="cover-image" mode="aspectFill"></image>
+          </view>
+
+          <view class="item-info">
+            <text class="item-title">{{item.title}}</text>
+            <text class="item-hosts">主播：{{item.hosts || item.channel || '未知主播'}}</text>
+
+            <view class="item-meta">
+              <view class="meta-item">
+                <t-icon name="time" class="meta-icon" />
+                <text class="meta-text">{{item.durationText || '未知时长'}}</text>
+              </view>
+              <view class="meta-item">
+                <text class="meta-text">{{item.publishDateText || item.favoriteTimeText}}</text>
+              </view>
+              <view class="meta-item">
+                <t-icon name="play-circle" class="meta-icon" />
+                <text class="meta-text">{{item.playCountText || '0'}}</text>
+              </view>
+              <view class="meta-item">
+                <t-icon name="chat" class="meta-icon" />
+                <text class="meta-text">{{item.commentCountText || '0'}}</text>
+              </view>
+            </view>
+          </view>
+
+          <view class="item-actions">
+            <view class="action-btn play-btn" bindtap="playFavoriteItem" data-item="{{item}}">
+              <t-icon name="play-circle-filled" class="action-icon" />
+            </view>
+            <view class="action-btn more-btn" bindtap="showMoreActions" data-item="{{item}}">
+               <t-icon name="more" class="action-icon" />
+            </view>
+          </view>
         </view>
+      </view>
+    </view>
+
+    <!-- 评论标签页 -->
+    <view class="comments-content" wx:if="{{currentTab === 'comments' && !showLoginPrompt}}">
+      <view class="empty-state">
+        <t-icon name="chat" class="empty-icon" />
+        <text class="empty-text">暂无收藏评论</text>
+        <text class="empty-desc">收藏的评论会显示在这里</text>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 更多操作弹窗 -->
+<view class="action-modal" wx:if="{{showActionModal}}" bindtap="hideActionModal">
+  <view class="modal-content" catchtap="stopPropagation">
+    <view class="modal-header">
+      <text class="modal-title">{{selectedItem.title}}</text>
+    </view>
+    <view class="modal-actions">
+      <view class="modal-action-item" bindtap="removeFromFavorites" data-id="{{selectedItem.id}}">
+        <t-icon name="heart-filled" class="modal-action-icon" />
+        <text class="modal-action-text">取消收藏</text>
+      </view>
+      <view class="modal-action-item" bindtap="shareItem">
+        <t-icon name="share" class="modal-action-icon" />
+        <text class="modal-action-text">分享</text>
       </view>
     </view>
   </view>
