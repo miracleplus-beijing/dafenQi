@@ -516,11 +516,20 @@ class AuthService {
       if (!userResult.data.user) {
         return { success: false, error: '用户未登录' }
       }
+      
+      if (userInfo.nickname) {
+        this.currentUser.user_metadata.nickname = userInfo.nickName
+      }
+
+      if(userInfo.avatar_url) {
+        this.currentUser.user_metadata.avatar_url = userInfo.avatarUrl
+      }
 
       const currentUser = userResult.data.user
       console.log('更新用户信息:', userInfo)
       console.log('当前用户信息:', currentUser)
 
+      this.getCurrentUser
       // 处理头像上传
       let finalAvatarUrl = null
       if (userInfo.avatarUrl) {

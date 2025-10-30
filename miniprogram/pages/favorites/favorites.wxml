@@ -4,7 +4,7 @@
   <view class="tab-header">
     <view class="tab-item {{currentTab === 'episodes' ? 'active' : ''}}"
           bindtap="switchTab" data-tab="episodes">
-      <text class="tab-text">单集</text>
+      <text class="tab-text">博客</text>
     </view>
     <view class="tab-item {{currentTab === 'comments' ? 'active' : ''}}"
           bindtap="switchTab" data-tab="comments">
@@ -26,7 +26,7 @@
       </view>
     </view>
 
-    <!-- 单集标签页 -->
+    <!-- 博客收藏列表标签页 -->
     <view class="episodes-content" wx:if="{{currentTab === 'episodes' && !showLoginPrompt}}">
       <!-- 空状态 -->
       <view class="empty-state" wx:if="{{favoriteList.length === 0}}">
@@ -45,7 +45,7 @@
 
           <view class="item-info">
             <text class="item-title">{{item.title}}</text>
-            <text class="item-hosts">主播：{{item.hosts || item.channel || '未知主播'}}</text>
+            <text class="item-hosts">作者：{{item.hosts || item.channel || '未知主播'}}</text>
 
             <view class="item-meta">
               <view class="meta-item">

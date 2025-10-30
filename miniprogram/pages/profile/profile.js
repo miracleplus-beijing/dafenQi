@@ -52,6 +52,7 @@ Page({
   initPageData: function() {
     // 检查登录状态 (没有必要因为， show会执行)
     // this.checkLoginStatus()
+
   },
 
 

@@ -41,7 +41,7 @@
               </view>
 
               <!-- 暂停遮罩效果 -->
-              <view wx:if="{{index === currentIndex && !isPlaying}}" class="pause-overlay" bindtap="handlePlayPause">
+              <view wx:if="{{index === currentIndex && !isPlaying}}" class="pause-overlay" >
                 <t-icon name="play" size="128rpx" class="pause-icon" />
               </view>
             </view>

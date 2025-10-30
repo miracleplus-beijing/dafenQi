@@ -135,7 +135,7 @@ page {
     align-items: center;
     gap: 24rpx;
     width: 650rpx;
-  background-color: #e1e3ff9f;
+  background-color: #f0f4f8;
   border: none;
   border-radius: 20rpx;
 }

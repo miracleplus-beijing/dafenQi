@@ -7,9 +7,6 @@ const defaultAvatarUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/ob
 
 Page({
   data: {
-    // 登录模式
-    mode: 'login', // 'login' | 'register'
-
     // 用户头像
     avatarUrl: defaultAvatarUrl,
 
@@ -122,7 +119,6 @@ Page({
 
           this.setData({
             showUserInfoForm: true,
-            mode: 'login'
           })
 
           wx.showToast({
@@ -137,7 +133,6 @@ Page({
           console.log('未知操作，显示信息完善表单')
           this.setData({
             showUserInfoForm: true,
-            mode: 'login'
           })
 
           wx.showToast({
@@ -162,7 +157,6 @@ Page({
             // 显示用户信息完善表单
             this.setData({
               showUserInfoForm: true,
-              mode: 'login'
             })
 
             wx.showToast({
@@ -212,7 +206,6 @@ Page({
     console.log('完成用户信息设置')
     console.log('当前头像:', this.data.avatarUrl)
     console.log('当前昵称:', this.data.nickname)
-    console.log('当前模式:', this.data.mode)
 
     // 验证必要信息
     if (!this.data.nickname.trim()) {
@@ -228,7 +221,7 @@ Page({
     try {
       // 显示加载中
       wx.showLoading({
-        title: this.data.mode === 'register' ? '注册中...' : '完善信息中...'
+        title: '完善信息中...'
       })
 
       // 检查用户是否已经登录
@@ -273,7 +266,7 @@ Page({
       wx.hideLoading()
 
       // 显示成功提示
-      const successTitle = this.data.mode === 'register' ? '注册成功' : '信息完善成功'
+      const successTitle = '信息完善成功'
       wx.showToast({
         title: successTitle,
         icon: 'success',
@@ -298,7 +291,7 @@ Page({
       wx.hideLoading()
 
       // 显示错误信息
-      const errorTitle = this.data.mode === 'register' ? '注册失败' : '信息完善失败'
+      const errorTitle = '信息完善失败'
       wx.showModal({
         title: errorTitle,
         content: error.message || '网络连接异常，请重试',
@@ -359,7 +352,6 @@ Page({
     // 显示用户信息完善表单
     this.setData({
       showUserInfoForm: true,
-      mode: 'register'
     })
 
     wx.showToast({
@@ -369,21 +361,6 @@ Page({
     })
   },
 
-  // 切换登录/注册模式
-  switchMode: function() {
-    const newMode = this.data.mode === 'login' ? 'register' : 'login'
-    this.setData({
-      mode: newMode,
-      showUserInfoForm: false
-    })
-
-    const modeText = newMode === 'register' ? '注册' : '登录'
-    wx.showToast({
-      title: `切换到${modeText}模式`,
-      icon: 'none',
-      duration: 1500
-    })
-  },
 
   // 切换协议同意状态
   toggleAgreement: function() {
