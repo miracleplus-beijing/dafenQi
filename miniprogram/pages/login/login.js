@@ -25,19 +25,22 @@ Page({
 
   onLoad: function (options) {
     console.log('登录页面加载', options)
-    
+
     // 获取系统主题
     const systemInfo = wx.getSystemInfoSync()
     this.setData({
       theme: systemInfo.theme || 'light'
     })
-    
+
     // 监听主题变化
     wx.onThemeChange((result) => {
       this.setData({
         theme: result.theme
       })
     })
+
+    // 检查隐私权限
+    this.checkPrivacyPermission()
   },
 
   onShow: function () {

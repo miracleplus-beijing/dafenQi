@@ -172,26 +172,26 @@ class AuthService {
 
       const user = loginResult.user
 
-      // 2. 检查用户信息是否完整
-      const isProfileComplete = this.checkProfileCompleteness(user)
+      // 2. 根据Edge Function返回的isNew字段判断用户类型
 
-      if (isProfileComplete) {
-        // 老用户，信息完整，直接跳转到profile
+      const isCompleted = this.checkProfileCompleteness(user)
+      if (user.isNew === true || !isCompleted) {
+        // 新用户，需要跳转到完善个人信息页面
+        console.log('检测到新用户或者 信息缺失，需要完善个人信息')
+        return {
+          success: true,
+          action: 'goto_login',
+          user: user,
+          message: '欢迎使用达芬Qi说！请完善您的个人信息'
+        }
+      } else {
+        // 老用户，直接跳转到profile
         console.log('检测到老用户，直接登录')
         return {
           success: true,
           action: 'goto_profile',
           user: user,
           message: '欢迎回来！'
-        }
-      } else {
-        // 新用户或信息不完整，需要跳转到login页面
-        console.log('检测到新用户或信息不完整，需要完善信息')
-        return {
-          success: true,
-          action: 'goto_login',
-          user: user,
-          message: '请完善您的个人信息'
         }
       }
 
@@ -226,6 +226,7 @@ class AuthService {
    * @param {Object} session - 会话信息
    */
   async setSession(session) {
+    console.log("set session: " + session )
     this.currentSession = session
     this.currentUser = session?.user || null
 
@@ -246,11 +247,6 @@ class AuthService {
    */
   getSession() {
     try {
-      // 优先返回内存中的session (快速访问)
-      if (this.currentSession) {
-        return { data: { session: this.currentSession }, error: null }
-      }
-
       // 尝试从本地存储恢复 (简化验证)
       return this.recoverSessionFromStorage()
     } catch (error) {
@@ -293,7 +289,7 @@ class AuthService {
       this.currentSession = session
       this.currentUser = session.user
 
-      console.log('成功恢复session，用户:', session.user.id)
+      console.log('成功恢复session，用户:', session.user)
       return { data: { session }, error: null }
 
     } catch (error) {
@@ -485,10 +481,6 @@ class AuthService {
    */
   async getUser() {
     try {
-      // 优先返回内存中的用户 (快速访问)
-      if (this.currentUser) {
-        return { data: { user: this.currentUser }, error: null }
-      }
 
       // 从存储恢复会话和用户信息
       const sessionResult = this.getSession()
@@ -511,25 +503,22 @@ class AuthService {
    * @returns {Promise<Object>} 更新结果
    */
   async updateUserInfo(userInfo) {
+    console.log("要更新的用户信息：" + userInfo)
+
     try {
       const userResult = await this.getUser()
       if (!userResult.data.user) {
         return { success: false, error: '用户未登录' }
       }
-      
-      if (userInfo.nickname) {
-        this.currentUser.user_metadata.nickname = userInfo.nickName
-      }
+  
 
-      if(userInfo.avatar_url) {
-        this.currentUser.user_metadata.avatar_url = userInfo.avatarUrl
-      }
 
       const currentUser = userResult.data.user
       console.log('更新用户信息:', userInfo)
       console.log('当前用户信息:', currentUser)
-
-      this.getCurrentUser
+      if (!userInfo.nickName) {
+        userInfo.nickName = currentUser.nickName
+      }
       // 处理头像上传
       let finalAvatarUrl = null
       if (userInfo.avatarUrl) {
@@ -559,7 +548,7 @@ class AuthService {
             finalAvatarUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
           }
         } else {
-          finalAvatarUrl =  uploadResult.publicUrl
+          finalAvatarUrl =  userInfo.avatarUrl
         }
       }
 
@@ -567,7 +556,7 @@ class AuthService {
       const updateData = {
         code: 'update_user_info', // 特殊标识
         userInfo: {
-          nickName: userInfo.nickName || userInfo.nickname,
+          nickName: userInfo.nickName,
           avatarUrl: finalAvatarUrl
         }
       }
@@ -583,30 +572,17 @@ class AuthService {
 
       const authResult = await this.callWechatAuthFunctionWithAuth('update_user_info', updateData.userInfo, currentSession.data.session.access_token)
 
+      console.log("authResult: " + authResult)
       if (!authResult.success) {
         throw new Error(authResult.error || '更新失败')
       }
 
-      // 更新本地会话
-      if (authResult.session) {
-        await this.setSession(authResult.session)
-      }
 
-      // 更新全局状态
-      const updatedUser = authResult.user
-      await this.saveUserSession(updatedUser)
 
-      try {
-        const app = getApp()
-        if (app && app.globalData) {
-          app.globalData.userInfo = updatedUser
-        }
-      } catch (error) {
-        console.warn('更新全局状态失败:', error)
-      }
-
-      console.log('用户信息更新成功:', updatedUser)
-      return { success: true, user: updatedUser }
+      currentSession.data.session.user = authResult.user
+      await this.setSession(currentSession.data.session)
+      console.log('用户信息更新成功:', authResult.user)
+      return { success: true, user: authResult.user }
 
     } catch (error) {
       console.error('更新用户信息失败:', error)
@@ -930,35 +906,35 @@ class AuthService {
    * @returns {Promise<Object>} 登出结果
    */
   async logout() {
+  try {
+    // 1. 清除 Supabase Auth 会话（内存中的状态）
+    this.currentSession = null;
+    this.currentUser = null;
+
+    // 2. 一键清除所有本地存储（替代逐个删除）
+    // 注意：会删除所有通过 wx.setStorageSync 存储的数据
+    wx.clearStorageSync();
+
+    // 3. 清除全局状态
     try {
-      // 清除Supabase Auth会话
-      this.currentSession = null
-      this.currentUser = null
-
-      // 清除本地存储
-      wx.removeStorageSync('userInfo')
-      wx.removeStorageSync('lastLoginTime')
-      wx.removeStorageSync('supabase_session')
-
-      // 清除全局状态
-      try {
-        const app = getApp()
-        if (app && app.globalData) {
-          app.globalData.userInfo = null
-          app.globalData.isLoggedIn = false
-        }
-      } catch (error) {
-        console.warn('清除全局状态失败:', error)
+      const app = getApp();
+      if (app && app.globalData) {
+        app.globalData.userInfo = null;
+        app.globalData.isLoggedIn = false;
+        // 可补充其他全局状态的清除（如 token、权限等）
       }
-
-      console.log('用户已登出')
-      return { success: true }
     } catch (error) {
-      console.error('登出失败:', error)
-      return { success: false, error: error.message }
+      console.warn('清除全局状态失败:', error);
     }
-  }
 
+
+    console.log('用户已彻底登出');
+    return { success: true };
+  } catch (error) {
+    console.error('登出失败:', error);
+    return { success: false, error: error.message };
+  }
+}
   /**
    * 检查登录状态
    * @returns {Promise<boolean>} 是否已登录
@@ -974,13 +950,13 @@ class AuthService {
         const userInfo = {
           id: user.id,
           email: user.email,
-          nickName: user.user_metadata?.nickname || '微信用户',  // 统一使用nickName
-          avatarUrl: user.user_metadata?.avatar_url,            // 统一使用avatarUrl
-          nickname: user.user_metadata?.nickname || '微信用户', // 保持兼容性
-          avatar_url: user.user_metadata?.avatar_url,           // 保持兼容性
-          wechat_openid: user.user_metadata?.wechat_openid,
-          display_name: user.user_metadata?.nickname || '微信用户',
-          has_user_info: !!(user.user_metadata?.nickname && user.user_metadata?.avatar_url)
+          nickName: user?.nickname || '微信用户',  // 统一使用nickName
+          avatarUrl: user?.avatar_url,            // 统一使用avatarUrl
+          nickname: user?.nickname || '微信用户', // 保持兼容性
+          avatar_url: user?.avatar_url,           // 保持兼容性
+          wechat_openid: user?.wechat_openid,
+          display_name: user?.nickname || '微信用户',
+          has_user_info: !!(user?.nickname && user?.avatar_url)
         }
 
         // 更新全局状态
@@ -1014,22 +990,20 @@ class AuthService {
     if (userResult.data.user) {
       const user = userResult.data.user
 
-      // 动态生成头像URL
-      console.log(user.user_metadata)
       const avatarUrl = await this.getAvatarDisplayUrl({
-        avatar_url: user.user_metadata?.avatar_url
+        avatar_url: user?.avatar_url
       })
 
       return {
         id: user.id,
         email: user.email,
-        nickName: user.user_metadata?.nickname || '微信用户',  // 统一使用nickName
+        nickName: user?.nickname || '微信用户',  // 统一使用nickName
         avatarUrl: avatarUrl,                                  // 使用动态生成的头像URL
-        nickname: user.user_metadata?.nickname || '微信用户', // 保持兼容性
-        avatar_url: user.user_metadata?.avatar_url,           // 原始avatar_url用于重新生成
-        wechat_openid: user.user_metadata?.wechat_openid,
-        display_name: user.user_metadata?.nickname || '微信用户',
-        has_user_info: !!(user.user_metadata?.nickname && user.user_metadata?.avatar_url)
+        nickname: user?.nickname || '微信用户', // 保持兼容性
+        avatar_url: user?.avatar_url,           // 原始avatar_url用于重新生成
+        wechat_openid: user?.wechat_openid,
+        display_name: user?.nickname || '微信用户',
+        has_user_info: !!(user?.nickname && user?.avatar_url)
       }
     }
 
@@ -1178,20 +1152,6 @@ class AuthService {
           lastError = result.error
           console.warn(`签名URL生成失败 (第${attempt}次尝试):`, result.error)
 
-          // 优化错误恢复策略
-          if (await this.shouldAttemptRecovery(result.error)) {
-            console.log('检测到可恢复错误，尝试恢复认证状态...')
-
-            const recoverySuccess = await this.attemptAuthRecovery()
-            if (recoverySuccess) {
-              console.log('认证状态恢复成功，继续重试')
-              continue
-            } else {
-              console.warn('认证状态恢复失败，停止重试')
-              break
-            }
-          }
-
           // 如果不是最后一次尝试，等待后重试
           if (attempt < maxRetries) {
             const delay = Math.min(attempt * 1000, 3000) // 递增延迟，最大3秒
@@ -1203,10 +1163,7 @@ class AuthService {
         lastError = error.message || error
         console.error(`签名URL生成异常 (第${attempt}次尝试):`, error)
 
-        // 对于严重错误，尝试恢复
-        if (await this.shouldAttemptRecovery(error.message)) {
-          await this.attemptAuthRecovery()
-        }
+
 
         // 如果不是最后一次尝试，等待后重试
         if (attempt < maxRetries) {
@@ -1246,59 +1203,6 @@ class AuthService {
     return recoverableErrors.some(keyword => errorMessage.includes(keyword))
   }
 
-  /**
-   * 尝试认证状态恢复
-   * @returns {Promise<boolean>} 恢复是否成功
-   */
-  async attemptAuthRecovery() {
-    try {
-      console.log('开始尝试认证状态恢复...')
-
-      // 方法1: 尝试从本地存储恢复
-      const localRecovery = this.recoverSessionFromStorage()
-      if (localRecovery.data.session?.user) {
-        console.log('本地存储恢复成功')
-        return true
-      }
-
-      // 方法2: 检查全局状态
-      try {
-        const app = getApp()
-        if (app && app.globalData && app.globalData.isLoggedIn && app.globalData.userInfo) {
-          console.log('从全局状态恢复用户信息')
-
-          // 尝试重建基本session结构
-          const mockSession = {
-            user: {
-              id: app.globalData.userInfo.id,
-              email: app.globalData.userInfo.email,
-              user_metadata: {
-                nickname: app.globalData.userInfo.nickName,
-                avatar_url: app.globalData.userInfo.avatar_url,
-                wechat_openid: app.globalData.userInfo.wechat_openid
-              }
-            },
-            access_token: 'recovery_placeholder' // 标记为需要重新获取
-          }
-
-          await this.setSession(mockSession)
-          console.log('基本session结构已重建，需要重新登录获取有效token')
-          return false // 需要用户重新登录
-        }
-      } catch (globalError) {
-        console.warn('全局状态恢复失败:', globalError)
-      }
-
-      // 方法3: 清理状态，准备重新登录
-      console.log('无法恢复认证状态，清理本地状态')
-      await this.clearInvalidSession()
-
-      return false
-    } catch (error) {
-      console.error('认证状态恢复异常:', error)
-      return false
-    }
-  }
 
   /**
    * 清理无效认证状态

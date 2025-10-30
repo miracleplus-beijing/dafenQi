@@ -3,6 +3,7 @@
  * 综合管理用户信息、Storage文件和数据同步
  */
 
+const authService = require('./auth.service.js')
 const storageService = require('./storage.service.js')
 
 class ProfileService {
@@ -281,7 +282,7 @@ class ProfileService {
   async syncToGlobalState(userProfile) {
     try {
       // 保存到本地存储
-      await this.saveUserSession(userProfile)
+      await authService.saveUserSession(userProfile)
       
       // 同步到全局状态
       const app = getApp()
@@ -415,18 +416,7 @@ class ProfileService {
     }
   }
 
-  /**
-   * 保存用户会话信息
-   * @param {Object} user - 用户信息
-   */
-  async saveUserSession(user) {
-    try {
-      wx.setStorageSync('userInfo', user)
-      wx.setStorageSync('lastLoginTime', Date.now())
-    } catch (error) {
-      console.error('保存用户会话失败:', error)
-    }
-  }
+ 
 }
 
 // 创建并导出用户资料服务实例

@@ -17,6 +17,9 @@
   "permission": {
     "scope.userAvatar": {
       "desc": "用于展示用户个人资料，便于其他用户识别"
+    },
+    "scope.userNickname": {
+      "desc": "用于获取用户昵称，完善个人资料信息"
     }
   },
   "window": {

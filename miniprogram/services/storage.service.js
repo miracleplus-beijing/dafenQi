@@ -203,7 +203,7 @@ class StorageService {
   getPublicUrl(bucketName, fileName) {
     const { config } = require('../config/supabase.config.js')
     console.log(config)
-    return `${config.url}/storage/v1/object/public/${bucketName}/${fileName}`
+    return `${config.supabaseUrl}/storage/v1/object/public/${bucketName}/${fileName}`
   }
 
   // 获取签名 URL（用于私有文件）

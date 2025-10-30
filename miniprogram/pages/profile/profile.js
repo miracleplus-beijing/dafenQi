@@ -138,9 +138,9 @@ Page({
       content: '确定要退出登录吗？',
       confirmText: '退出',
       confirmColor: '#FF4444',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          this.performLogout()
+          await this.performLogout()
         }
       }
     })
@@ -542,9 +542,7 @@ Page({
         // 更新页面数据
         this.setData({ userInfo: normalized })
 
-        // 更新全局数据
-        app.globalData.userInfo = normalized
-
+        
         wx.hideLoading()
         wx.showToast({
           title: '用户名更新成功',
