@@ -83,7 +83,10 @@ Page({
     // 个性化推荐相关
     personalizedRecommendations: [], // 个性化推荐列表
     recommendationsLoading: false, // 推荐加载状态
-    recommendationMode: 'personalized' // 固定为个性化推荐模式
+    recommendationMode: 'personalized', // 固定为个性化推荐模式
+
+
+    userInfo: null
   },
 
   onLoad: function (options) {
@@ -113,8 +116,7 @@ Page({
 
   // 检查登录状态
   checkLoginStatus() {
-    const userInfo = app.globalData.userInfo
-    const isLoggedIn = app.globalData.isLoggedIn && userInfo && userInfo.id
+    const isLoggedIn = app.globalData.isLoggedIn
 
     this.setData({
       isLoggedIn: isLoggedIn
@@ -126,7 +128,7 @@ Page({
   // 智能降级的个性化推荐加载
   async loadPersonalizedRecommendations() {
     try {
-      const userInfo = app.globalData.userInfo
+      const userInfo = authService.getCurrentUser()
       this.setData({ recommendationsLoading: true })
 
       // 智能降级逻辑：优先尝试个性化推荐
@@ -269,14 +271,13 @@ Page({
         this.triggerAutoPlay()
       }, 500)
     }
-    
+    const user = authService.getCurrentUser()
     // 记录推荐点击行为，用于优化推荐算法（使用防护代码）
-    if (app.globalData.userInfo && app.globalData.userInfo.id) {
       try {
         // 防护检查：确保方法存在
         if (apiService && apiService.recommendation && typeof apiService.recommendation.recordClick === 'function') {
           await apiService.recommendation.recordClick(
-            app.globalData.userInfo.id,
+            user.id,
             podcast.id,
             null, // recommendationId
             null, // position
@@ -290,7 +291,6 @@ Page({
         console.error('记录推荐点击失败:', error)
         // 点击记录失败不影响主要功能
       }
-    }
   },
 
   // 处理来自搜索页面的播客
@@ -391,6 +391,9 @@ Page({
   onShow: function () {
     console.log('漫游页面显示')
     
+    this.setData({
+      userInfo: authService.getCurrentUser()
+    })
     // 页面进入动画
     this.enterAnimation()
 
@@ -534,18 +537,9 @@ Page({
   // 获取当前用户ID
   getCurrentUserId() {
     try {
-      const app = getApp()
-      if (app && app.globalData && app.globalData.userInfo && app.globalData.userInfo.id) {
-        return app.globalData.userInfo.id
-      }
-      
       // 如果全局状态没有，尝试从本地存储获取
-      const userInfo = wx.getStorageSync('userInfo')
-      if (userInfo && userInfo.id) {
-        return userInfo.id
-      }
       
-      return null
+      return this.data.userInfo.id
     } catch (error) {
       console.error('获取用户ID失败:', error)
       return null
@@ -1306,8 +1300,8 @@ Page({
     }
 
     // 检查用户登录状态
-    const userId = this.getCurrentUserId()
-    if (!userId) {
+    const loginStatus = authService.checkLoginStatus()
+    if (!loginStatus) {
       // 未登录用户，引导登录
       wx.showModal({
         title: '需要登录',
@@ -1360,7 +1354,7 @@ Page({
     }
 
     // 异步处理数据库操作
-    this.updateFavoriteStatus(currentPodcast.id, newIsFavorited, userId)
+    this.updateFavoriteStatus(currentPodcast.id, newIsFavorited, this.getCurrentUserId())
   },
 
   // 异步更新收藏状态到数据库（仅登录用户）

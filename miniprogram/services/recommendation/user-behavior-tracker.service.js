@@ -3,6 +3,8 @@
  * 用于收集和分析用户行为数据，优化推荐算法
  */
 
+const authService = require("../auth.service")
+
 class UserBehaviorTracker {
   constructor() {
     // 行为队列，用于批量处理
@@ -624,8 +626,7 @@ Page = function(config) {
   const originalOnUnload = config.onUnload
   
   config.onLoad = function(options) {
-    const app = getApp()
-    const userInfo = app.globalData.userInfo
+    const userInfo = authService.getCurrentUser()
     
     if (userInfo && userInfo.id) {
       userBehaviorTracker.recordPageView(userInfo.id, this.route, {

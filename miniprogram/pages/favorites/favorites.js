@@ -1,6 +1,7 @@
 // 收藏页面逻辑
 const app = getApp()
 const apiService = require('../../services/api.service.js')
+const authService = require('../../services/auth.service.js')
 
 Page({
   data: {
@@ -17,7 +18,8 @@ Page({
 
     // 加载状态
     loading: false,
-    error: null
+    error: null,
+    userInfo: null
   },
 
   onLoad: function (options) {
@@ -28,7 +30,7 @@ Page({
     console.log('收藏页面显示')
 
     // 检查用户登录状态
-    if (!app.globalData.isLoggedIn || !app.globalData.userInfo) {
+    if (!authService.checkLoginStatus()) {
       // 未登录用户，显示登录提示
       this.setData({
         favoriteList: [],
@@ -41,9 +43,72 @@ Page({
     this.setData({
       showLoginPrompt: false
     })
-    this.loadFavoriteList()
-  },
 
+    console.log(authService.getCurrentUser())
+    this.setData ({
+      userInfo: authService.getCurrentUser()
+    })
+
+    this.loadFavoriteList()
+
+  },
+    async removeFromFavorites(e) {
+        const id = e.currentTarget.dataset.id || this.data.selectedItem?.id
+
+        if (!id) return
+
+        try {
+            const result = await wx.showModal({
+                title: '取消收藏',
+                content: '确定要取消收藏这个内容吗？',
+                confirmText: '确定',
+                cancelText: '取消'
+            })
+
+            if (result.confirm) {
+                // 显示加载提示
+                wx.showLoading({
+                    title: '正在取消收藏...',
+                    mask: true
+                })
+
+                // 直接调用API删除收藏
+                const removeResult = await apiService.user.removeFavorite(
+                  this.data.userInfo.id,
+                    id
+                )
+
+                wx.hideLoading()
+
+                if (removeResult.success) {
+                    // 关闭弹窗
+                    this.hideActionModal()
+
+                    wx.showToast({
+                        title: '已取消收藏',
+                        icon: 'success'
+                    })
+
+                    // 重新加载收藏列表
+                    this.loadFavoriteList()
+                } else {
+                    wx.showToast({
+                        title: removeResult.error || '操作失败',
+                        icon: 'none',
+                        duration: 2000
+                    })
+                }
+            }
+        } catch (error) {
+            wx.hideLoading()
+            console.error('取消收藏失败:', error)
+            wx.showToast({
+                title: '操作失败，请重试',
+                icon: 'none',
+                duration: 2000
+            })
+        }
+    },
   // =============== 数据加载 ===============
 
   async loadFavoriteList() {
@@ -51,8 +116,9 @@ Page({
 
     try {
       // 直接从数据库获取收藏列表，不使用本地缓存
-      if (app.globalData.isLoggedIn && app.globalData.userInfo) {
-        const result = await apiService.user.getFavorites(app.globalData.userInfo.id)
+      console.log(this.data.userInfo)
+      console.log(this.data.loading)
+        const result = await apiService.user.getFavorites(this.data.userInfo.id)
 
         if (result.success && result.data) {
           // 处理从数据库获取的收藏数据
@@ -90,14 +156,7 @@ Page({
             error: null
           })
         }
-      } else {
-        // 未登录用户，收藏列表为空
-        this.setData({
-          favoriteList: [],
-          loading: false,
-          error: null
-        })
-      }
+
 
     } catch (error) {
       console.error('加载收藏列表失败:', error)
@@ -221,64 +280,6 @@ Page({
     // 阻止事件冒泡，防止弹窗关闭
   },
 
-  async removeFromFavorites(e) {
-    const id = e.currentTarget.dataset.id || this.data.selectedItem?.id
-
-    if (!id) return
-
-    try {
-      const result = await wx.showModal({
-        title: '取消收藏',
-        content: '确定要取消收藏这个内容吗？',
-        confirmText: '确定',
-        cancelText: '取消'
-      })
-
-      if (result.confirm) {
-        // 显示加载提示
-        wx.showLoading({
-          title: '正在取消收藏...',
-          mask: true
-        })
-
-        // 直接调用API删除收藏
-        const removeResult = await apiService.user.removeFavorite(
-          app.globalData.userInfo.id,
-          id
-        )
-
-        wx.hideLoading()
-
-        if (removeResult.success) {
-          // 关闭弹窗
-          this.hideActionModal()
-
-          wx.showToast({
-            title: '已取消收藏',
-            icon: 'success'
-          })
-
-          // 重新加载收藏列表
-          this.loadFavoriteList()
-        } else {
-          wx.showToast({
-            title: removeResult.error || '操作失败',
-            icon: 'none',
-            duration: 2000
-          })
-        }
-      }
-    } catch (error) {
-      wx.hideLoading()
-      console.error('取消收藏失败:', error)
-      wx.showToast({
-        title: '操作失败，请重试',
-        icon: 'none',
-        duration: 2000
-      })
-    }
-  },
-
   shareItem() {
     const item = this.data.selectedItem
     if (!item) return
@@ -366,10 +367,6 @@ Page({
     })
   },
 
-  retryLoad() {
-    this.setData({ error: null })
-    this.loadFavoriteList()
-  },
 
   // =============== 登录相关 ===============
 

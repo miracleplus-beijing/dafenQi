@@ -198,16 +198,6 @@ Page({
         }
       })
 
-      // 清除全局状态
-      try {
-        const app = getApp()
-        if (app && app.globalData) {
-          app.globalData.isLoggedIn = false
-          app.globalData.userInfo = null
-        }
-      } catch (appError) {
-        console.warn('清除全局状态失败:', appError)
-      }
 
       wx.hideLoading()
       wx.showToast({
@@ -296,6 +286,7 @@ Page({
   },
   async checkLoginStatus() {
     const currentUser = await authService.getCurrentUser()
+    console.log(currentUser)
     const isLoggedIn = await authService.checkLoginStatus()
 
     this.setData({
@@ -440,8 +431,7 @@ Page({
         }
         // 更新页面数据
         this.setData({ userInfo: normalized })
-        // 更新全局数据
-        app.globalData.userInfo = normalized
+        
         
         wx.hideLoading()
         wx.showToast({

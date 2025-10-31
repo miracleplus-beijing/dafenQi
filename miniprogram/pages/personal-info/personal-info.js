@@ -21,7 +21,7 @@ Page({
   },
 
   // 加载用户数据
-  loadUserData: function() {
+  loadUserData () {
     const globalUserInfo = app.globalData.userInfo
     const favoriteList = app.globalData.favoriteList || []
     const historyList = app.globalData.historyList || []

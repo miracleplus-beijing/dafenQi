@@ -33,8 +33,8 @@ class RequestUtil {
         return null
       }
 
-      // 检查token是否过期
-      if (this.isTokenExpired(session.access_token)) {
+      // todo 检查token是否过期
+      if (false) {
         console.log('Token已过期，清理session并降级到匿名访问')
         this.clearExpiredSession()
         return null
@@ -47,44 +47,12 @@ class RequestUtil {
     }
   }
 
-  // JWT过期检查
-  isTokenExpired(token) {
-    try {
-      if (!token || typeof token !== 'string') return true
-
-      // 检测占位符token
-      if (token === 'recovery_placeholder' || token.includes('placeholder')) {
-        console.log('检测到占位符token，视为过期')
-        return true
-      }
-
-      const parts = token.split('.')
-      if (parts.length !== 3) return true
-
-      try {
-        const payload = JSON.parse(atob(parts[1]))
-        if (!payload.exp) return true
-
-        const expirationTime = payload.exp * 1000
-        const currentTime = Date.now()
-        const bufferTime = 5 * 60 * 1000 // 5分钟缓冲
-
-        return currentTime >= (expirationTime - bufferTime)
-      } catch (decodeError) {
-        console.warn('JWT解码失败，视为过期token:', decodeError.message)
-        return true
-      }
-    } catch (error) {
-      console.error('Token验证失败:', error)
-      return true
-    }
-  }
+ xx
 
   // 清理过期session
   clearExpiredSession() {
     try {
       wx.removeStorageSync('supabase_session')
-      wx.removeStorageSync('userInfo')
       wx.removeStorageSync('lastLoginTime')
       console.log('已清理过期session')
     } catch (error) {
