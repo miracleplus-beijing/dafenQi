@@ -171,26 +171,6 @@ Page({
   async loadPopularRecommendations() {
     try {
       console.log('加载热门推荐作为降级方案')
-
-      // 防御性检查：确保apiService和recommendation存在
-      if (!apiService) {
-        console.error('apiService未加载，使用静态内容')
-        this.loadStaticRecommendations()
-        return
-      }
-
-      if (!apiService.recommendation) {
-        console.error('apiService.recommendation未加载，使用静态内容')
-        this.loadStaticRecommendations()
-        return
-      }
-
-      if (typeof apiService.recommendation.getPopular !== 'function') {
-        console.error('apiService.recommendation.getPopular方法不存在，使用静态内容')
-        this.loadStaticRecommendations()
-        return
-      }
-
       const result = await apiService.recommendation.getPopular(20)
 
       if (result.success) {

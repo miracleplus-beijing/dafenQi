@@ -89,7 +89,7 @@ text {
     position: relative;
     z-index: 2;
     background: white;
-    padding: 0 60rpx;
+    padding: 0;
     margin-top: -20rpx;
     border-radius: 20rpx;
     overflow: hidden;
@@ -104,7 +104,7 @@ text {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 32rpx 0;
+    padding: 32rpx 60rpx;
     border-bottom: 1rpx solid #F0F0F0;
     transition: background-color 0.2s ease;
 }

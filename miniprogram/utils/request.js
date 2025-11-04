@@ -47,7 +47,6 @@ class RequestUtil {
     }
   }
 
- xx
 
   // 清理过期session
   clearExpiredSession() {
@@ -57,6 +56,45 @@ class RequestUtil {
       console.log('已清理过期session')
     } catch (error) {
       console.error('清理session失败:', error)
+    }
+  }
+
+  // 退出登录状态
+  logoutUser() {
+    try {
+      // 清理本地存储的认证信息
+      wx.removeStorageSync('supabase_session')
+      wx.removeStorageSync('lastLoginTime')
+
+      // 更新全局状态
+      const app = getApp()
+      if (app && app.globalData) {
+        app.globalData.userInfo = null
+        app.globalData.isLoggedIn = false
+        app.globalData.isGuestMode = true
+        // 清理用户相关数据
+        app.globalData.favoriteList = []
+        app.globalData.historyList = []
+      }
+
+      console.log('用户已退出登录')
+
+      // 显示提示消息
+      wx.showToast({
+        title: '登录已过期，请重新登录',
+        icon: 'none',
+        duration: 2000
+      })
+
+      // 延迟跳转到登录页面，让用户看到提示
+      setTimeout(() => {
+        wx.reLaunch({
+          url: '/pages/login/login'
+        })
+      }, 1500)
+
+    } catch (error) {
+      console.error('退出登录失败:', error)
     }
   }
 
@@ -146,6 +184,26 @@ class RequestUtil {
             resolve(res.data)
           } else if (res.statusCode === 401) {
             // 401错误的智能处理
+            console.log('收到401错误，认证失败')
+
+            // 如果当前请求需要认证，说明token可能已经失效
+            if (needAuth) {
+              // 检查是否有存储的token，如果有说明token失效了
+              try {
+                const session = wx.getStorageSync('supabase_session')
+                if (session?.access_token) {
+                  // 有token但仍然401，说明token已失效，执行退出登录
+                  console.log('Token失效，执行退出登录')
+                  this.logoutUser()
+                  reject(new AuthRequiredError('登录已过期，请重新登录'))
+                  return
+                }
+              } catch (error) {
+                console.error('检查session失败:', error)
+              }
+            }
+
+            // 原有的降级处理逻辑
             if (needAuth && retryWithoutAuth && this.canUseAnonymousAccess(url)) {
               console.log('JWT认证失败，自动重试匿名访问')
               this.request({
