@@ -75,7 +75,6 @@ Page({
     playbackSpeed: 1.0, // 当前播放速度
 
     // 智能降级和用户体验相关
-    isLoggedIn: false, // 登录状态
     showLoginTip: false, // 显示登录提示
     loginTipMessage: '', // 登录提示消息
     isPersonalized: true, // 是否为个性化推荐
@@ -91,9 +90,6 @@ Page({
 
   onLoad: function (options) {
     console.log('漫游页面加载', options)
-
-    // 检查登录状态
-    this.checkLoginStatus()
 
     // 初始化音频上下文
     this.initAudioContext()
@@ -114,17 +110,6 @@ Page({
     }
   },
 
-  // 检查登录状态
-  checkLoginStatus() {
-    const isLoggedIn = app.globalData.isLoggedIn
-
-    this.setData({
-      isLoggedIn: isLoggedIn
-    })
-
-    console.log('用户登录状态:', isLoggedIn)
-  },
-
   // 智能降级的个性化推荐加载
   async loadPersonalizedRecommendations() {
     try {
@@ -132,9 +117,9 @@ Page({
       this.setData({ recommendationsLoading: true })
 
       // 智能降级逻辑：优先尝试个性化推荐
-      if (this.data.isLoggedIn && userInfo && userInfo.id) {
+      if (app.globalData.isLoggedIn && userInfo && userInfo.id) {
         console.log('尝试加载个性化推荐')
-        const result = await apiService.recommendation.getPersonalized(userInfo.id, {
+        const result = await apiService.recommendation.getPersonalizedRecommendations(userInfo.id, {
           algorithm: 'hybrid',
           count: 20,
           includeReasons: true
@@ -171,7 +156,7 @@ Page({
   async loadPopularRecommendations() {
     try {
       console.log('加载热门推荐作为降级方案')
-      const result = await apiService.recommendation.getPopular(20)
+      const result = await apiService.recommendation.getPopularRecommendations(20)
 
       if (result.success) {
         this.setData({
@@ -255,8 +240,8 @@ Page({
     // 记录推荐点击行为，用于优化推荐算法（使用防护代码）
       try {
         // 防护检查：确保方法存在
-        if (apiService && apiService.recommendation && typeof apiService.recommendation.recordClick === 'function') {
-          await apiService.recommendation.recordClick(
+        if (apiService && apiService.recommendation && typeof apiService.recommendation.recordRecommendationClick === 'function') {
+          await apiService.recommendation.recordRecommendationClick(
             user.id,
             podcast.id,
             null, // recommendationId
@@ -277,7 +262,6 @@ Page({
   async handlePodcastFromSearch(podcastId, shouldAutoPlay = false) {
     console.log('处理搜索跳转播客:', podcastId, '自动播放:', shouldAutoPlay)
     
-    try {
       // 显示加载状态
       this.setData({ 
         loading: true,
@@ -313,21 +297,7 @@ Page({
         await this.fetchAndInsertPodcast(podcastId, shouldAutoPlay)
       }
       
-    } catch (error) {
-      console.error('处理搜索跳转播客失败:', error)
-      this.setData({ 
-        loading: false,
-        audioLoadingVisible: false
-      })
-      wx.showToast({
-        title: '播客加载失败',
-        icon: 'none',
-        duration: 2000
-      })
-      
-      // 失败时仍然加载正常列表
-      this.loadPodcastData()
-    }
+
   },
 
   // 获取并插入特定播客到列表
@@ -387,32 +357,6 @@ Page({
   checkTitleScrolling() {
     // 纯CSS方案，无需JavaScript干预
     // 滚动逻辑已在WXML和WXSS中实现
-  },
-  debugTitleWidth() {
-    const { podcastList, currentIndex } = this.data
-    if (!podcastList.length || currentIndex < 0) return
-    
-    const currentPodcast = podcastList[currentIndex]
-    if (!currentPodcast) return
-    
-    const query = this.createSelectorQuery()
-    query.select('.podcast-title').boundingClientRect()
-    query.select('.podcast-title-container').boundingClientRect()
-    query.exec((res) => {
-      if (res[0] && res[1]) {
-        console.log('=== 标题宽度调试信息 ===')
-        console.log('标题实际宽度:', res[0].width, 'px')
-        console.log('容器宽度:', res[1].width, 'px')
-        console.log('超出宽度:', res[0].width - res[1].width, 'px')
-        console.log('当前播客:', currentPodcast.title)
-        console.log('标题长度:', currentPodcast.title?.length)
-        console.log('是否需要滚动:', res[0].width > res[1].width)
-        console.log('当前是否有滚动类:', currentPodcast.title?.length > 15)
-        console.log('========================')
-      } else {
-        console.log('无法获取标题宽度信息')
-      }
-    })
   },
 
   // 检查全局播客状态
@@ -1359,8 +1303,8 @@ Page({
           if (currentPodcast) {
             try {
               // 防护检查：确保方法存在
-              if (apiService && apiService.recommendation && typeof apiService.recommendation.recordConversion === 'function') {
-                await apiService.recommendation.recordConversion(
+              if (apiService && apiService.recommendation && typeof apiService.recommendation.recordUserConversion === 'function') {
+                await apiService.recommendation.recordUserConversion(
                   userId,
                   podcastId,
                   'favorite',
@@ -2111,38 +2055,5 @@ Page({
     console.log('自动播放命令已发送，等待状态回调')
   },
 
-  // 检查是否首次使用自动播放功能
-  checkAutoPlayFirstTime: function() {
-    try {
-      const hasSeenAutoPlayTip = wx.getStorageSync('hasSeenAutoPlayTip')
-      if (!hasSeenAutoPlayTip) {
-        // 首次访问，显示自动播放功能说明
-        setTimeout(() => {
-          wx.showModal({
-            title: '✨ 新功能提示',
-            content: '现在支持下滑自动播放！滑动到下一个播客时会自动开始播放。您可以在设置中关闭此功能。',
-            confirmText: '我知道了',
-            cancelText: '关闭自动播放',
-            success: (res) => {
-              if (!res.confirm) {
-                // 用户选择关闭自动播放
-                this.setData({ autoPlayOnSwipe: false })
-                wx.setStorageSync('autoPlayOnSwipe', false)
-              }
-              // 标记用户已看过提示
-              wx.setStorageSync('hasSeenAutoPlayTip', true)
-            }
-          })
-        }, 1000) // 页面加载1秒后显示
-      } else {
-        // 不是首次访问，从存储中读取用户设置
-        const autoPlaySetting = wx.getStorageSync('autoPlayOnSwipe')
-        if (autoPlaySetting !== '') {
-          this.setData({ autoPlayOnSwipe: autoPlaySetting })
-        }
-      }
-    } catch (error) {
-      console.error('检查自动播放首次使用失败:', error)
-    }
-  }
+  
 })
