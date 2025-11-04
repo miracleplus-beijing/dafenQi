@@ -5,9 +5,9 @@
 
 class SimilarityUtils {
   constructor() {
-    this.similarityCache = new Map()
-    this.CACHE_SIZE = 1000
-    this.CACHE_DURATION = 15 * 60 * 1000 // 15分钟缓存
+    this.similarityCache = new Map();
+    this.CACHE_SIZE = 1000;
+    this.CACHE_DURATION = 15 * 60 * 1000; // 15分钟缓存
   }
 
   /**
@@ -17,35 +17,40 @@ class SimilarityUtils {
    * @returns {number} 相似度 (-1 到 1)
    */
   cosineSimilarity(user1Ratings, user2Ratings) {
-    if (!user1Ratings || !user2Ratings || user1Ratings.size === 0 || user2Ratings.size === 0) {
-      return 0
+    if (
+      !user1Ratings ||
+      !user2Ratings ||
+      user1Ratings.size === 0 ||
+      user2Ratings.size === 0
+    ) {
+      return 0;
     }
 
     // 找到共同评分的物品
-    const commonItems = this.getCommonItems(user1Ratings, user2Ratings)
+    const commonItems = this.getCommonItems(user1Ratings, user2Ratings);
     if (commonItems.length === 0) {
-      return 0
+      return 0;
     }
 
     // 计算点积和模长
-    let dotProduct = 0
-    let norm1 = 0
-    let norm2 = 0
+    let dotProduct = 0;
+    let norm1 = 0;
+    let norm2 = 0;
 
     commonItems.forEach(itemId => {
-      const rating1 = user1Ratings.get(itemId)
-      const rating2 = user2Ratings.get(itemId)
-      
-      dotProduct += rating1 * rating2
-      norm1 += rating1 * rating1
-      norm2 += rating2 * rating2
-    })
+      const rating1 = user1Ratings.get(itemId);
+      const rating2 = user2Ratings.get(itemId);
+
+      dotProduct += rating1 * rating2;
+      norm1 += rating1 * rating1;
+      norm2 += rating2 * rating2;
+    });
 
     if (norm1 === 0 || norm2 === 0) {
-      return 0
+      return 0;
     }
 
-    return dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2))
+    return dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2));
   }
 
   /**
@@ -55,44 +60,50 @@ class SimilarityUtils {
    * @returns {number} 相关系数 (-1 到 1)
    */
   pearsonCorrelation(user1Ratings, user2Ratings) {
-    if (!user1Ratings || !user2Ratings || user1Ratings.size === 0 || user2Ratings.size === 0) {
-      return 0
+    if (
+      !user1Ratings ||
+      !user2Ratings ||
+      user1Ratings.size === 0 ||
+      user2Ratings.size === 0
+    ) {
+      return 0;
     }
 
-    const commonItems = this.getCommonItems(user1Ratings, user2Ratings)
+    const commonItems = this.getCommonItems(user1Ratings, user2Ratings);
     if (commonItems.length < 2) {
-      return 0
+      return 0;
     }
 
     // 计算平均值
-    let sum1 = 0, sum2 = 0
+    let sum1 = 0,
+      sum2 = 0;
     commonItems.forEach(itemId => {
-      sum1 += user1Ratings.get(itemId)
-      sum2 += user2Ratings.get(itemId)
-    })
+      sum1 += user1Ratings.get(itemId);
+      sum2 += user2Ratings.get(itemId);
+    });
 
-    const mean1 = sum1 / commonItems.length
-    const mean2 = sum2 / commonItems.length
+    const mean1 = sum1 / commonItems.length;
+    const mean2 = sum2 / commonItems.length;
 
     // 计算分子和分母
-    let numerator = 0
-    let denominator1 = 0
-    let denominator2 = 0
+    let numerator = 0;
+    let denominator1 = 0;
+    let denominator2 = 0;
 
     commonItems.forEach(itemId => {
-      const rating1 = user1Ratings.get(itemId) - mean1
-      const rating2 = user2Ratings.get(itemId) - mean2
-      
-      numerator += rating1 * rating2
-      denominator1 += rating1 * rating1
-      denominator2 += rating2 * rating2
-    })
+      const rating1 = user1Ratings.get(itemId) - mean1;
+      const rating2 = user2Ratings.get(itemId) - mean2;
+
+      numerator += rating1 * rating2;
+      denominator1 += rating1 * rating1;
+      denominator2 += rating2 * rating2;
+    });
 
     if (denominator1 === 0 || denominator2 === 0) {
-      return 0
+      return 0;
     }
 
-    return numerator / (Math.sqrt(denominator1) * Math.sqrt(denominator2))
+    return numerator / (Math.sqrt(denominator1) * Math.sqrt(denominator2));
   }
 
   /**
@@ -103,37 +114,43 @@ class SimilarityUtils {
    * @returns {number} 相似度
    */
   adjustedCosineSimilarity(user1Ratings, user2Ratings, itemRatings) {
-    if (!user1Ratings || !user2Ratings || !itemRatings || user1Ratings.size === 0 || user2Ratings.size === 0) {
-      return 0
+    if (
+      !user1Ratings ||
+      !user2Ratings ||
+      !itemRatings ||
+      user1Ratings.size === 0 ||
+      user2Ratings.size === 0
+    ) {
+      return 0;
     }
 
-    const commonItems = this.getCommonItems(user1Ratings, user2Ratings)
+    const commonItems = this.getCommonItems(user1Ratings, user2Ratings);
     if (commonItems.length === 0) {
-      return 0
+      return 0;
     }
 
-    let dotProduct = 0
-    let norm1 = 0
-    let norm2 = 0
+    let dotProduct = 0;
+    let norm1 = 0;
+    let norm2 = 0;
 
     commonItems.forEach(itemId => {
-      const rating1 = user1Ratings.get(itemId)
-      const rating2 = user2Ratings.get(itemId)
-      const itemAvg = this.getItemAverageRating(itemRatings, itemId)
-      
-      const adjustedRating1 = rating1 - itemAvg
-      const adjustedRating2 = rating2 - itemAvg
-      
-      dotProduct += adjustedRating1 * adjustedRating2
-      norm1 += adjustedRating1 * adjustedRating1
-      norm2 += adjustedRating2 * adjustedRating2
-    })
+      const rating1 = user1Ratings.get(itemId);
+      const rating2 = user2Ratings.get(itemId);
+      const itemAvg = this.getItemAverageRating(itemRatings, itemId);
+
+      const adjustedRating1 = rating1 - itemAvg;
+      const adjustedRating2 = rating2 - itemAvg;
+
+      dotProduct += adjustedRating1 * adjustedRating2;
+      norm1 += adjustedRating1 * adjustedRating1;
+      norm2 += adjustedRating2 * adjustedRating2;
+    });
 
     if (norm1 === 0 || norm2 === 0) {
-      return 0
+      return 0;
     }
 
-    return dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2))
+    return dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2));
   }
 
   /**
@@ -143,29 +160,34 @@ class SimilarityUtils {
    * @returns {number} 相似度
    */
   itemSimilarity(item1Ratings, item2Ratings) {
-    if (!item1Ratings || !item2Ratings || item1Ratings.size === 0 || item2Ratings.size === 0) {
-      return 0
+    if (
+      !item1Ratings ||
+      !item2Ratings ||
+      item1Ratings.size === 0 ||
+      item2Ratings.size === 0
+    ) {
+      return 0;
     }
 
     // 转换为物品评分向量格式
-    const ratings1 = new Map()
-    const ratings2 = new Map()
+    const ratings1 = new Map();
+    const ratings2 = new Map();
 
     // 找到共同用户
-    const commonUsers = []
+    const commonUsers = [];
     item1Ratings.forEach((rating, userId) => {
       if (item2Ratings.has(userId)) {
-        commonUsers.push(userId)
-        ratings1.set(userId, rating)
-        ratings2.set(userId, item2Ratings.get(userId))
+        commonUsers.push(userId);
+        ratings1.set(userId, rating);
+        ratings2.set(userId, item2Ratings.get(userId));
       }
-    })
+    });
 
     if (commonUsers.length === 0) {
-      return 0
+      return 0;
     }
 
-    return this.cosineSimilarity(ratings1, ratings2)
+    return this.cosineSimilarity(ratings1, ratings2);
   }
 
   /**
@@ -176,43 +198,43 @@ class SimilarityUtils {
    * @returns {Array} 相似度列表 [{userId, similarity}]
    */
   calculateUserSimilarities(ratingMatrix, targetUserId, method = 'cosine') {
-    const targetRatings = ratingMatrix.get(targetUserId)
+    const targetRatings = ratingMatrix.get(targetUserId);
     if (!targetRatings || targetRatings.size === 0) {
-      return []
+      return [];
     }
 
-    const similarities = []
+    const similarities = [];
 
     ratingMatrix.forEach((userRatings, userId) => {
-      if (userId === targetUserId) return
+      if (userId === targetUserId) return;
 
-      let similarity = 0
+      let similarity = 0;
       switch (method) {
         case 'cosine':
-          similarity = this.cosineSimilarity(targetRatings, userRatings)
-          break
+          similarity = this.cosineSimilarity(targetRatings, userRatings);
+          break;
         case 'pearson':
-          similarity = this.pearsonCorrelation(targetRatings, userRatings)
-          break
+          similarity = this.pearsonCorrelation(targetRatings, userRatings);
+          break;
         case 'adjusted':
           // 需要额外的物品平均评分数据
-          similarity = this.cosineSimilarity(targetRatings, userRatings) // 简化处理
-          break
+          similarity = this.cosineSimilarity(targetRatings, userRatings); // 简化处理
+          break;
         default:
-          similarity = this.cosineSimilarity(targetRatings, userRatings)
+          similarity = this.cosineSimilarity(targetRatings, userRatings);
       }
 
       if (similarity > 0) {
         similarities.push({
           userId,
           similarity,
-          commonItems: this.getCommonItems(targetRatings, userRatings).length
-        })
+          commonItems: this.getCommonItems(targetRatings, userRatings).length,
+        });
       }
-    })
+    });
 
     // 按相似度排序
-    return similarities.sort((a, b) => b.similarity - a.similarity)
+    return similarities.sort((a, b) => b.similarity - a.similarity);
   }
 
   /**
@@ -222,30 +244,30 @@ class SimilarityUtils {
    * @returns {Array} 相似度列表 [{itemId, similarity}]
    */
   calculateItemSimilarities(ratingMatrix, targetItemId) {
-    const itemRatings = this.transformToItemMatrix(ratingMatrix)
-    const targetItemRating = itemRatings.get(targetItemId)
-    
+    const itemRatings = this.transformToItemMatrix(ratingMatrix);
+    const targetItemRating = itemRatings.get(targetItemId);
+
     if (!targetItemRating || targetItemRating.size === 0) {
-      return []
+      return [];
     }
 
-    const similarities = []
+    const similarities = [];
 
     itemRatings.forEach((itemRating, itemId) => {
-      if (itemId === targetItemId) return
+      if (itemId === targetItemId) return;
 
-      const similarity = this.itemSimilarity(targetItemRating, itemRating)
-      
+      const similarity = this.itemSimilarity(targetItemRating, itemRating);
+
       if (similarity > 0) {
         similarities.push({
           itemId,
           similarity,
-          commonUsers: this.getCommonItems(targetItemRating, itemRating).length
-        })
+          commonUsers: this.getCommonItems(targetItemRating, itemRating).length,
+        });
       }
-    })
+    });
 
-    return similarities.sort((a, b) => b.similarity - a.similarity)
+    return similarities.sort((a, b) => b.similarity - a.similarity);
   }
 
   /**
@@ -254,18 +276,18 @@ class SimilarityUtils {
    * @returns {Map} 物品-用户评分矩阵
    */
   transformToItemMatrix(userItemMatrix) {
-    const itemUserMatrix = new Map()
+    const itemUserMatrix = new Map();
 
     userItemMatrix.forEach((itemRatings, userId) => {
       itemRatings.forEach((rating, itemId) => {
         if (!itemUserMatrix.has(itemId)) {
-          itemUserMatrix.set(itemId, new Map())
+          itemUserMatrix.set(itemId, new Map());
         }
-        itemUserMatrix.get(itemId).set(userId, rating)
-      })
-    })
+        itemUserMatrix.get(itemId).set(userId, rating);
+      });
+    });
 
-    return itemUserMatrix
+    return itemUserMatrix;
   }
 
   /**
@@ -275,15 +297,15 @@ class SimilarityUtils {
    * @returns {Array} 共同项目ID数组
    */
   getCommonItems(ratings1, ratings2) {
-    const commonItems = []
-    
+    const commonItems = [];
+
     ratings1.forEach((rating, itemId) => {
       if (ratings2.has(itemId)) {
-        commonItems.push(itemId)
+        commonItems.push(itemId);
       }
-    })
+    });
 
-    return commonItems
+    return commonItems;
   }
 
   /**
@@ -293,17 +315,17 @@ class SimilarityUtils {
    * @returns {number} 平均评分
    */
   getItemAverageRating(itemRatings, itemId) {
-    const ratings = itemRatings.get(itemId)
+    const ratings = itemRatings.get(itemId);
     if (!ratings || ratings.size === 0) {
-      return 0
+      return 0;
     }
 
-    let sum = 0
+    let sum = 0;
     ratings.forEach(rating => {
-      sum += rating
-    })
+      sum += rating;
+    });
 
-    return sum / ratings.size
+    return sum / ratings.size;
   }
 
   /**
@@ -313,15 +335,15 @@ class SimilarityUtils {
    */
   getUserAverageRating(userRatings) {
     if (!userRatings || userRatings.size === 0) {
-      return 0
+      return 0;
     }
 
-    let sum = 0
+    let sum = 0;
     userRatings.forEach(rating => {
-      sum += rating
-    })
+      sum += rating;
+    });
 
-    return sum / userRatings.size
+    return sum / userRatings.size;
   }
 
   /**
@@ -332,10 +354,10 @@ class SimilarityUtils {
    * @returns {Array} 过滤后的相似度数组
    */
   filterSimilarities(similarities, minSimilarity = 0.1, minCommonItems = 2) {
-    return similarities.filter(sim => 
-      sim.similarity >= minSimilarity && 
-      sim.commonItems >= minCommonItems
-    )
+    return similarities.filter(
+      sim =>
+        sim.similarity >= minSimilarity && sim.commonItems >= minCommonItems
+    );
   }
 
   /**
@@ -345,7 +367,7 @@ class SimilarityUtils {
    * @returns {Array} Top N相似的用户/物品
    */
   getTopNSimilar(similarities, n = 10) {
-    return similarities.slice(0, n)
+    return similarities.slice(0, n);
   }
 
   /**
@@ -357,34 +379,34 @@ class SimilarityUtils {
   async computeWithCache(cacheKey, computeFunction) {
     // 检查内存缓存
     if (this.similarityCache.has(cacheKey)) {
-      const cached = this.similarityCache.get(cacheKey)
+      const cached = this.similarityCache.get(cacheKey);
       if (Date.now() - cached.timestamp < this.CACHE_DURATION) {
-        return cached.data
+        return cached.data;
       }
     }
 
     // 执行计算
-    const result = await computeFunction()
+    const result = await computeFunction();
 
     // 缓存结果 (LRU策略)
     if (this.similarityCache.size >= this.CACHE_SIZE) {
-      const firstKey = this.similarityCache.keys().next().value
-      this.similarityCache.delete(firstKey)
+      const firstKey = this.similarityCache.keys().next().value;
+      this.similarityCache.delete(firstKey);
     }
 
     this.similarityCache.set(cacheKey, {
       data: result,
-      timestamp: Date.now()
-    })
+      timestamp: Date.now(),
+    });
 
-    return result
+    return result;
   }
 
   /**
    * 清理缓存
    */
   clearCache() {
-    this.similarityCache.clear()
+    this.similarityCache.clear();
   }
 
   /**
@@ -394,12 +416,13 @@ class SimilarityUtils {
     return {
       size: this.similarityCache.size,
       maxSize: this.CACHE_SIZE,
-      usageRate: (this.similarityCache.size / this.CACHE_SIZE * 100).toFixed(2) + '%'
-    }
+      usageRate:
+        ((this.similarityCache.size / this.CACHE_SIZE) * 100).toFixed(2) + '%',
+    };
   }
 }
 
 // 创建单例实例
-const similarityUtils = new SimilarityUtils()
+const similarityUtils = new SimilarityUtils();
 
-module.exports = similarityUtils
+module.exports = similarityUtils;

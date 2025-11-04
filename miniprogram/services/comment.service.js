@@ -3,20 +3,21 @@
 
 class CommentService {
   constructor() {
-    this.supabaseUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co'
-    this.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmZjYWZnbmh6amlhdXVrc3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0MjY4NjAsImV4cCI6MjA3MTAwMjg2MH0.uxO5eyw0Usyd59UKz-S7bTrmOnNPg9Ld9wJ6pDMIQUA'
+    this.supabaseUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co';
+    this.supabaseAnonKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmZjYWZnbmh6amlhdXVrc3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0MjY4NjAsImV4cCI6MjA3MTAwMjg2MH0.uxO5eyw0Usyd59UKz-S7bTrmOnNPg9Ld9wJ6pDMIQUA';
   }
 
   // 通用的Supabase请求方法
   async supabaseRequest(endpoint, options = {}) {
-    const url = `${this.supabaseUrl}/rest/v1/${endpoint}`
+    const url = `${this.supabaseUrl}/rest/v1/${endpoint}`;
     const headers = {
-      'apikey': this.supabaseAnonKey,
-      'Authorization': `Bearer ${this.supabaseAnonKey}`,
+      apikey: this.supabaseAnonKey,
+      Authorization: `Bearer ${this.supabaseAnonKey}`,
       'Content-Type': 'application/json',
-      'Prefer': 'return=representation',
-      ...options.headers
-    }
+      Prefer: 'return=representation',
+      ...options.headers,
+    };
 
     try {
       const response = await new Promise((resolve, reject) => {
@@ -26,131 +27,132 @@ class CommentService {
           header: headers,
           data: options.data,
           success: resolve,
-          fail: reject
-        })
-      })
+          fail: reject,
+        });
+      });
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return {
           success: true,
           data: response.data,
-          statusCode: response.statusCode
-        }
+          statusCode: response.statusCode,
+        };
       } else {
-        console.error('Supabase请求失败:', response)
+        console.error('Supabase请求失败:', response);
         return {
           success: false,
           error: response.data?.message || `请求失败 (${response.statusCode})`,
-          statusCode: response.statusCode
-        }
+          statusCode: response.statusCode,
+        };
       }
     } catch (error) {
-      console.error('网络请求失败:', error)
+      console.error('网络请求失败:', error);
       return {
         success: false,
         error: error.errMsg || '网络请求失败',
-        statusCode: 0
-      }
+        statusCode: 0,
+      };
     }
   }
 
   // 获取播客的所有评论（包含用户信息）
   async getCommentsByPodcastId(podcastId) {
     try {
-      console.log('获取播客评论列表:', podcastId)
+      console.log('获取播客评论列表:', podcastId);
 
       // 使用Supabase的关联查询获取评论及用户信息
-      const query = `podcast_id=eq.${podcastId}&select=*,user:user_id(id,nickname,avatar_url)&order=created_at.desc`
+      const query = `podcast_id=eq.${podcastId}&select=*,user:user_id(id,nickname,avatar_url)&order=created_at.desc`;
 
-      const result = await this.supabaseRequest(`comments?${query}`)
+      const result = await this.supabaseRequest(`comments?${query}`);
 
       if (result.success) {
-        const comments = result.data.map(comment => this.formatCommentData(comment))
+        const comments = result.data.map(comment =>
+          this.formatCommentData(comment)
+        );
 
-        console.log(`成功获取${comments.length}条评论`)
+        console.log(`成功获取${comments.length}条评论`);
         return {
           success: true,
-          data: comments
-        }
+          data: comments,
+        };
       } else {
-        throw new Error(result.error)
+        throw new Error(result.error);
       }
     } catch (error) {
-      console.error('获取评论列表失败:', error)
+      console.error('获取评论列表失败:', error);
       return {
         success: false,
         error: error.message || '获取评论失败',
-        data: []
-      }
+        data: [],
+      };
     }
   }
 
   // 获取悬浮播放条显示的评论（置顶 > 高赞 > 随机）
   async getPinnedOrPopularComment(podcastId) {
     try {
-      console.log('获取悬浮播放条评论:', podcastId)
+      console.log('获取悬浮播放条评论:', podcastId);
 
       // 第1优先级：置顶评论
-      let query = `podcast_id=eq.${podcastId}&is_pinned=eq.true&is_deleted=eq.false&select=*,user:user_id(id,nickname,avatar_url)&limit=1`
-      let result = await this.supabaseRequest(`comments?${query}`)
+      let query = `podcast_id=eq.${podcastId}&is_pinned=eq.true&is_deleted=eq.false&select=*,user:user_id(id,nickname,avatar_url)&limit=1`;
+      let result = await this.supabaseRequest(`comments?${query}`);
 
       if (result.success && result.data.length > 0) {
-        console.log('找到置顶评论')
+        console.log('找到置顶评论');
         return {
           success: true,
-          data: this.formatCommentData(result.data[0])
-        }
+          data: this.formatCommentData(result.data[0]),
+        };
       }
 
       // 第2优先级：高赞评论（like_count >= 10）
-      query = `podcast_id=eq.${podcastId}&like_count=gte.10&is_deleted=eq.false&select=*,user:user_id(id,nickname,avatar_url)&order=like_count.desc&limit=1`
-      result = await this.supabaseRequest(`comments?${query}`)
+      query = `podcast_id=eq.${podcastId}&like_count=gte.10&is_deleted=eq.false&select=*,user:user_id(id,nickname,avatar_url)&order=like_count.desc&limit=1`;
+      result = await this.supabaseRequest(`comments?${query}`);
 
       if (result.success && result.data.length > 0) {
-        console.log('找到高赞评论')
+        console.log('找到高赞评论');
         return {
           success: true,
-          data: this.formatCommentData(result.data[0])
-        }
+          data: this.formatCommentData(result.data[0]),
+        };
       }
 
       // 第3优先级：随机评论
-      query = `podcast_id=eq.${podcastId}&is_deleted=eq.false&select=*,user:user_id(id,nickname,avatar_url)`
-      result = await this.supabaseRequest(`comments?${query}`)
+      query = `podcast_id=eq.${podcastId}&is_deleted=eq.false&select=*,user:user_id(id,nickname,avatar_url)`;
+      result = await this.supabaseRequest(`comments?${query}`);
 
       if (result.success && result.data.length > 0) {
-        const randomIndex = Math.floor(Math.random() * result.data.length)
-        console.log('使用随机评论:', randomIndex, '/', result.data.length)
+        const randomIndex = Math.floor(Math.random() * result.data.length);
+        console.log('使用随机评论:', randomIndex, '/', result.data.length);
         return {
           success: true,
-          data: this.formatCommentData(result.data[randomIndex])
-        }
+          data: this.formatCommentData(result.data[randomIndex]),
+        };
       }
 
       // 没有评论时返回null
-      console.log('没有找到任何评论')
+      console.log('没有找到任何评论');
       return {
         success: true,
-        data: null
-      }
-
+        data: null,
+      };
     } catch (error) {
-      console.error('获取悬浮播放条评论失败:', error)
+      console.error('获取悬浮播放条评论失败:', error);
       return {
         success: false,
         error: error.message || '获取评论失败',
-        data: null
-      }
+        data: null,
+      };
     }
   }
 
   // 发表评论（自动记录音频时间点）
   async createComment(userId, podcastId, content, audioTimestamp = 0) {
     try {
-      console.log('发表评论:', { userId, podcastId, audioTimestamp })
+      console.log('发表评论:', { userId, podcastId, audioTimestamp });
 
       if (!userId || !podcastId || !content || !content.trim()) {
-        throw new Error('缺少必要参数')
+        throw new Error('缺少必要参数');
       }
 
       const commentData = {
@@ -160,50 +162,52 @@ class CommentService {
         audio_timestamp: audioTimestamp,
         like_count: 0,
         is_deleted: false,
-        is_pinned: false
-      }
+        is_pinned: false,
+      };
 
       const result = await this.supabaseRequest('comments', {
         method: 'POST',
-        data: commentData
-      })
+        data: commentData,
+      });
 
       if (result.success && result.data.length > 0) {
-        console.log('评论发表成功')
+        console.log('评论发表成功');
         return {
           success: true,
-          data: result.data[0]
-        }
+          data: result.data[0],
+        };
       } else {
-        throw new Error(result.error || '发表评论失败')
+        throw new Error(result.error || '发表评论失败');
       }
     } catch (error) {
-      console.error('发表评论失败:', error)
+      console.error('发表评论失败:', error);
       return {
         success: false,
-        error: error.message || '发表评论失败'
-      }
+        error: error.message || '发表评论失败',
+      };
     }
   }
 
   // 回复评论
   async replyToComment(userId, parentCommentId, content) {
     try {
-      console.log('回复评论:', { userId, parentCommentId })
+      console.log('回复评论:', { userId, parentCommentId });
 
       if (!userId || !parentCommentId || !content || !content.trim()) {
-        throw new Error('缺少必要参数')
+        throw new Error('缺少必要参数');
       }
 
       // 先获取父评论信息以获取podcast_id
-      const parentQuery = `id=eq.${parentCommentId}&select=podcast_id,audio_timestamp`
-      const parentResult = await this.supabaseRequest(`comments?${parentQuery}`)
+      const parentQuery = `id=eq.${parentCommentId}&select=podcast_id,audio_timestamp`;
+      const parentResult = await this.supabaseRequest(
+        `comments?${parentQuery}`
+      );
 
       if (!parentResult.success || parentResult.data.length === 0) {
-        throw new Error('父评论不存在')
+        throw new Error('父评论不存在');
       }
 
-      const parentComment = parentResult.data[0]
+      const parentComment = parentResult.data[0];
 
       const replyData = {
         user_id: userId,
@@ -213,124 +217,133 @@ class CommentService {
         audio_timestamp: parentComment.audio_timestamp, // 继承父评论的时间点
         like_count: 0,
         is_deleted: false,
-        is_pinned: false
-      }
+        is_pinned: false,
+      };
 
       const result = await this.supabaseRequest('comments', {
         method: 'POST',
-        data: replyData
-      })
+        data: replyData,
+      });
 
       if (result.success && result.data.length > 0) {
-        console.log('回复发表成功')
+        console.log('回复发表成功');
         return {
           success: true,
-          data: result.data[0]
-        }
+          data: result.data[0],
+        };
       } else {
-        throw new Error(result.error || '回复失败')
+        throw new Error(result.error || '回复失败');
       }
     } catch (error) {
-      console.error('回复评论失败:', error)
+      console.error('回复评论失败:', error);
       return {
         success: false,
-        error: error.message || '回复评论失败'
-      }
+        error: error.message || '回复评论失败',
+      };
     }
   }
 
   // 点赞评论
   async likeComment(userId, commentId) {
     try {
-      console.log('点赞评论:', { userId, commentId })
+      console.log('点赞评论:', { userId, commentId });
 
       if (!userId || !commentId) {
-        throw new Error('缺少必要参数')
+        throw new Error('缺少必要参数');
       }
 
       // 检查是否已经点赞过
-      const checkQuery = `user_id=eq.${userId}&comment_id=eq.${commentId}`
-      const checkResult = await this.supabaseRequest(`comment_likes?${checkQuery}`)
+      const checkQuery = `user_id=eq.${userId}&comment_id=eq.${commentId}`;
+      const checkResult = await this.supabaseRequest(
+        `comment_likes?${checkQuery}`
+      );
 
       if (checkResult.success && checkResult.data.length > 0) {
         // 已经点赞，执行取消点赞
-        await this.supabaseRequest(`comment_likes?user_id=eq.${userId}&comment_id=eq.${commentId}`, {
-          method: 'DELETE'
-        })
+        await this.supabaseRequest(
+          `comment_likes?user_id=eq.${userId}&comment_id=eq.${commentId}`,
+          {
+            method: 'DELETE',
+          }
+        );
 
         // 减少点赞数
-        await this.decrementLikeCount(commentId)
+        await this.decrementLikeCount(commentId);
 
         return {
           success: true,
-          data: { isLiked: false }
-        }
+          data: { isLiked: false },
+        };
       } else {
         // 未点赞，执行点赞
         await this.supabaseRequest('comment_likes', {
           method: 'POST',
           data: {
             user_id: userId,
-            comment_id: commentId
-          }
-        })
+            comment_id: commentId,
+          },
+        });
 
         // 增加点赞数
-        await this.incrementLikeCount(commentId)
+        await this.incrementLikeCount(commentId);
 
         return {
           success: true,
-          data: { isLiked: true }
-        }
+          data: { isLiked: true },
+        };
       }
     } catch (error) {
-      console.error('点赞评论失败:', error)
+      console.error('点赞评论失败:', error);
       return {
         success: false,
-        error: error.message || '操作失败'
-      }
+        error: error.message || '操作失败',
+      };
     }
   }
 
   // 增加评论点赞数
   async incrementLikeCount(commentId) {
     try {
-      const currentResult = await this.supabaseRequest(`comments?id=eq.${commentId}&select=like_count`)
+      const currentResult = await this.supabaseRequest(
+        `comments?id=eq.${commentId}&select=like_count`
+      );
 
       if (currentResult.success && currentResult.data.length > 0) {
-        const currentCount = currentResult.data[0].like_count || 0
-        const newCount = currentCount + 1
+        const currentCount = currentResult.data[0].like_count || 0;
+        const newCount = currentCount + 1;
 
         await this.supabaseRequest(`comments?id=eq.${commentId}`, {
           method: 'PATCH',
-          data: { like_count: newCount }
-        })
+          data: { like_count: newCount },
+        });
 
-        console.log(`评论 ${commentId} 点赞数更新为 ${newCount}`)
+        console.log(`评论 ${commentId} 点赞数更新为 ${newCount}`);
       }
     } catch (error) {
-      console.error('更新点赞数失败:', error)
+      console.error('更新点赞数失败:', error);
     }
   }
 
   // 减少评论点赞数
   async decrementLikeCount(commentId) {
     try {
-      const currentResult = await this.supabaseRequest(`comments?id=eq.${commentId}&select=like_count`)
+      const currentResult = await this.supabaseRequest(
+        `comments?id=eq.${commentId}&select=like_count`
+      );
 
       if (currentResult.success && currentResult.data.length > 0) {
-        const currentCount = currentResult.data[0].like_count || 0
-        const newCount = Math.max(0, currentCount - 1)
+        const currentCount = currentResult.data[0].like_count || 0;
+        const newCount = Math.max(0, currentCount - 1);
 
         await this.supabaseRequest(`comments?id=eq.${commentId}`, {
           method: 'PATCH',
-          data: { like_count: newCount }
-        })
+          data: { like_count: newCount },
+        });
 
-        console.log(`评论 ${commentId} 点赞数更新为 ${newCount}`)
+        console.log(`评论 ${commentId} 点赞数更新为 ${newCount}`);
       }
     } catch (error) {
-      console.error('更新点赞数失败:', error)
+      console.error('更新点赞数失败:', error);
     }
   }
 
@@ -338,7 +351,7 @@ class CommentService {
   formatCommentData(rawComment) {
     try {
       // 处理用户信息（可能是嵌套对象或单独字段）
-      const user = rawComment.user || rawComment.users || {}
+      const user = rawComment.user || rawComment.users || {};
 
       return {
         id: rawComment.id,
@@ -347,102 +360,107 @@ class CommentService {
         parent_id: rawComment.parent_id,
         content: rawComment.content || '',
         audio_timestamp: rawComment.audio_timestamp || 0,
-        timestamp_formatted: this.formatTimestamp(rawComment.audio_timestamp || 0),
+        timestamp_formatted: this.formatTimestamp(
+          rawComment.audio_timestamp || 0
+        ),
         like_count: rawComment.like_count || 0,
         is_pinned: rawComment.is_pinned || false,
         is_deleted: rawComment.is_deleted || false,
         // 用户信息
         user_nickname: user.nickname || '匿名用户',
-        user_avatar: user.avatar_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-avatar.png',
+        user_avatar:
+          user.avatar_url ||
+          'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-avatar.png',
         // 时间信息
         created_at: rawComment.created_at,
         updated_at: rawComment.updated_at,
         // UI状态
-        isLiked: false // 需要根据当前用户判断
-      }
+        isLiked: false, // 需要根据当前用户判断
+      };
     } catch (error) {
-      console.error('格式化评论数据失败:', error)
+      console.error('格式化评论数据失败:', error);
       return {
         id: rawComment.id,
         content: rawComment.content || '',
         user_nickname: '匿名用户',
-        user_avatar: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-avatar.png',
+        user_avatar:
+          'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-avatar.png',
         timestamp_formatted: '0:00',
-        like_count: 0
-      }
+        like_count: 0,
+      };
     }
   }
 
   // 格式化音频时间戳（秒 → MM:SS 或 H:MM:SS）
   formatTimestamp(seconds) {
-    if (!seconds || isNaN(seconds) || seconds < 0) return '0:00'
+    if (!seconds || isNaN(seconds) || seconds < 0) return '0:00';
 
-    const hours = Math.floor(seconds / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    const secs = Math.floor(seconds % 60)
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
 
     if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     } else {
-      return `${minutes}:${secs.toString().padStart(2, '0')}`
+      return `${minutes}:${secs.toString().padStart(2, '0')}`;
     }
   }
 
   // 置顶评论（管理员功能）
   async pinComment(commentId) {
     try {
-      console.log('置顶评论:', commentId)
+      console.log('置顶评论:', commentId);
 
       const result = await this.supabaseRequest(`comments?id=eq.${commentId}`, {
         method: 'PATCH',
-        data: { is_pinned: true }
-      })
+        data: { is_pinned: true },
+      });
 
       if (result.success) {
-        console.log('评论置顶成功')
+        console.log('评论置顶成功');
         return {
-          success: true
-        }
+          success: true,
+        };
       } else {
-        throw new Error(result.error)
+        throw new Error(result.error);
       }
     } catch (error) {
-      console.error('置顶评论失败:', error)
+      console.error('置顶评论失败:', error);
       return {
         success: false,
-        error: error.message || '置顶失败'
-      }
+        error: error.message || '置顶失败',
+      };
     }
   }
 
   // 取消置顶评论
   async unpinComment(commentId) {
     try {
-      console.log('取消置顶评论:', commentId)
+      console.log('取消置顶评论:', commentId);
 
       const result = await this.supabaseRequest(`comments?id=eq.${commentId}`, {
         method: 'PATCH',
-        data: { is_pinned: false }
-      })
+        data: { is_pinned: false },
+      });
 
       if (result.success) {
-        console.log('取消置顶成功')
+        console.log('取消置顶成功');
         return {
-          success: true
-        }
+          success: true,
+        };
       } else {
-        throw new Error(result.error)
+        throw new Error(result.error);
       }
     } catch (error) {
-      console.error('取消置顶失败:', error)
+      console.error('取消置顶失败:', error);
       return {
         success: false,
-        error: error.message || '取消置顶失败'
-      }
+        error: error.message || '取消置顶失败',
+      };
     }
   }
 }
 
 // 导出单例
-const commentService = new CommentService()
-module.exports = commentService
+const commentService = new CommentService();
+module.exports = commentService;

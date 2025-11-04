@@ -3,14 +3,12 @@
  * 使用Supabase Auth处理微信登录、用户信息管理等认证相关功能
  */
 
-const storageService = require('./storage.service.js')
-
 class AuthService {
   constructor() {
-    this.supabaseUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co'
-    this.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmZjYWZnbmh6amlhdXVrc3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0MjY4NjAsImV4cCI6MjA3MTAwMjg2MH0.uxO5eyw0Usyd59UKz-S7bTrmOnNPg9Ld9wJ6pDMIQUA'
-    this.storageService = require('./storage.service.js')
-
+    this.supabaseUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co';
+    this.supabaseAnonKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmZjYWZnbmh6amlhdXVrc3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0MjY4NjAsImV4cCI6MjA3MTAwMjg2MH0.uxO5eyw0Usyd59UKz-S7bTrmOnNPg9Ld9wJ6pDMIQUA';
+    this.storageService = require('./storage.service.js');
   }
 
   /**
@@ -20,38 +18,36 @@ class AuthService {
   async loginWithWechat() {
     try {
       // 1. 获取微信登录code
-      const loginResult = await this.getWechatLoginCode()
+      const loginResult = await this.getWechatLoginCode();
       if (!loginResult.code) {
-        throw new Error('获取微信登录code失败')
+        throw new Error('获取微信登录code失败');
       }
 
-      console.log('微信登录code获取成功:', loginResult.code)
+      console.log('微信登录code获取成功:', loginResult.code);
 
       // 2. 调用Edge Function进行认证
-      const authResult = await this.callWechatAuthFunction(loginResult.code)
+      const authResult = await this.callWechatAuthFunction(loginResult.code);
 
       if (!authResult.success) {
-        throw new Error(authResult.error || '认证失败')
+        throw new Error(authResult.error || '认证失败');
       }
 
       // 3. 设置会话
-      await this.setSession(authResult.session)
+      await this.setSession(authResult.session);
 
-      console.log(authResult)
+      console.log(authResult);
       // 4. 更新全局状态
-      const user = authResult.user
-      await this.saveUserSession(user)
+      const user = authResult.user;
+      await this.saveUserSession(user);
 
-
-      console.log('微信登录成功:', user)
-      return { success: true, user }
-
+      console.log('微信登录成功:', user);
+      return { success: true, user };
     } catch (error) {
-      console.error('微信登录失败:', error)
+      console.error('微信登录失败:', error);
       return {
         success: false,
-        error: error.message
-      }
+        error: error.message,
+      };
     }
   }
 
@@ -62,18 +58,18 @@ class AuthService {
   getWechatLoginCode() {
     return new Promise((resolve, reject) => {
       wx.login({
-        success: (res) => {
+        success: res => {
           if (res.code) {
-            resolve({ code: res.code })
+            resolve({ code: res.code });
           } else {
-            reject(new Error('微信登录失败: ' + res.errMsg))
+            reject(new Error('微信登录失败: ' + res.errMsg));
           }
         },
-        fail: (error) => {
-          reject(new Error('微信登录失败: ' + error.errMsg))
-        }
-      })
-    })
+        fail: error => {
+          reject(new Error('微信登录失败: ' + error.errMsg));
+        },
+      });
+    });
   }
 
   /**
@@ -85,27 +81,29 @@ class AuthService {
    */
   async callWechatAuthFunctionWithAuth(code, userInfo = null, accessToken) {
     try {
-      console.log('调用wechat-auth Edge Function (带认证)...', { code, hasUserInfo: !!userInfo })
+      console.log('调用wechat-auth Edge Function (带认证)...', {
+        code,
+        hasUserInfo: !!userInfo,
+      });
 
       const response = await this.supabaseRequest({
         url: '/functions/v1/wechat-auth',
         method: 'POST',
         data: {
           code: code,
-          userInfo: userInfo
+          userInfo: userInfo,
         },
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        }
-      })
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
 
-      console.log('Edge Function (带认证) 响应:', response)
-      return response
-
+      console.log('Edge Function (带认证) 响应:', response);
+      return response;
     } catch (error) {
-      console.error('调用Edge Function (带认证) 失败:', error)
-      throw error
+      console.error('调用Edge Function (带认证) 失败:', error);
+      throw error;
     }
   }
 
@@ -117,26 +115,25 @@ class AuthService {
    */
   async callWechatAuthFunction(code, userInfo = null) {
     try {
-      console.log('调用wechat-auth Edge Function...')
+      console.log('调用wechat-auth Edge Function...');
 
       const response = await this.supabaseRequest({
         url: '/functions/v1/wechat-auth',
         method: 'POST',
         data: {
           code: code,
-          userInfo: userInfo
+          userInfo: userInfo,
         },
         headers: {
-          'Content-Type': 'application/json'
-        }
-      })
+          'Content-Type': 'application/json',
+        },
+      });
 
-      console.log('Edge Function响应:', response)
-      return response
-
+      console.log('Edge Function响应:', response);
+      return response;
     } catch (error) {
-      console.error('调用Edge Function失败:', error)
-      throw error
+      console.error('调用Edge Function失败:', error);
+      throw error;
     }
   }
 
@@ -146,53 +143,51 @@ class AuthService {
    */
   async smartLogin() {
     try {
-      console.log('开始智能登录流程...')
+      console.log('开始智能登录流程...');
 
       // 1. 尝试进行微信登录
-      const loginResult = await this.loginWithWechat()
+      const loginResult = await this.loginWithWechat();
 
       if (!loginResult.success) {
         return {
           success: false,
           action: 'error',
-          error: loginResult.error
-        }
+          error: loginResult.error,
+        };
       }
 
-      const user = loginResult.user
+      const user = loginResult.user;
 
       // 2. 根据Edge Function返回的isNew字段判断用户类型
 
-      const isCompleted = this.checkProfileCompleteness(user)
-
+      const isCompleted = this.checkProfileCompleteness(user);
 
       if (user.isNew === true || !isCompleted) {
         // 新用户，需要跳转到完善个人信息页面
-        console.log('检测到新用户或者 信息缺失，需要完善个人信息')
+        console.log('检测到新用户或者 信息缺失，需要完善个人信息');
         return {
           success: true,
           action: 'goto_login',
           user: user,
-          message: '欢迎使用达芬Qi说！请完善您的个人信息'
-        }
+          message: '欢迎使用达芬Qi说！请完善您的个人信息',
+        };
       } else {
         // 老用户，直接跳转到profile
-        console.log('检测到老用户，直接登录')
+        console.log('检测到老用户，直接登录');
         return {
           success: true,
           action: 'goto_profile',
           user: user,
-          message: '欢迎回来！'
-        }
+          message: '欢迎回来！',
+        };
       }
-
     } catch (error) {
-      console.error('智能登录失败:', error)
+      console.error('智能登录失败:', error);
       return {
         success: false,
         action: 'error',
-        error: error.message
-      }
+        error: error.message,
+      };
     }
   }
 
@@ -202,14 +197,14 @@ class AuthService {
    * @returns {boolean} 是否完整
    */
   checkProfileCompleteness(user) {
-    if (!user) return false
+    if (!user) return false;
 
     // 检查必要的用户信息字段
-    const hasNickname = user.nickname || user.nickName
-    const hasAvatar = user.avatar_url || user.avatarUrl
+    const hasNickname = user.nickname || user.nickName;
+    const hasAvatar = user.avatar_url || user.avatarUrl;
 
     // 可以根据业务需求调整完整性标准
-    return !!(hasNickname && hasAvatar && user.id)
+    return !!(hasNickname && hasAvatar && user.id);
   }
 
   /**
@@ -217,56 +212,56 @@ class AuthService {
    * @param {Object} session - 会话信息
    */
   async setSession(session) {
-    console.log("set session: " + session )
+    console.log('set session: ' + session);
 
     // 保存到本地存储
     if (session) {
       try {
-        wx.setStorageSync('supabase_session', session)
-        wx.setStorageSync('lastLoginTime', Date.now())
+        wx.setStorageSync('supabase_session', session);
+        wx.setStorageSync('lastLoginTime', Date.now());
       } catch (error) {
-        console.error('保存会话到本地失败:', error)
+        console.error('保存会话到本地失败:', error);
       }
     }
   }
 
   /**
-   * 从本地存储恢复session 
+   * 从本地存储恢复session
    * @returns {Object} session结果
    */
   getSession() {
     try {
-      const session = wx.getStorageSync('supabase_session')
-      const lastLoginTime = wx.getStorageSync('lastLoginTime')
+      const session = wx.getStorageSync('supabase_session');
+      const lastLoginTime = wx.getStorageSync('lastLoginTime');
 
       if (!session) {
-        return { data: null , error: null }
+        return { data: null, error: null };
       }
 
       // 只检查基本的时间过期（7天），移除复杂的JWT验证
-      const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000
-      const isTimeExpired = !lastLoginTime || (Date.now() - lastLoginTime >= SESSION_DURATION)
+      const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
+      const isTimeExpired =
+        !lastLoginTime || Date.now() - lastLoginTime >= SESSION_DURATION;
 
       if (isTimeExpired) {
-        console.log('Session时间已过期，清理存储')
-        this.clearStorageSession()
-        return { data: null , error: null }
+        console.log('Session时间已过期，清理存储');
+        this.clearStorageSession();
+        return { data: null, error: null };
       }
 
       // 基本结构检查（简化）
       if (!session.access_token || !session.user || !session.user.id) {
-        console.warn('Session结构不完整，清理存储')
-        this.clearStorageSession()
-        return { data: null , error: null }
+        console.warn('Session结构不完整，清理存储');
+        this.clearStorageSession();
+        return { data: null, error: null };
       }
 
-      console.log('成功恢复session，用户:', session.user)
-      return { data: session , error: null }
-
+      console.log('成功恢复session，用户:', session.user);
+      return { data: session, error: null };
     } catch (error) {
-      console.error('从本地存储恢复session失败:', error)
-      this.clearStorageSession()
-      return { data: null, error: error.message }
+      console.error('从本地存储恢复session失败:', error);
+      this.clearStorageSession();
+      return { data: null, error: error.message };
     }
   }
 
@@ -278,49 +273,51 @@ class AuthService {
   validateSessionStructure(session) {
     try {
       if (!session || typeof session !== 'object') {
-        console.warn('Session不是有效对象')
-        return false
+        console.warn('Session不是有效对象');
+        return false;
       }
 
       // 检查必需字段
-      const requiredFields = ['access_token', 'user']
+      const requiredFields = ['access_token', 'user'];
       for (const field of requiredFields) {
         if (!session[field]) {
-          console.warn(`Session缺少必需字段: ${field}`)
-          return false
+          console.warn(`Session缺少必需字段: ${field}`);
+          return false;
         }
       }
 
       // 检查user对象结构
       if (!session.user.id || !session.user.email) {
-        console.warn('Session中的user对象结构无效')
-        return false
+        console.warn('Session中的user对象结构无效');
+        return false;
       }
 
       // 检查access_token格式
-      if (typeof session.access_token !== 'string' || session.access_token.trim() === '') {
-        console.warn('Session中的access_token格式无效')
-        return false
+      if (
+        typeof session.access_token !== 'string' ||
+        session.access_token.trim() === ''
+      ) {
+        console.warn('Session中的access_token格式无效');
+        return false;
       }
 
-      return true
+      return true;
     } catch (error) {
-      console.error('验证session结构时出错:', error)
-      return false
+      console.error('验证session结构时出错:', error);
+      return false;
     }
   }
-
 
   /**
    * 清理本地存储中的session
    */
   clearStorageSession() {
     try {
-      wx.removeStorageSync('supabase_session')
-      wx.removeStorageSync('lastLoginTime')
-      console.log('已清理本地存储中的session')
+      wx.removeStorageSync('supabase_session');
+      wx.removeStorageSync('lastLoginTime');
+      console.log('已清理本地存储中的session');
     } catch (error) {
-      console.error('清理本地存储session失败:', error)
+      console.error('清理本地存储session失败:', error);
     }
   }
 
@@ -333,72 +330,72 @@ class AuthService {
     try {
       // 严格的token格式验证
       if (!token || typeof token !== 'string' || token.trim() === '') {
-        console.warn('Token为空或格式无效')
-        return true
+        console.warn('Token为空或格式无效');
+        return true;
       }
 
-      const trimmedToken = token.trim()
-      const parts = trimmedToken.split('.')
+      const trimmedToken = token.trim();
+      const parts = trimmedToken.split('.');
 
       if (parts.length !== 3) {
-        console.warn('JWT token格式错误，parts长度:', parts.length)
-        return true
+        console.warn('JWT token格式错误，parts长度:', parts.length);
+        return true;
       }
 
       // 验证每个部分都不为空
       if (!parts[0] || !parts[1] || !parts[2]) {
-        console.warn('JWT token部分为空')
-        return true
+        console.warn('JWT token部分为空');
+        return true;
       }
 
       // 验证payload部分的Base64编码
-      const payload = parts[1]
+      const payload = parts[1];
 
       // 添加padding if needed
-      let paddedPayload = payload
+      let paddedPayload = payload;
       while (paddedPayload.length % 4) {
-        paddedPayload += '='
+        paddedPayload += '=';
       }
 
       // 验证是否为有效的Base64字符串
-      const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
+      const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
       if (!base64Regex.test(paddedPayload)) {
-        console.warn('JWT payload不是有效的Base64编码')
-        return true
+        console.warn('JWT payload不是有效的Base64编码');
+        return true;
       }
 
       // 尝试解码payload
-      let decodedPayload
+      let decodedPayload;
       try {
-        decodedPayload = JSON.parse(atob(paddedPayload))
+        decodedPayload = JSON.parse(atob(paddedPayload));
       } catch (decodeError) {
-        console.error('JWT payload解码失败:', decodeError)
-        return true
+        console.error('JWT payload解码失败:', decodeError);
+        return true;
       }
 
       // 检查exp字段
       if (!decodedPayload.exp || typeof decodedPayload.exp !== 'number') {
-        console.warn('JWT token缺少有效的exp字段')
-        return true
+        console.warn('JWT token缺少有效的exp字段');
+        return true;
       }
 
       // exp是Unix时间戳（秒），需要转换为毫秒
-      const expirationTime = decodedPayload.exp * 1000
-      const currentTime = Date.now()
+      const expirationTime = decodedPayload.exp * 1000;
+      const currentTime = Date.now();
 
       // 提前5分钟判断为过期，给刷新留时间
-      const bufferTime = 5 * 60 * 1000
+      const bufferTime = 5 * 60 * 1000;
 
-      const isExpired = currentTime >= (expirationTime - bufferTime)
+      const isExpired = currentTime >= expirationTime - bufferTime;
 
       if (isExpired) {
-        console.log('JWT token已过期或即将过期')
+        console.log('JWT token已过期或即将过期');
       }
 
-      return isExpired
+      return isExpired;
     } catch (error) {
-      console.error('JWT token验证异常:', error)
-      return true
+      console.error('JWT token验证异常:', error);
+      return true;
     }
   }
 
@@ -410,26 +407,26 @@ class AuthService {
   getTokenRemainingTime(token) {
     try {
       if (!token || typeof token !== 'string') {
-        return -1
+        return -1;
       }
 
-      const parts = token.split('.')
+      const parts = token.split('.');
       if (parts.length !== 3) {
-        return -1
+        return -1;
       }
 
-      const payload = JSON.parse(atob(parts[1]))
+      const payload = JSON.parse(atob(parts[1]));
       if (!payload.exp) {
-        return -1
+        return -1;
       }
 
-      const expirationTime = payload.exp * 1000
-      const currentTime = Date.now()
+      const expirationTime = payload.exp * 1000;
+      const currentTime = Date.now();
 
-      return Math.max(0, expirationTime - currentTime)
+      return Math.max(0, expirationTime - currentTime);
     } catch (error) {
-      console.error('解析JWT token失败:', error)
-      return -1
+      console.error('解析JWT token失败:', error);
+      return -1;
     }
   }
 
@@ -439,37 +436,35 @@ class AuthService {
    */
   getUser() {
     try {
-
       // 从存储恢复会话和用户信息
-      const sessionResult = this.getSession()
+      const sessionResult = this.getSession();
 
-      console.log(sessionResult)
+      console.log(sessionResult);
       if (sessionResult.data) {
-        const user = sessionResult.data.user
+        const user = sessionResult.data.user;
         const avatarUrl = this.getAvatarDisplayUrl({
-          avatar_url: user?.avatar_url
-        })
-        const currentUser =  {
+          avatar_url: user?.avatar_url,
+        });
+        const currentUser = {
           id: user.id,
           email: user.email,
-          nickName: user?.nickname || '微信用户',  // 统一使用nickName
-          avatarUrl: avatarUrl,                                  // 使用动态生成的头像URL
+          nickName: user?.nickname || '微信用户', // 统一使用nickName
+          avatarUrl: avatarUrl, // 使用动态生成的头像URL
           nickname: user?.nickname || '微信用户', // 保持兼容性
-          avatar_url: user?.avatar_url,           // 原始avatar_url用于重新生成
+          avatar_url: user?.avatar_url, // 原始avatar_url用于重新生成
           wechat_openid: user?.wechat_openid,
           display_name: user?.nickname || '微信用户',
-          has_user_info: !!(user?.nickname && user?.avatar_url)
-        }
-        return { data: currentUser, error: null }
+          has_user_info: !!(user?.nickname && user?.avatar_url),
+        };
+        return { data: currentUser, error: null };
       }
 
-      return { data: null, error: null }
+      return { data: null, error: null };
     } catch (error) {
-      console.error('获取用户信息时发生异常:', error)
-      return { data: { user: null }, error: error.message }
+      console.error('获取用户信息时发生异常:', error);
+      return { data: { user: null }, error: error.message };
     }
   }
-
 
   /**
    * 更新用户信息（使用Supabase Auth）
@@ -477,52 +472,54 @@ class AuthService {
    * @returns {Promise<Object>} 更新结果
    */
   async updateUserInfo(userInfo) {
-    console.log("要更新的用户信息：" + userInfo)
+    console.log('要更新的用户信息：' + userInfo);
 
     try {
-      const userResult = this.getUser()
+      const userResult = this.getUser();
       if (!userResult.data) {
-        return { success: false, error: '用户未登录' }
+        return { success: false, error: '用户未登录' };
       }
-  
 
-
-      const currentUser = userResult.data
-      console.log('更新用户信息:', userInfo)
-      console.log('当前用户信息:', currentUser)
+      const currentUser = userResult.data;
+      console.log('更新用户信息:', userInfo);
+      console.log('当前用户信息:', currentUser);
       if (!userInfo.nickName) {
-        userInfo.nickName = currentUser.nickName
+        userInfo.nickName = currentUser.nickName;
       }
       // 处理头像上传
-      let finalAvatarUrl = null
+      let finalAvatarUrl = null;
       if (userInfo.avatarUrl) {
-        if (userInfo.avatarUrl.includes('tmp') || userInfo.avatarUrl.includes('temp') || userInfo.avatarUrl.includes('wxfile://')) {
-
+        if (
+          userInfo.avatarUrl.includes('tmp') ||
+          userInfo.avatarUrl.includes('temp') ||
+          userInfo.avatarUrl.includes('wxfile://')
+        ) {
           console.log('开始调用uploadUserFileToBucket:', {
             userId: currentUser.id,
             fileType: 'avatar',
-            tempFilePath: userInfo.avatarUrl
-          })
+            tempFilePath: userInfo.avatarUrl,
+          });
 
-          const uploadResult = await this.storageService.uploadUserFileToPublicBucket(
-            currentUser.id,
-            'avatar',
-            userInfo.avatarUrl
-          )
+          const uploadResult =
+            await this.storageService.uploadUserFileToPublicBucket(
+              currentUser.id,
+              'avatar',
+              userInfo.avatarUrl
+            );
 
-          console.log('头像上传结果:', uploadResult)
+          console.log('头像上传结果:', uploadResult);
 
           if (uploadResult.success) {
-          
-            finalAvatarUrl = uploadResult.publicUrl
-            console.log('头像上传成功，存储路径:', finalAvatarUrl)
+            finalAvatarUrl = uploadResult.publicUrl;
+            console.log('头像上传成功，存储路径:', finalAvatarUrl);
           } else {
-            console.error('头像上传失败:', uploadResult.error)
+            console.error('头像上传失败:', uploadResult.error);
             // 使用默认头像
-            finalAvatarUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
+            finalAvatarUrl =
+              'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png';
           }
         } else {
-          finalAvatarUrl =  userInfo.avatarUrl
+          finalAvatarUrl = userInfo.avatarUrl;
         }
       }
 
@@ -531,39 +528,40 @@ class AuthService {
         code: 'update_user_info', // 特殊标识
         userInfo: {
           nickName: userInfo.nickName,
-          avatarUrl: finalAvatarUrl
-        }
-      }
+          avatarUrl: finalAvatarUrl,
+        },
+      };
 
-      console.log('调用Edge Function更新用户信息:', updateData)
+      console.log('调用Edge Function更新用户信息:', updateData);
 
       // 获取当前session的token用于认证
-      const currentSession = this.getSession()
+      const currentSession = this.getSession();
       if (!currentSession.data?.access_token) {
-        console.error('无法获取access_token进行Edge Function调用')
-        return { success: false, error: '认证状态异常，请重新登录' }
+        console.error('无法获取access_token进行Edge Function调用');
+        return { success: false, error: '认证状态异常，请重新登录' };
       }
 
-      const authResult = await this.callWechatAuthFunctionWithAuth('update_user_info', updateData.userInfo, currentSession.data.session.access_token)
+      const authResult = await this.callWechatAuthFunctionWithAuth(
+        'update_user_info',
+        updateData.userInfo,
+        currentSession.data.session.access_token
+      );
 
-      console.log("authResult: " + authResult)
+      console.log('authResult: ' + authResult);
       if (!authResult.success) {
-        throw new Error(authResult.error || '更新失败')
+        throw new Error(authResult.error || '更新失败');
       }
 
-
-
-      currentSession.data.session.user = authResult.user
-      await this.setSession(currentSession.data.session)
-      console.log('用户信息更新成功:', authResult.user)
-      return { success: true, user: authResult.user }
-
+      currentSession.data.session.user = authResult.user;
+      await this.setSession(currentSession.data.session);
+      console.log('用户信息更新成功:', authResult.user);
+      return { success: true, user: authResult.user };
     } catch (error) {
-      console.error('更新用户信息失败:', error)
+      console.error('更新用户信息失败:', error);
       return {
         success: false,
-        error: error.message || '更新失败，请重试'
-      }
+        error: error.message || '更新失败，请重试',
+      };
     }
   }
 
@@ -579,28 +577,32 @@ class AuthService {
         method: 'GET',
         params: {
           select: '*',
-          id: `eq.${userId}`
-        }
-      })
+          id: `eq.${userId}`,
+        },
+      });
 
       if (response.length === 0) {
-        return { success: false, error: '用户不存在' }
+        return { success: false, error: '用户不存在' };
       }
 
-      const user = response[0]
+      const user = response[0];
 
       const combinedUserInfo = {
         ...user,
         display_name: user.nickname || user.username,
         avatar_url: user.avatar_url,
         bio: user.bio || '',
-        has_user_info: !!(user.nickname && user.avatar_url && !user.avatar_url.includes('default-avatar'))
-      }
+        has_user_info: !!(
+          user.nickname &&
+          user.avatar_url &&
+          !user.avatar_url.includes('default-avatar')
+        ),
+      };
 
-      return { success: true, user: combinedUserInfo }
+      return { success: true, user: combinedUserInfo };
     } catch (error) {
-      console.error('获取用户资料失败:', error)
-      return { success: false, error: error.message }
+      console.error('获取用户资料失败:', error);
+      return { success: false, error: error.message };
     }
   }
 
@@ -611,32 +613,32 @@ class AuthService {
    */
   async updateUserProfile(profileData) {
     try {
-      const currentUser = this.getCurrentUser()
+      const currentUser = this.getCurrentUser();
       if (!currentUser) {
-        return { success: false, error: '用户未登录' }
+        return { success: false, error: '用户未登录' };
       }
 
       const updateData = {
         ...profileData,
-        updated_at: new Date().toISOString()
-      }
+        updated_at: new Date().toISOString(),
+      };
 
       const response = await this.supabaseRequest({
         url: `/rest/v1/users`,
         method: 'PATCH',
         params: {
-          id: `eq.${currentUser.id}`
+          id: `eq.${currentUser.id}`,
         },
         data: updateData,
         headers: {
-          'Prefer': 'return=representation'
-        }
-      })
+          Prefer: 'return=representation',
+        },
+      });
 
-      return { success: true, profile: response[0] || response }
+      return { success: true, profile: response[0] || response };
     } catch (error) {
-      console.error('更新用户详细资料失败:', error)
-      return { success: false, error: error.message }
+      console.error('更新用户详细资料失败:', error);
+      return { success: false, error: error.message };
     }
   }
 
@@ -649,10 +651,10 @@ class AuthService {
     return new Promise((resolve, reject) => {
       wx.getFileSystemManager().readFile({
         filePath: tempFilePath,
-        success: (res) => resolve(res.data),
-        fail: reject
-      })
-    })
+        success: res => resolve(res.data),
+        fail: reject,
+      });
+    });
   }
 
   /**
@@ -661,39 +663,46 @@ class AuthService {
    * @returns {Promise<Object>} 响应数据
    */
   async supabaseRequest(options) {
-    const { url, method = 'GET', data, params = {}, headers = {} } = options
-    
+    const { url, method = 'GET', data, params = {}, headers = {} } = options;
+
     // 构建查询参数
-    let queryString = ''
+    let queryString = '';
     if (Object.keys(params).length > 0) {
-      queryString = '?' + Object.entries(params)
-        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-        .join('&')
+      queryString =
+        '?' +
+        Object.entries(params)
+          .map(
+            ([key, value]) =>
+              `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+          )
+          .join('&');
     }
-    
-    const requestUrl = `${this.supabaseUrl}${url}${queryString}`
-    
+
+    const requestUrl = `${this.supabaseUrl}${url}${queryString}`;
+
     return new Promise((resolve, reject) => {
       wx.request({
         url: requestUrl,
         method,
         data,
         header: {
-          'apikey': this.supabaseAnonKey,
-          'Authorization': `Bearer ${this.supabaseAnonKey}`,
+          apikey: this.supabaseAnonKey,
+          Authorization: `Bearer ${this.supabaseAnonKey}`,
           'Content-Type': 'application/json',
-          ...headers
+          ...headers,
         },
-        success: (res) => {
+        success: res => {
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve(res.data)
+            resolve(res.data);
           } else {
-            reject(new Error(`HTTP ${res.statusCode}: ${JSON.stringify(res.data)}`))
+            reject(
+              new Error(`HTTP ${res.statusCode}: ${JSON.stringify(res.data)}`)
+            );
           }
         },
-        fail: reject
-      })
-    })
+        fail: reject,
+      });
+    });
   }
 
   /**
@@ -702,90 +711,34 @@ class AuthService {
    * @returns {Promise<Object>} 响应数据
    */
   async supabaseStorageRequest(options) {
-    const { bucket, path, file, options: uploadOptions = {} } = options
-    
+    const { bucket, path, file, options: uploadOptions = {} } = options;
+
     return new Promise((resolve, reject) => {
       wx.request({
         url: `${this.supabaseUrl}/storage/v1/object/${bucket}/${path}`,
         method: 'POST',
         data: file,
         header: {
-          'apikey': this.supabaseAnonKey,
-          'Authorization': `Bearer ${this.supabaseAnonKey}`,
-          'Content-Type': uploadOptions.contentType || 'application/octet-stream'
+          apikey: this.supabaseAnonKey,
+          Authorization: `Bearer ${this.supabaseAnonKey}`,
+          'Content-Type':
+            uploadOptions.contentType || 'application/octet-stream',
         },
-        success: (res) => {
+        success: res => {
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve({ data: res.data, error: null })
+            resolve({ data: res.data, error: null });
           } else {
-            resolve({ data: null, error: { message: `HTTP ${res.statusCode}: ${JSON.stringify(res.data)}` } })
-          }
-        },
-        fail: (error) => resolve({ data: null, error })
-      })
-    })
-  }
-
-  /**
-   * 验证手机号（使用微信官方手机号验证组件）
-   * @param {string} code - 微信返回的code
-   * @returns {Promise<Object>} 验证结果
-   */
-  async verifyPhoneNumber(code) {
-    try {
-      // 模拟后端验证手机号
-      await new Promise(resolve => setTimeout(resolve, 1500)) // 模拟网络延迟
-      
-      // 模拟解析手机号（实际中需要后端接口）
-      const phoneNumber = '138****' + Math.floor(Math.random() * 10000).toString().padStart(4, '0')
-      
-      return {
-        success: true,
-        phoneNumber: phoneNumber
-      }
-    } catch (error) {
-      console.error('手机号验证失败:', error)
-      return {
-        success: false,
-        error: error.message
-      }
-    }
-  }
-
-  /**
-   * 与真实后端进行认证（需要后端实现对应的RPC函数）
-   * @param {Object} data - 认证数据
-   * @returns {Promise<Object>} 认证结果
-   */
-  async authenticateWithBackend(data) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: `${this.supabaseUrl}/rest/v1/rpc/wechat_login`,
-        method: 'POST',
-        header: {
-          'apikey': this.supabaseAnonKey,
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.supabaseAnonKey}`
-        },
-        data: {
-          wechat_code: data.code,
-          user_info: data.userInfo
-        },
-        success: (res) => {
-          if (res.statusCode === 200) {
             resolve({
-              success: true,
-              user: res.data
-            })
-          } else {
-            reject(new Error(`认证失败: ${res.statusCode} ${res.data?.message || ''}`))
+              data: null,
+              error: {
+                message: `HTTP ${res.statusCode}: ${JSON.stringify(res.data)}`,
+              },
+            });
           }
         },
-        fail: (error) => {
-          reject(new Error('网络请求失败: ' + error.errMsg))
-        }
-      })
-    })
+        fail: error => resolve({ data: null, error }),
+      });
+    });
   }
 
   /**
@@ -794,36 +747,15 @@ class AuthService {
    */
   async saveUserSession(user) {
     try {
-      const session = wx.getStorageSync('supabase_session')
-      session.user = user
+      const session = wx.getStorageSync('supabase_session');
+      session.user = user;
 
-      wx.setStorageSync('supabase_session', session)
+      wx.setStorageSync('supabase_session', session);
 
-
-      console.log(wx.getStorageSync('supabase_session'))
+      console.log(wx.getStorageSync('supabase_session'));
     } catch (error) {
-      console.error('保存用户会话失败:', error)
+      console.error('保存用户会话失败:', error);
     }
-  }
-
-  /**
-   * 获取本地用户会话
-   * @returns {Object|null} 用户信息
-   */
-  getLocalUserSession() {
-    try {
-      const userInfo = wx.getStorageSync('userInfo')
-      const lastLoginTime = wx.getStorageSync('lastLoginTime')
-      
-      // 检查会话是否过期（7天）
-      const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000
-      if (userInfo && lastLoginTime && (Date.now() - lastLoginTime < SESSION_DURATION)) {
-        return userInfo
-      }
-    } catch (error) {
-      console.error('获取本地用户会话失败:', error)
-    }
-    return null
   }
 
   /**
@@ -832,13 +764,13 @@ class AuthService {
    */
   async refreshSession() {
     try {
-      const sessionResult = this.getSession()
+      const sessionResult = this.getSession();
       if (!sessionResult.data?.refresh_token) {
-        console.log('没有可用的refresh_token')
-        return { success: false, error: 'No refresh token available' }
+        console.log('没有可用的refresh_token');
+        return { success: false, error: 'No refresh token available' };
       }
 
-      console.log('尝试刷新session...')
+      console.log('尝试刷新session...');
 
       // 调用Edge Function进行session刷新
       const response = await this.supabaseRequest({
@@ -846,26 +778,25 @@ class AuthService {
         method: 'POST',
         data: {
           code: 'refresh_session',
-          refresh_token: sessionResult.data.refresh_token
+          refresh_token: sessionResult.data.refresh_token,
         },
         headers: {
-          'Content-Type': 'application/json'
-        }
-      })
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (response.success && response.session) {
-        console.log('Session刷新成功')
-        await this.setSession(response.session)
+        console.log('Session刷新成功');
+        await this.setSession(response.session);
 
-        return { success: true, session: response.session }
+        return { success: true, session: response.session };
       } else {
-        console.warn('Session刷新失败:', response.error)
-        return { success: false, error: response.error || 'Refresh failed' }
+        console.warn('Session刷新失败:', response.error);
+        return { success: false, error: response.error || 'Refresh failed' };
       }
-
     } catch (error) {
-      console.error('Session刷新异常:', error)
-      return { success: false, error: error.message }
+      console.error('Session刷新异常:', error);
+      return { success: false, error: error.message };
     }
   }
 
@@ -874,20 +805,21 @@ class AuthService {
    * @returns {Promise<Object>} 登出结果
    */
   async logout() {
-  try {
-    // 1. 清除 Supabase Auth 会话（内存中的状态）
+    try {
+      // 1. 清除 Supabase Auth 会话（内存中的状态）
 
-    // 2. 一键清除所有本地存储（替代逐个删除）
-    // 注意：会删除所有通过 wx.setStorageSync 存储的数据
-    wx.clearStorageSync();
+      // 2. 一键清除所有本地存储（替代逐个删除）
+      // 注意：会删除所有通过 wx.setStorageSync 存储的数据
+      wx.clearStorageSync();
 
-    console.log('用户已彻底登出');
-    return { success: true };
-  } catch (error) {
-    console.error('登出失败:', error);
-    return { success: false, error: error.message };
+      console.log('用户已彻底登出');
+      return { success: true };
+    } catch (error) {
+      console.error('登出失败:', error);
+      return { success: false, error: error.message };
+    }
   }
-}
+
   /**
    * 检查登录状态
    * @returns {Promise<boolean>} 是否已登录
@@ -895,18 +827,17 @@ class AuthService {
   async checkLoginStatus() {
     try {
       // 检查Supabase Auth会话
-      const sessionResult = this.getSession()
+      const sessionResult = this.getSession();
       if (sessionResult.data?.user) {
-        
         // this.setSession(sessionResult.data)
 
-        return true
+        return true;
       }
     } catch (error) {
-      console.error('检查登录状态失败:', error)
+      console.error('检查登录状态失败:', error);
     }
 
-    return false
+    return false;
   }
 
   /**
@@ -915,31 +846,40 @@ class AuthService {
    */
   getCurrentUser() {
     // 优先从Supabase Auth获取
-    const userResult = this.getUser()
-    console.log(userResult)
+    const userResult = this.getUser();
+    console.log(userResult);
     if (userResult.data) {
-      const user = userResult.data
+      const user = userResult.data;
 
       const avatarUrl = this.getAvatarDisplayUrl({
-        avatar_url: user?.avatar_url
-      })
+        avatar_url: user?.avatar_url,
+      });
 
       return {
         id: user.id,
         email: user.email,
-        nickName: user?.nickname || '微信用户',  // 统一使用nickName
-        avatarUrl: avatarUrl,                                  // 使用动态生成的头像URL
+        nickName: user?.nickname || '微信用户', // 统一使用nickName
+        avatarUrl: avatarUrl, // 使用动态生成的头像URL
         nickname: user?.nickname || '微信用户', // 保持兼容性
-        avatar_url: user?.avatar_url,           // 原始avatar_url用于重新生成
+        avatar_url: user?.avatar_url, // 原始avatar_url用于重新生成
         wechat_openid: user?.wechat_openid,
         display_name: user?.display_name || '微信用户',
-        has_user_info: !!(user?.nickname && user?.avatar_url)
-      }
+        has_user_info: !!(user?.nickname && user?.avatar_url),
+      };
     } else {
-      console.log("supabase 无法获取到当前用户信息")
+      console.log('supabase 无法获取到当前用户信息');
+      return {
+        id: null,
+        email: null,
+        nickName: null,
+        avatarUrl: null, // 使用动态生成的头像URL
+        nickname: null, // 保持兼容性
+        avatar_url: null, // 原始avatar_url用于重新生成
+        wechat_openid: null,
+        display_name: null,
+        has_user_info: false,
+      };
     }
-    return null
-
   }
 
   /**
@@ -948,16 +888,16 @@ class AuthService {
    * @returns {boolean} 是否有权限
    */
   hasPermission(permission) {
-    const user = this.getCurrentUser()
-    if (!user) return false
+    const user = this.getCurrentUser();
+    if (!user) return false;
 
     switch (permission) {
       case 'admin':
-        return user.role === 'admin'
+        return user.role === 'admin';
       case 'user':
-        return user.role === 'user' || user.role === 'admin'
+        return user.role === 'user' || user.role === 'admin';
       default:
-        return false
+        return false;
     }
   }
 
@@ -968,25 +908,24 @@ class AuthService {
    */
   async bindOrcid(orcid) {
     // 验证ORCID格式
-    const orcidRegex = /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/
+    const orcidRegex = /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/;
     if (!orcidRegex.test(orcid)) {
-      return { success: false, error: 'ORCID格式不正确' }
+      return { success: false, error: 'ORCID格式不正确' };
     }
 
     // 模拟更新用户信息
     try {
-      const currentUser = this.getCurrentUser()
+      const currentUser = this.getCurrentUser();
       if (!currentUser) {
-        return { success: false, error: '用户未登录' }
+        return { success: false, error: '用户未登录' };
       }
 
-      const updatedUser = { ...currentUser, orcid }
-      await this.saveUserSession(updatedUser)
-      
+      const updatedUser = { ...currentUser, orcid };
+      await this.saveUserSession(updatedUser);
 
-      return { success: true, user: updatedUser }
+      return { success: true, user: updatedUser };
     } catch (error) {
-      return { success: false, error: error.message }
+      return { success: false, error: error.message };
     }
   }
 
@@ -997,21 +936,20 @@ class AuthService {
    */
   async updateAcademicFields(academicFields) {
     try {
-      const currentUser = this.getCurrentUser()
+      const currentUser = this.getCurrentUser();
       if (!currentUser) {
-        return { success: false, error: '用户未登录' }
+        return { success: false, error: '用户未登录' };
       }
 
-      const updatedUser = { 
-        ...currentUser, 
-        academic_field: { fields: academicFields } 
-      }
-      await this.saveUserSession(updatedUser)
-    
+      const updatedUser = {
+        ...currentUser,
+        academic_field: { fields: academicFields },
+      };
+      await this.saveUserSession(updatedUser);
 
-      return { success: true, user: updatedUser }
+      return { success: true, user: updatedUser };
     } catch (error) {
-      return { success: false, error: error.message }
+      return { success: false, error: error.message };
     }
   }
 
@@ -1021,13 +959,12 @@ class AuthService {
    * @returns {Promise<string>} 头像显示URL
    */
   getAvatarDisplayUrl(user) {
-      // 如果没有avatar_url，返回默认头像
-      if (!user.avatar_url) {
-        return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png'
-      }
+    // 如果没有avatar_url，返回默认头像
+    if (!user.avatar_url) {
+      return 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/MiraclePlus-Avatar.png';
+    }
 
-      return user.avatar_url
-
+    return user.avatar_url;
   }
 
   /**
@@ -1037,47 +974,48 @@ class AuthService {
    * @returns {Promise<Object>} 签名URL结果
    */
   async retryGenerateSignedUrl(filePath, maxRetries = 3) {
-    let lastError = null
-    
+    let lastError = null;
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`尝试生成签名URL (第${attempt}次尝试):`, filePath)
+        console.log(`尝试生成签名URL (第${attempt}次尝试):`, filePath);
 
-        const result = await this.storageService.generateUserFileSignedUrl(filePath, 604800)
+        const result = await this.storageService.generateUserFileSignedUrl(
+          filePath,
+          604800
+        );
 
         if (result.success) {
-          console.log(`签名URL生成成功 (第${attempt}次尝试)`)
-          return result
+          console.log(`签名URL生成成功 (第${attempt}次尝试)`);
+          return result;
         } else {
-          lastError = result.error
-          console.warn(`签名URL生成失败 (第${attempt}次尝试):`, result.error)
+          lastError = result.error;
+          console.warn(`签名URL生成失败 (第${attempt}次尝试):`, result.error);
 
           // 如果不是最后一次尝试，等待后重试
           if (attempt < maxRetries) {
-            const delay = Math.min(attempt * 1000, 3000) // 递增延迟，最大3秒
-            console.log(`等待${delay}ms后重试...`)
-            await new Promise(resolve => setTimeout(resolve, delay))
+            const delay = Math.min(attempt * 1000, 3000); // 递增延迟，最大3秒
+            console.log(`等待${delay}ms后重试...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
           }
         }
       } catch (error) {
-        lastError = error.message || error
-        console.error(`签名URL生成异常 (第${attempt}次尝试):`, error)
-
-
+        lastError = error.message || error;
+        console.error(`签名URL生成异常 (第${attempt}次尝试):`, error);
 
         // 如果不是最后一次尝试，等待后重试
         if (attempt < maxRetries) {
-          const delay = Math.min(attempt * 1000, 3000)
-          console.log(`等待${delay}ms后重试...`)
-          await new Promise(resolve => setTimeout(resolve, delay))
+          const delay = Math.min(attempt * 1000, 3000);
+          console.log(`等待${delay}ms后重试...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
     }
 
     return {
       success: false,
-      error: lastError || `重试${maxRetries}次后仍然失败`
-    }
+      error: lastError || `重试${maxRetries}次后仍然失败`,
+    };
   }
 
   /**
@@ -1087,7 +1025,7 @@ class AuthService {
    */
   async shouldAttemptRecovery(errorMessage) {
     if (!errorMessage || typeof errorMessage !== 'string') {
-      return false
+      return false;
     }
 
     const recoverableErrors = [
@@ -1097,12 +1035,11 @@ class AuthService {
       'Invalid Compact JWS',
       'exp',
       'token',
-      '认证'
-    ]
+      '认证',
+    ];
 
-    return recoverableErrors.some(keyword => errorMessage.includes(keyword))
+    return recoverableErrors.some(keyword => errorMessage.includes(keyword));
   }
-
 
   /**
    * 清理无效认证状态
@@ -1110,19 +1047,18 @@ class AuthService {
    */
   async clearInvalidSession() {
     try {
-      console.log('清理无效的认证状态...')
-
+      console.log('清理无效的认证状态...');
 
       // 清理本地存储
-      this.clearStorageSession()
+      this.clearStorageSession();
 
-      console.log('认证状态清理完成')
+      console.log('认证状态清理完成');
     } catch (error) {
-      console.error('清理认证状态失败:', error)
+      console.error('清理认证状态失败:', error);
     }
   }
 }
 
 // 创建并导出认证服务实例
-const authService = new AuthService()
-module.exports = authService
+const authService = new AuthService();
+module.exports = authService;

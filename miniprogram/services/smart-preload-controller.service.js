@@ -3,42 +3,42 @@
  * 负责监控播放位置、触发预加载和管理加载优先级
  */
 
-const audioChunkManager = require('./audio-chunk-manager.service.js')
-const lruCache = require('./lru-cache.service.js')
+const audioChunkManager = require('./audio-chunk-manager.service.js');
+const lruCache = require('./lru-cache.service.js');
 
 class SmartPreloadController {
   constructor() {
     // 预加载配置
-    this.preloadRange = 3      // 预加载范围(块数量)
-    this.triggerThreshold = 0.7 // 触发阈值(当前块播放70%时触发下一块预加载)
-    this.maxConcurrentLoads = 3 // 最大并发加载数
-    
+    this.preloadRange = 3; // 预加载范围(块数量)
+    this.triggerThreshold = 0.7; // 触发阈值(当前块播放70%时触发下一块预加载)
+    this.maxConcurrentLoads = 3; // 最大并发加载数
+
     // 状态管理
-    this.currentAudioUrl = null
-    this.currentTime = 0
-    this.isPreloading = false
-    this.activeLoads = new Set() // 正在加载的块标识
-    this.preloadQueue = []       // 预加载队列
-    
+    this.currentAudioUrl = null;
+    this.currentTime = 0;
+    this.isPreloading = false;
+    this.activeLoads = new Set(); // 正在加载的块标识
+    this.preloadQueue = []; // 预加载队列
+
     // 性能监控
     this.loadingStats = {
       totalLoads: 0,
       successfulLoads: 0,
       failedLoads: 0,
       averageLoadTime: 0,
-      totalLoadTime: 0
-    }
-    
+      totalLoadTime: 0,
+    };
+
     // 自适应参数
     this.adaptiveConfig = {
       networkSpeed: 'unknown', // fast, medium, slow
-      memoryPressure: 1,       // 1-5级别
-      batteryLevel: 100,       // 电量百分比
-      enableAdaptive: true     // 是否启用自适应优化
-    }
-    
+      memoryPressure: 1, // 1-5级别
+      batteryLevel: 100, // 电量百分比
+      enableAdaptive: true, // 是否启用自适应优化
+    };
+
     // 初始化监控
-    this.initPerformanceMonitoring()
+    this.initPerformanceMonitoring();
   }
 
   /**
@@ -46,13 +46,13 @@ class SmartPreloadController {
    */
   initPerformanceMonitoring() {
     // 监听内存警告
-    wx.onMemoryWarning((res) => {
-      console.warn('内存警告:', res.level)
-      this.handleMemoryPressure(res.level)
-    })
-    
+    wx.onMemoryWarning(res => {
+      console.warn('内存警告:', res.level);
+      this.handleMemoryPressure(res.level);
+    });
+
     // 定期检测网络性能
-    this.startNetworkSpeedTest()
+    this.startNetworkSpeedTest();
   }
 
   /**
@@ -61,21 +61,23 @@ class SmartPreloadController {
    */
   handleMemoryPressure(level) {
     // level: 5(严重) 10(中等) 15(轻微)
-    let pressureLevel = 1
-    if (level >= 15) pressureLevel = 1      // 轻微
-    else if (level >= 10) pressureLevel = 3 // 中等
-    else if (level >= 5) pressureLevel = 5  // 严重
-    
-    this.adaptiveConfig.memoryPressure = pressureLevel
-    
+    let pressureLevel = 1;
+    if (level >= 15)
+      pressureLevel = 1; // 轻微
+    else if (level >= 10)
+      pressureLevel = 3; // 中等
+    else if (level >= 5) pressureLevel = 5; // 严重
+
+    this.adaptiveConfig.memoryPressure = pressureLevel;
+
     // 根据内存压力调整预加载策略
     if (pressureLevel >= 4) {
-      this.preloadRange = 1 // 严重内存压力，仅预加载1块
-      lruCache.smartCleanup(pressureLevel)
-      console.log('内存压力较大，降低预加载范围至1块')
+      this.preloadRange = 1; // 严重内存压力，仅预加载1块
+      lruCache.smartCleanup(pressureLevel);
+      console.log('内存压力较大，降低预加载范围至1块');
     } else if (pressureLevel >= 2) {
-      this.preloadRange = 2 // 中等内存压力，预加载2块
-      console.log('中等内存压力，预加载范围调整至2块')
+      this.preloadRange = 2; // 中等内存压力，预加载2块
+      console.log('中等内存压力，预加载范围调整至2块');
     }
   }
 
@@ -84,9 +86,12 @@ class SmartPreloadController {
    */
   startNetworkSpeedTest() {
     // 每2分钟检测一次网络性能
-    setInterval(() => {
-      this.testNetworkSpeed()
-    }, 2 * 60 * 1000)
+    setInterval(
+      () => {
+        this.testNetworkSpeed();
+      },
+      2 * 60 * 1000
+    );
   }
 
   /**
@@ -94,23 +99,24 @@ class SmartPreloadController {
    */
   async testNetworkSpeed() {
     try {
-      const testUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg'
-      const startTime = Date.now()
-      
+      const testUrl =
+        'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg';
+      const startTime = Date.now();
+
       await new Promise((resolve, reject) => {
         wx.request({
           url: testUrl,
           method: 'GET',
           success: () => {
-            const loadTime = Date.now() - startTime
-            this.updateNetworkSpeed(loadTime)
-            resolve()
+            const loadTime = Date.now() - startTime;
+            this.updateNetworkSpeed(loadTime);
+            resolve();
           },
-          fail: reject
-        })
-      })
+          fail: reject,
+        });
+      });
     } catch (error) {
-      console.warn('网络速度测试失败:', error)
+      console.warn('网络速度测试失败:', error);
     }
   }
 
@@ -119,22 +125,25 @@ class SmartPreloadController {
    * @param {number} loadTime - 加载时间(毫秒)
    */
   updateNetworkSpeed(loadTime) {
-    let speed = 'medium'
-    if (loadTime < 500) speed = 'fast'        // 小于500ms为快速网络
-    else if (loadTime > 2000) speed = 'slow'  // 大于2s为慢速网络
-    
-    this.adaptiveConfig.networkSpeed = speed
-    
+    let speed = 'medium';
+    if (loadTime < 500)
+      speed = 'fast'; // 小于500ms为快速网络
+    else if (loadTime > 2000) speed = 'slow'; // 大于2s为慢速网络
+
+    this.adaptiveConfig.networkSpeed = speed;
+
     // 根据网络速度调整预加载策略
     if (speed === 'fast') {
-      this.maxConcurrentLoads = 4
-      this.preloadRange = Math.min(this.preloadRange + 1, 4)
+      this.maxConcurrentLoads = 4;
+      this.preloadRange = Math.min(this.preloadRange + 1, 4);
     } else if (speed === 'slow') {
-      this.maxConcurrentLoads = 2
-      this.preloadRange = Math.max(this.preloadRange - 1, 1)
+      this.maxConcurrentLoads = 2;
+      this.preloadRange = Math.max(this.preloadRange - 1, 1);
     }
-    
-    console.log(`网络速度评估: ${speed} (${loadTime}ms), 预加载范围: ${this.preloadRange}`)
+
+    console.log(
+      `网络速度评估: ${speed} (${loadTime}ms), 预加载范围: ${this.preloadRange}`
+    );
   }
 
   /**
@@ -143,20 +152,19 @@ class SmartPreloadController {
    * @param {number} duration - 音频时长
    */
   async initialize(audioUrl, duration) {
-    console.log('初始化智能预加载控制器:', audioUrl)
-    
-    this.currentAudioUrl = audioUrl
-    this.currentTime = 0
-    
+    console.log('初始化智能预加载控制器:', audioUrl);
+
+    this.currentAudioUrl = audioUrl;
+    this.currentTime = 0;
+
     try {
       // 分析音频文件
-      await audioChunkManager.analyzeAudioFile(audioUrl, duration)
-      
+      await audioChunkManager.analyzeAudioFile(audioUrl, duration);
+
       // 开始预加载初始块
-      this.startInitialPreload()
-      
+      this.startInitialPreload();
     } catch (error) {
-      console.error('初始化预加载失败:', error)
+      console.error('初始化预加载失败:', error);
     }
   }
 
@@ -164,24 +172,28 @@ class SmartPreloadController {
    * 开始初始预加载
    */
   async startInitialPreload() {
-    if (!this.currentAudioUrl) return
-    
+    if (!this.currentAudioUrl) return;
+
     // 获取初始预加载块列表
     const initialChunks = audioChunkManager.getPreloadChunks(
-      this.currentAudioUrl, 
-      0, 
+      this.currentAudioUrl,
+      0,
       this.preloadRange
-    )
-    
-    console.log('开始初始预加载，块列表:', initialChunks)
-    
+    );
+
+    console.log('开始初始预加载，块列表:', initialChunks);
+
     // 按优先级加载(当前播放块优先级最高)
     for (const chunkIndex of initialChunks) {
-      this.enqueuePreload(this.currentAudioUrl, chunkIndex, chunkIndex === 0 ? 'high' : 'medium')
+      this.enqueuePreload(
+        this.currentAudioUrl,
+        chunkIndex,
+        chunkIndex === 0 ? 'high' : 'medium'
+      );
     }
-    
+
     // 开始处理预加载队列
-    this.processPreloadQueue()
+    this.processPreloadQueue();
   }
 
   /**
@@ -189,15 +201,18 @@ class SmartPreloadController {
    * @param {number} currentTime - 当前播放时间(秒)
    */
   onPlaybackProgress(currentTime) {
-    this.currentTime = currentTime
-    
-    if (!this.currentAudioUrl) return
-    
+    this.currentTime = currentTime;
+
+    if (!this.currentAudioUrl) return;
+
     // 获取当前播放的块索引
-    const currentChunkIndex = audioChunkManager.getChunkIndexByTime(this.currentAudioUrl, currentTime)
-    
+    const currentChunkIndex = audioChunkManager.getChunkIndexByTime(
+      this.currentAudioUrl,
+      currentTime
+    );
+
     // 检查是否需要触发预加载
-    this.checkPreloadTrigger(currentChunkIndex, currentTime)
+    this.checkPreloadTrigger(currentChunkIndex, currentTime);
   }
 
   /**
@@ -211,29 +226,30 @@ class SmartPreloadController {
       this.currentAudioUrl,
       currentTime,
       this.preloadRange
-    )
-    
+    );
+
     // 检查哪些块还未缓存
-    const missingChunks = requiredChunks.filter(chunkIndex => 
-      !lruCache.has(this.currentAudioUrl, chunkIndex) && 
-      !this.isChunkLoading(this.currentAudioUrl, chunkIndex)
-    )
-    
+    const missingChunks = requiredChunks.filter(
+      chunkIndex =>
+        !lruCache.has(this.currentAudioUrl, chunkIndex) &&
+        !this.isChunkLoading(this.currentAudioUrl, chunkIndex)
+    );
+
     if (missingChunks.length > 0) {
-      console.log('触发预加载，缺失块:', missingChunks)
-      
+      console.log('触发预加载，缺失块:', missingChunks);
+
       // 根据播放方向设置优先级
       missingChunks.forEach(chunkIndex => {
-        let priority = 'medium'
-        if (chunkIndex === currentChunkIndex) priority = 'high'
-        else if (chunkIndex === currentChunkIndex + 1) priority = 'high'
-        else if (chunkIndex > currentChunkIndex) priority = 'medium'
-        else priority = 'low' // 后退方向的块优先级较低
-        
-        this.enqueuePreload(this.currentAudioUrl, chunkIndex, priority)
-      })
-      
-      this.processPreloadQueue()
+        let priority = 'medium';
+        if (chunkIndex === currentChunkIndex) priority = 'high';
+        else if (chunkIndex === currentChunkIndex + 1) priority = 'high';
+        else if (chunkIndex > currentChunkIndex) priority = 'medium';
+        else priority = 'low'; // 后退方向的块优先级较低
+
+        this.enqueuePreload(this.currentAudioUrl, chunkIndex, priority);
+      });
+
+      this.processPreloadQueue();
     }
   }
 
@@ -244,8 +260,8 @@ class SmartPreloadController {
    * @returns {boolean} 是否正在加载
    */
   isChunkLoading(audioUrl, chunkIndex) {
-    const loadId = `${audioUrl}#${chunkIndex}`
-    return this.activeLoads.has(loadId)
+    const loadId = `${audioUrl}#${chunkIndex}`;
+    return this.activeLoads.has(loadId);
   }
 
   /**
@@ -256,29 +272,34 @@ class SmartPreloadController {
    */
   enqueuePreload(audioUrl, chunkIndex, priority = 'medium') {
     // 检查是否已经在队列中
-    const exists = this.preloadQueue.some(task => 
-      task.audioUrl === audioUrl && task.chunkIndex === chunkIndex
-    )
-    
-    if (!exists && !this.isChunkLoading(audioUrl, chunkIndex) && !lruCache.has(audioUrl, chunkIndex)) {
+    const exists = this.preloadQueue.some(
+      task => task.audioUrl === audioUrl && task.chunkIndex === chunkIndex
+    );
+
+    if (
+      !exists &&
+      !this.isChunkLoading(audioUrl, chunkIndex) &&
+      !lruCache.has(audioUrl, chunkIndex)
+    ) {
       const task = {
         audioUrl,
         chunkIndex,
         priority,
-        addedAt: Date.now()
-      }
-      
-      this.preloadQueue.push(task)
-      
+        addedAt: Date.now(),
+      };
+
+      this.preloadQueue.push(task);
+
       // 按优先级排序队列
       this.preloadQueue.sort((a, b) => {
-        const priorityOrder = { high: 3, medium: 2, low: 1 }
-        const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority]
-        if (priorityDiff !== 0) return priorityDiff
-        return a.addedAt - b.addedAt // 相同优先级按添加时间排序
-      })
-      
-      console.log(`加入预加载队列: chunk ${chunkIndex}, 优先级: ${priority}`)
+        const priorityOrder = { high: 3, medium: 2, low: 1 };
+        const priorityDiff =
+          priorityOrder[b.priority] - priorityOrder[a.priority];
+        if (priorityDiff !== 0) return priorityDiff;
+        return a.addedAt - b.addedAt; // 相同优先级按添加时间排序
+      });
+
+      console.log(`加入预加载队列: chunk ${chunkIndex}, 优先级: ${priority}`);
     }
   }
 
@@ -286,23 +307,26 @@ class SmartPreloadController {
    * 处理预加载队列
    */
   async processPreloadQueue() {
-    if (this.isPreloading) return
-    
-    this.isPreloading = true
-    
-    while (this.preloadQueue.length > 0 && this.activeLoads.size < this.maxConcurrentLoads) {
-      const task = this.preloadQueue.shift()
-      
+    if (this.isPreloading) return;
+
+    this.isPreloading = true;
+
+    while (
+      this.preloadQueue.length > 0 &&
+      this.activeLoads.size < this.maxConcurrentLoads
+    ) {
+      const task = this.preloadQueue.shift();
+
       // 再次检查是否已缓存(可能在队列等待期间已加载)
       if (lruCache.has(task.audioUrl, task.chunkIndex)) {
-        continue
+        continue;
       }
-      
+
       // 开始加载任务
-      this.startChunkLoad(task)
+      this.startChunkLoad(task);
     }
-    
-    this.isPreloading = false
+
+    this.isPreloading = false;
   }
 
   /**
@@ -310,49 +334,53 @@ class SmartPreloadController {
    * @param {Object} task - 加载任务
    */
   async startChunkLoad(task) {
-    const { audioUrl, chunkIndex } = task
-    const loadId = `${audioUrl}#${chunkIndex}`
-    const startTime = Date.now()
-    
-    this.activeLoads.add(loadId)
-    this.loadingStats.totalLoads++
-    
+    const { audioUrl, chunkIndex } = task;
+    const loadId = `${audioUrl}#${chunkIndex}`;
+    const startTime = Date.now();
+
+    this.activeLoads.add(loadId);
+    this.loadingStats.totalLoads++;
+
     try {
-      console.log(`开始加载块: ${audioUrl} chunk ${chunkIndex}`)
-      
+      console.log(`开始加载块: ${audioUrl} chunk ${chunkIndex}`);
+
       // 获取块的字节范围
-      const { start, end } = audioChunkManager.getChunkByteRange(audioUrl, chunkIndex)
-      
+      const { start, end } = audioChunkManager.getChunkByteRange(
+        audioUrl,
+        chunkIndex
+      );
+
       // 发起Range请求
-      const chunkData = await this.loadChunkData(audioUrl, start, end)
-      
+      const chunkData = await this.loadChunkData(audioUrl, start, end);
+
       if (chunkData && chunkData.byteLength > 0) {
         // 存入缓存
-        const success = lruCache.put(audioUrl, chunkIndex, chunkData)
-        
+        const success = lruCache.put(audioUrl, chunkIndex, chunkData);
+
         if (success) {
-          this.loadingStats.successfulLoads++
-          const loadTime = Date.now() - startTime
-          this.updateLoadTimeStats(loadTime)
-          
-          console.log(`块加载成功: chunk ${chunkIndex}, 大小: ${(chunkData.byteLength / 1024).toFixed(1)}KB, 耗时: ${loadTime}ms`)
+          this.loadingStats.successfulLoads++;
+          const loadTime = Date.now() - startTime;
+          this.updateLoadTimeStats(loadTime);
+
+          console.log(
+            `块加载成功: chunk ${chunkIndex}, 大小: ${(chunkData.byteLength / 1024).toFixed(1)}KB, 耗时: ${loadTime}ms`
+          );
         } else {
-          console.warn(`块缓存失败: chunk ${chunkIndex}`)
-          this.loadingStats.failedLoads++
+          console.warn(`块缓存失败: chunk ${chunkIndex}`);
+          this.loadingStats.failedLoads++;
         }
       } else {
-        console.warn(`块数据为空: chunk ${chunkIndex}`)
-        this.loadingStats.failedLoads++
+        console.warn(`块数据为空: chunk ${chunkIndex}`);
+        this.loadingStats.failedLoads++;
       }
-      
     } catch (error) {
-      console.error(`块加载失败: chunk ${chunkIndex}`, error)
-      this.loadingStats.failedLoads++
+      console.error(`块加载失败: chunk ${chunkIndex}`, error);
+      this.loadingStats.failedLoads++;
     } finally {
-      this.activeLoads.delete(loadId)
-      
+      this.activeLoads.delete(loadId);
+
       // 继续处理队列
-      setTimeout(() => this.processPreloadQueue(), 10)
+      setTimeout(() => this.processPreloadQueue(), 10);
     }
   }
 
@@ -369,21 +397,22 @@ class SmartPreloadController {
         url,
         method: 'GET',
         header: {
-          'Range': `bytes=${start}-${end}`
+          Range: `bytes=${start}-${end}`,
         },
         responseType: 'arraybuffer',
-        success: (res) => {
-          if (res.statusCode === 206 || res.statusCode === 200) { // Partial Content 或 OK
-            resolve(res.data)
+        success: res => {
+          if (res.statusCode === 206 || res.statusCode === 200) {
+            // Partial Content 或 OK
+            resolve(res.data);
           } else {
-            reject(new Error(`HTTP ${res.statusCode}`))
+            reject(new Error(`HTTP ${res.statusCode}`));
           }
         },
-        fail: (error) => {
-          reject(error)
-        }
-      })
-    })
+        fail: error => {
+          reject(error);
+        },
+      });
+    });
   }
 
   /**
@@ -391,9 +420,9 @@ class SmartPreloadController {
    * @param {number} loadTime - 加载时间
    */
   updateLoadTimeStats(loadTime) {
-    this.loadingStats.totalLoadTime += loadTime
-    this.loadingStats.averageLoadTime = 
-      this.loadingStats.totalLoadTime / this.loadingStats.successfulLoads
+    this.loadingStats.totalLoadTime += loadTime;
+    this.loadingStats.averageLoadTime =
+      this.loadingStats.totalLoadTime / this.loadingStats.successfulLoads;
   }
 
   /**
@@ -402,24 +431,27 @@ class SmartPreloadController {
    * @param {number} duration - 音频时长
    */
   async switchAudio(newAudioUrl, duration) {
-    console.log('切换音频:', newAudioUrl)
-    
+    console.log('切换音频:', newAudioUrl);
+
     // 清理旧音频的预加载队列
-    this.preloadQueue = this.preloadQueue.filter(task => task.audioUrl === newAudioUrl)
-    
+    this.preloadQueue = this.preloadQueue.filter(
+      task => task.audioUrl === newAudioUrl
+    );
+
     // 可选：清理旧音频的缓存(保留一定数量以支持快速切换回来)
     if (this.currentAudioUrl && this.currentAudioUrl !== newAudioUrl) {
       // 保留最近播放的音频块，清理其他
       setTimeout(() => {
-        const oldAudioCacheCount = this.countAudioCache(this.currentAudioUrl)
-        if (oldAudioCacheCount > 5) { // 如果超过5块，清理部分
-          lruCache.removeAudio(this.currentAudioUrl)
+        const oldAudioCacheCount = this.countAudioCache(this.currentAudioUrl);
+        if (oldAudioCacheCount > 5) {
+          // 如果超过5块，清理部分
+          lruCache.removeAudio(this.currentAudioUrl);
         }
-      }, 5000) // 5秒后清理
+      }, 5000); // 5秒后清理
     }
-    
+
     // 初始化新音频
-    await this.initialize(newAudioUrl, duration)
+    await this.initialize(newAudioUrl, duration);
   }
 
   /**
@@ -428,16 +460,16 @@ class SmartPreloadController {
    * @returns {number} 缓存块数量
    */
   countAudioCache(audioUrl) {
-    const keys = lruCache.getAllKeys()
-    return keys.filter(item => item.audioUrl === audioUrl).length
+    const keys = lruCache.getAllKeys();
+    return keys.filter(item => item.audioUrl === audioUrl).length;
   }
 
   /**
    * 暂停预加载
    */
   pausePreload() {
-    this.preloadQueue.length = 0 // 清空队列
-    console.log('已暂停预加载')
+    this.preloadQueue.length = 0; // 清空队列
+    console.log('已暂停预加载');
   }
 
   /**
@@ -446,11 +478,14 @@ class SmartPreloadController {
   resumePreload() {
     if (this.currentAudioUrl) {
       this.checkPreloadTrigger(
-        audioChunkManager.getChunkIndexByTime(this.currentAudioUrl, this.currentTime),
+        audioChunkManager.getChunkIndexByTime(
+          this.currentAudioUrl,
+          this.currentTime
+        ),
         this.currentTime
-      )
+      );
     }
-    console.log('已恢复预加载')
+    console.log('已恢复预加载');
   }
 
   /**
@@ -467,21 +502,21 @@ class SmartPreloadController {
       queueSize: this.preloadQueue.length,
       maxConcurrentLoads: this.maxConcurrentLoads,
       adaptiveConfig: this.adaptiveConfig,
-      cacheStats: lruCache.getStats()
-    }
+      cacheStats: lruCache.getStats(),
+    };
   }
 
   /**
    * 销毁控制器
    */
   destroy() {
-    this.pausePreload()
-    this.currentAudioUrl = null
-    this.activeLoads.clear()
-    console.log('智能预加载控制器已销毁')
+    this.pausePreload();
+    this.currentAudioUrl = null;
+    this.activeLoads.clear();
+    console.log('智能预加载控制器已销毁');
   }
 }
 
 // 创建并导出智能预加载控制器实例
-const smartPreloadController = new SmartPreloadController()
-module.exports = smartPreloadController
+const smartPreloadController = new SmartPreloadController();
+module.exports = smartPreloadController;

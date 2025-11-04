@@ -5,15 +5,16 @@
 
 class IconManager {
   constructor() {
-    this.baseUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/'
-    this.iconCache = new Map()
-    
+    this.baseUrl =
+      'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/';
+    this.iconCache = new Map();
+
     // 图标映射表
     this.iconMap = {
       // 导航类图标
       'nav-browse': 'nav-browse.svg',
-      'nav-category': 'nav-category.svg', 
-      
+      'nav-category': 'nav-category.svg',
+
       // 播放控制类图标
       'player-play-large': 'player-play-large.svg',
       'player-play-small': 'player-play-small.svg',
@@ -21,7 +22,7 @@ class IconManager {
       'player-forward-30s': 'player-forward-30s.svg',
       'player-backward-15s': 'player-backward-15s.svg',
       'player-progress-bar': 'player-progress-bar.svg',
-      
+
       // 交互类图标
       'action-like-active': 'action-like-active.svg',
       'action-like-inactive': 'action-like-inactive.svg',
@@ -29,7 +30,7 @@ class IconManager {
       'action-favorite-inactive': 'action-favorite-inactive.svg',
       'action-share': 'action-share.svg',
       'action-comment': 'action-comment.svg',
-      
+
       // 界面控制类图标
       'ui-back': 'ui-back.svg',
       'ui-search': 'search.svg',
@@ -39,15 +40,15 @@ class IconManager {
       'ui-expand': 'ui-expand.svg',
       'ui-list': 'ui-list.svg',
       'ui-loading': 'ui-loading.svg',
-      
+
       // 功能页面类图标
       'feature-history': 'feature-history.svg',
       'feature-feedback': 'feature-feedback.svg',
-      
+
       // 认证相关图标
       'auth-agreement-checked': 'auth-agreement-checked.svg',
-      'auth-agreement-unchecked': 'auth-agreement-unchecked.svg'
-    }
+      'auth-agreement-unchecked': 'auth-agreement-unchecked.svg',
+    };
   }
 
   /**
@@ -56,12 +57,12 @@ class IconManager {
    * @returns {string} 图标URL
    */
   getIconUrl(iconName) {
-    const fileName = this.iconMap[iconName]
+    const fileName = this.iconMap[iconName];
     if (!fileName) {
-      console.warn(`图标 ${iconName} 不存在`)
-      return ''
+      console.warn(`图标 ${iconName} 不存在`);
+      return '';
     }
-    return this.baseUrl + fileName
+    return this.baseUrl + fileName;
   }
 
   /**
@@ -72,26 +73,26 @@ class IconManager {
   async getIconInfo(iconName) {
     // 检查缓存
     if (this.iconCache.has(iconName)) {
-      return this.iconCache.get(iconName)
+      return this.iconCache.get(iconName);
     }
 
     try {
       // 从Supabase获取图标信息
-      const response = await this.fetchIconFromSupabase(iconName)
+      const response = await this.fetchIconFromSupabase(iconName);
       if (response) {
-        this.iconCache.set(iconName, response)
-        return response
+        this.iconCache.set(iconName, response);
+        return response;
       }
     } catch (error) {
-      console.error(`获取图标 ${iconName} 失败:`, error)
+      console.error(`获取图标 ${iconName} 失败:`, error);
     }
 
     // 回退到基础URL
     return {
       name: iconName,
       url: this.getIconUrl(iconName),
-      metadata: {}
-    }
+      metadata: {},
+    };
   }
 
   /**
@@ -105,23 +106,23 @@ class IconManager {
         url: 'https://gxvfcafgnhzjiauukssj.supabase.co/rest/v1/static_assets',
         method: 'GET',
         header: {
-          'apikey': getApp().globalData.supabaseAnonKey,
-          'Content-Type': 'application/json'
+          apikey: getApp().globalData.supabaseAnonKey,
+          'Content-Type': 'application/json',
         },
         data: {
           select: '*',
-          name: `eq.${iconName}`
+          name: `eq.${iconName}`,
         },
-        success: (res) => {
+        success: res => {
           if (res.statusCode === 200 && res.data.length > 0) {
-            resolve(res.data[0])
+            resolve(res.data[0]);
           } else {
-            resolve(null)
+            resolve(null);
           }
         },
-        fail: reject
-      })
-    })
+        fail: reject,
+      });
+    });
   }
 
   /**
@@ -130,22 +131,28 @@ class IconManager {
    */
   async preloadIcons(iconNames = []) {
     const defaultIcons = [
-      'nav-browse', 'nav-category', 'nav-profile',
-      'action-like-active', 'action-like-inactive',
-      'action-favorite-active', 'action-favorite-inactive',
-      'player-play-large', 'player-pause',
-      'ui-back', 'ui-search'
-    ]
-    
-    const iconsToLoad = iconNames.length > 0 ? iconNames : defaultIcons
-    
-    const promises = iconsToLoad.map(iconName => this.getIconInfo(iconName))
-    
+      'nav-browse',
+      'nav-category',
+      'nav-profile',
+      'action-like-active',
+      'action-like-inactive',
+      'action-favorite-active',
+      'action-favorite-inactive',
+      'player-play-large',
+      'player-pause',
+      'ui-back',
+      'ui-search',
+    ];
+
+    const iconsToLoad = iconNames.length > 0 ? iconNames : defaultIcons;
+
+    const promises = iconsToLoad.map(iconName => this.getIconInfo(iconName));
+
     try {
-      await Promise.all(promises)
-      console.log('图标预加载完成')
+      await Promise.all(promises);
+      console.log('图标预加载完成');
     } catch (error) {
-      console.error('图标预加载失败:', error)
+      console.error('图标预加载失败:', error);
     }
   }
 
@@ -167,10 +174,10 @@ class IconManager {
       'player-play-large': '/images/icons/播放-大.svg',
       'player-pause': '/images/icons/暂停.svg',
       'ui-back': '/images/icons/back.svg',
-      'ui-search': '/images/icons/search.svg'
-    }
-    
-    return localIconMap[iconName] || ''
+      'ui-search': '/images/icons/search.svg',
+    };
+
+    return localIconMap[iconName] || '';
   }
 
   /**
@@ -181,16 +188,16 @@ class IconManager {
    */
   getIconPath(iconName, forceLocal = false) {
     if (forceLocal) {
-      return this.getLocalIconPath(iconName)
+      return this.getLocalIconPath(iconName);
     }
-    
+
     // 检查网络状态
-    const networkType = wx.getNetworkTypeSync()
+    const networkType = wx.getNetworkTypeSync();
     if (networkType.networkType === 'none') {
-      return this.getLocalIconPath(iconName)
+      return this.getLocalIconPath(iconName);
     }
-    
-    return this.getIconUrl(iconName)
+
+    return this.getIconUrl(iconName);
   }
 
   /**
@@ -200,20 +207,42 @@ class IconManager {
    */
   getIconsByCategory(category) {
     const categoryMap = {
-      'navigation': ['nav-browse', 'nav-category', 'nav-profile'],
-      'player': ['player-play-large', 'player-play-small', 'player-pause', 'player-forward-30s', 'player-backward-15s'],
-      'interaction': ['action-like-active', 'action-like-inactive', 'action-favorite-active', 'action-favorite-inactive', 'action-share', 'action-comment'],
-      'ui': ['ui-back', 'ui-search', 'ui-settings', 'ui-arrow-right', 'ui-refresh', 'ui-expand', 'ui-list', 'ui-loading'],
-      'feature': ['feature-history', 'feature-feedback'],
-      'auth': ['auth-agreement-checked', 'auth-agreement-unchecked']
-    }
-    
-    return categoryMap[category] || []
+      navigation: ['nav-browse', 'nav-category', 'nav-profile'],
+      player: [
+        'player-play-large',
+        'player-play-small',
+        'player-pause',
+        'player-forward-30s',
+        'player-backward-15s',
+      ],
+      interaction: [
+        'action-like-active',
+        'action-like-inactive',
+        'action-favorite-active',
+        'action-favorite-inactive',
+        'action-share',
+        'action-comment',
+      ],
+      ui: [
+        'ui-back',
+        'ui-search',
+        'ui-settings',
+        'ui-arrow-right',
+        'ui-refresh',
+        'ui-expand',
+        'ui-list',
+        'ui-loading',
+      ],
+      feature: ['feature-history', 'feature-feedback'],
+      auth: ['auth-agreement-checked', 'auth-agreement-unchecked'],
+    };
+
+    return categoryMap[category] || [];
   }
 }
 
 // 创建全局实例
-const iconManager = new IconManager()
+const iconManager = new IconManager();
 
 // 导出
-module.exports = iconManager
+module.exports = iconManager;

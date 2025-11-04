@@ -2,8 +2,21 @@
   "name": "dafenqi",
   "version": "1.0.0",
   "description": "这是云开发的快速启动指引，其中演示了如何上手使用云开发的三大基础能力：",
-  "main": "index.js",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "format": "prettier --write .",
+    "check-format": "prettier --check ."
+  },
   "dependencies": {
     "tdesign-miniprogram": "^1.10.1"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "prettier": "^3.6.2"
   }
 }
