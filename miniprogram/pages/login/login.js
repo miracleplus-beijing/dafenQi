@@ -39,8 +39,6 @@ Page({
       });
     });
 
-    // 检查隐私权限
-    this.checkPrivacyPermission();
   },
 
   onShow: function () {

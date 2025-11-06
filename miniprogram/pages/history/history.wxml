@@ -1,44 +1,123 @@
 <!-- 历史记录页面 -->
 <view class="history-container">
-  <!-- 空状态 -->
-  <view class="empty-state" wx:if="{{historyList.length === 0}}">
-    <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/history.svg" class="empty-icon"></image>
-    <text class="empty-text">暂无播放历史</text>
-    <text class="empty-desc">听过的内容会显示在这里</text>
-  </view>
-
-  <!-- 历史列表 -->
-  <view class="history-list" wx:else>
-    <view wx:for="{{historyList}}" wx:key="id" class="history-item" 
-          bindtap="playHistoryItem" data-item="{{item}}">
-      <view class="item-cover">
-        <image src="{{item.cover || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/pictures/default-cover.png'}}" 
-               class="cover-image" mode="aspectFill"></image>
-        <view class="play-overlay">
-          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="play-icon"></image>
-        </view>
-      </view>
-      
-      <view class="item-info">
-        <text class="item-title">{{item.title}}</text>
-        <text class="item-channel">{{item.channel}}</text>
-        <view class="item-meta">
-          <text class="play-time">{{item.playTimeText}}</text>
-          <text class="duration">{{item.duration || '00:00'}}</text>
-        </view>
-      </view>
-      
-      <view class="item-actions">
-        <view class="action-btn" bindtap="removeFromHistory" 
-              data-id="{{item.id}}" catchtap="true">
-          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/delete.svg" class="action-icon"></image>
-        </view>
-      </view>
+  <!-- 加载状态 -->
+  <view class="loading-wrapper" wx:if="{{loading}}">
+    <view class="loading-indicator">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">加载中...</text>
     </view>
   </view>
 
-  <!-- 底部操作 -->
-  <view class="bottom-actions" wx:if="{{historyList.length > 0}}">
-    <button class="clear-btn" bindtap="clearAllHistory">清空历史记录</button>
+  <!-- 空状态 -->
+  <view class="empty-state" wx:elif="{{historyList.length === 0}}">
+    <view class="empty-content">
+      <t-icon name="history" class="empty-icon" />
+      <text class="empty-title">暂无播放历史</text>
+      <text class="empty-desc">听过的内容会显示在这里</text>
+    </view>
+  </view>
+
+  <!-- 历史列表 -->
+  <view class="history-content" wx:else>
+    <!-- 列表头部 -->
+    <view class="history-header">
+      <text class="header-title">播放历史</text>
+      <view class="header-count">
+        <text class="count-text">{{historyList.length}} 条记录</text>
+      </view>
+    </view>
+
+    <!-- 历史列表 -->
+    <view class="history-list">
+      <view
+        wx:for="{{historyList}}"
+        wx:key="id"
+        class="history-item"
+        bindtap="playHistoryItem"
+        data-item="{{item}}"
+      >
+        <!-- 左侧封面 -->
+        <view class="item-cover-wrapper">
+          <image
+            src="{{item.cover || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/default-cover.png'}}"
+            class="item-cover-image"
+            mode="aspectFill"
+          ></image>
+          <view class="cover-overlay">
+            <t-icon name="play-circle" class="play-icon" />
+          </view>
+        </view>
+
+        <!-- 中间信息 -->
+        <view class="item-content">
+          <view class="item-header">
+            <text class="item-title">{{item.title}}</text>
+
+            <!-- 频道信息 -->
+            <view class="channel-info">
+              <text class="channel-name">{{item.channel}}</text>
+              <view class="channel-badges" wx:if="{{item.isOfficial || item.channelCategory}}">
+                <text class="official-badge" wx:if="{{item.isOfficial}}">官方</text>
+                <text class="category-badge" wx:if="{{item.channelCategory}}">{{item.channelCategory}}</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 学术信息 -->
+          <view class="paper-info" wx:if="{{item.paperInfo.title}}">
+            <view class="paper-title-line">
+              <t-icon name="file-text" class="paper-icon" />
+              <text class="paper-title">{{item.paperInfo.title}}</text>
+            </view>
+
+            <view class="paper-meta">
+              <text class="paper-authors">{{item.paperInfo.authors}}</text>
+              <view class="meta-divider" wx:if="{{item.paperInfo.authors && item.paperInfo.institution}}">·</view>
+              <text class="paper-institution" wx:if="{{item.paperInfo.institution}}">{{item.paperInfo.institution}}</text>
+            </view>
+
+            <view class="paper-details" wx:if="{{item.paperInfo.publishDateText || item.paperInfo.arxivId}}">
+              <text class="publish-date" wx:if="{{item.paperInfo.publishDateText}}">{{item.paperInfo.publishDateText}}</text>
+              <view class="meta-divider" wx:if="{{item.paperInfo.publishDateText && item.paperInfo.arxivId}}">·</view>
+              <text class="arxiv-id" wx:if="{{item.paperInfo.arxivId}}">arXiv:{{item.paperInfo.arxivId}}</text>
+            </view>
+          </view>
+
+          <!-- 播放统计 -->
+          <view class="stats-info">
+        
+            <t-icon name="eye" class="stats-icon" />
+
+            <text class="stats-text">{{item.stats.playCount}}次播放</text>
+          </view>
+
+          <!-- 状态标识 -->
+          <view class="status-badges">
+            <text class="completed-badge" wx:if="{{item.completed}}">已完成</text>
+            <text class="in-progress-badge" wx:elif="{{item.progressPercent > 0}}">进行中</text>
+          </view>
+        </view>
+
+        <!-- 右侧操作按钮 -->
+        <view class="item-actions">
+          <view
+            class="action-btn delete-btn"
+            bindtap="removeFromHistory"
+            data-id="{{item.id}}"
+            catchtap="true"
+          >
+            <t-icon name="delete" class="action-icon" />
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部操作区域 -->
+    <view class="bottom-actions">
+      <button class="clear-all-btn" bindtap="clearAllHistory">
+        <t-icon name="delete" class="btn-icon" />
+        <text class="btn-text">清空历史记录</text>
+      </button>
+    </view>
   </view>
 </view>

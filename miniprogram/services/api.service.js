@@ -249,6 +249,73 @@ class ApiService {
           error: error.message
         }
       }
+    },
+
+    // 删除单个播放历史记录
+    removeHistory: async (userId, podcastId) => {
+      try {
+        const result = await requestUtil.delete(`/rest/v1/user_play_history?user_id=eq.${userId}&podcast_id=eq.${podcastId}`, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+
+        return {
+          success: true,
+          data: result
+        }
+      } catch (error) {
+        console.error('删除播放历史失败:', error)
+        return {
+          success: false,
+          error: error.message
+        }
+      }
+    },
+
+    // 清空用户所有播放历史
+    clearHistory: async (userId) => {
+      try {
+        const result = await requestUtil.delete(`/rest/v1/user_play_history?user_id=eq.${userId}`, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+
+        return {
+          success: true,
+          data: result
+        }
+      } catch (error) {
+        console.error('清空播放历史失败:', error)
+        return {
+          success: false,
+          error: error.message
+        }
+      }
+    },
+
+    // 获取用户播放历史（包含播客和频道信息）
+    getPlayHistory: async (userId, limit = 50) => {
+      try {
+        const result = await requestUtil.get('/rest/v1/user_play_history', {
+          user_id: `eq.${userId}`,
+          select: '*,podcasts(id,title,description,cover_url,audio_url,duration,paper_url,paper_title,authors,institution,publish_date,arxiv_id,doi,play_count,like_count,favorite_count,comment_count,share_count,status,created_at,updated_at,channels(id,name,description,cover_url,category,is_official,subscriber_count))',
+          order: 'played_at.desc',
+          limit
+        })
+
+        return {
+          success: true,
+          data: result
+        }
+      } catch (error) {
+        console.error('获取播放历史失败:', error)
+        return {
+          success: false,
+          error: error.message
+        }
+      }
     }
   }
 

@@ -431,11 +431,4 @@ All Supabase requests use:
 - **HTTPS**: All requests over secure transport
 
 ### Icon Usage Guidelines
-**IMPORTANT**: Always use the correct Supabase static-images URL for icons:
-- **Base URL**: `https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/`
-- **Example Usage**: 
-  - Search icon: `https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/search.svg`
-  - Play icon: `https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg`
-  - Close icon: `https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/close.svg`
-- **DO NOT** use incorrect paths like `/icons/` or `public/icons/` - always use the full Supabase URL
-- All icons are SVG format and stored in the `static-images` bucket
+**IMPORTANT**: 必须以 t-design 的icon为先，当t-design的图标 无法满足需求时，需要向用户提醒，解释使用什么样的 icon，让用户自行替换
