@@ -318,7 +318,7 @@ User files follow path structure: `{userId}/{fileType}/{filename}` in `user_prof
 
 ### 3. Working with Services
 When modifying services, follow these patterns:
-- Import services at page level: `const authService = require('../../services/auth.service.js')`
+- Import services at page level: `const { authService }= require('../../services/auth.service.js')`
 - Always handle both success and error cases
 - Check authentication state before making user-specific API calls
 - Use `getApp().globalData` for accessing global state

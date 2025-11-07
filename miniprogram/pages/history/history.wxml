@@ -39,7 +39,7 @@
         <!-- 左侧封面 -->
         <view class="item-cover-wrapper">
           <image
-            src="{{item.cover || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/default-cover.png'}}"
+            src="{{item.cover || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png'}}"
             class="item-cover-image"
             mode="aspectFill"
           ></image>

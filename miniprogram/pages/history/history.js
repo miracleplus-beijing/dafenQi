@@ -110,7 +110,7 @@ Page({
             id: item.podcast_id,
             title: podcast.title || '未知播客',
             description: podcast.description || '',
-            cover: podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/default-cover.png',
+            cover: podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/logo.png',
             audioUrl: podcast.audio_url || '',
             channel: channel.name || '未知来源',
             channelCategory: channel.category || '',

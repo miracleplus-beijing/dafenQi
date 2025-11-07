@@ -13,19 +13,13 @@ class RequestUtil {
     };
   }
 
-  // 获取认证令牌（已弃用，使用getValidAuthToken代替）
-  async getAuthToken() {
-    try {
-      const session = wx.getStorageSync('supabase_session');
-      return session ? session.access_token : null;
-    } catch (error) {
-      console.error('获取认证令牌失败:', error);
-      return null;
-    }
-  }
+
 
   // 获取有效认证令牌（带智能验证）
   async getValidAuthToken() {
+
+    const authService = require('../services/auth.service.js');
+
     try {
       const session = wx.getStorageSync('supabase_session');
       if (!session?.access_token) {
@@ -36,7 +30,7 @@ class RequestUtil {
       // 检查token是否即将过期（提前5分钟续签）
       if (this.isTokenExpiringSoon(session)) {
         console.log('Token即将过期，尝试提前续签');
-        const refreshResult = await this.refreshSessionToken();
+        const refreshResult = await authService.refreshSession();
         if (refreshResult.success) {
           return refreshResult.session.access_token;
         } else {
@@ -64,74 +58,7 @@ class RequestUtil {
     return expiresAt <= fiveMinutesFromNow;
   }
 
-  // 使用refresh token刷新会话
-  async refreshSessionToken() {
-    try {
-      const session = wx.getStorageSync('supabase_session');
-      if (!session?.refresh_token) {
-        console.error('无refresh_token，无法续签');
-        return { success: false, error: '无refresh_token' };
-      }
 
-      console.log('开始自动续签token...');
-
-      const response = await this.callRefreshTokenAPI(session.refresh_token);
-      if (response.success) {
-        // 更新本地存储的session
-        const newSession = response.session;
-        wx.setStorageSync('supabase_session', newSession);
-
-        // 更新全局状态
-        const app = getApp();
-        if (app && app.globalData) {
-          app.globalData.userInfo = response.user;
-          app.globalData.isLoggedIn = true;
-          app.globalData.isGuestMode = false;
-        }
-
-        console.log('Token续签成功');
-        return { success: true, session: newSession };
-      } else {
-        console.error('续签失败:', response.error);
-        return { success: false, error: response.error };
-      }
-    } catch (error) {
-      console.error('续签过程出错:', error);
-      return { success: false, error: error.message };
-    }
-  }
-
-  // 调用后端refresh token API
-  async callRefreshTokenAPI(refreshToken) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: `${this.baseURL}/functions/v1/wechat-auth`,
-        method: 'POST',
-        data: {
-          code: 'refresh_session',
-          refresh_token: refreshToken
-        },
-        header: {
-          'Content-Type': 'application/json',
-          'apikey': this.config.anonKey
-        },
-        timeout: 10000,
-        success: (res) => {
-          if (res.statusCode === 200 && res.data.success) {
-            resolve(res.data);
-          } else {
-            resolve({
-              success: false,
-              error: res.data?.error || `HTTP ${res.statusCode}`
-            });
-          }
-        },
-        fail: (error) => {
-          reject(new Error(`续签API调用失败: ${error.errMsg}`));
-        }
-      });
-    });
-  }
 
   // 清理过期session
   clearExpiredSession() {
@@ -156,7 +83,6 @@ class RequestUtil {
       if (app && app.globalData) {
         app.globalData.userInfo = null;
         app.globalData.isLoggedIn = false;
-        app.globalData.isGuestMode = true;
         // 清理用户相关数据
         app.globalData.favoriteList = [];
         app.globalData.historyList = [];
@@ -289,8 +215,9 @@ class RequestUtil {
   // 处理401错误的智能续签逻辑
   async handle401Error(res, originalOptions, resolve, reject) {
     const { needAuth, retryWithoutAuth, isRetryAfterRefresh, url } = originalOptions;
+    const authService = require('../services/auth.service.js');
 
-    console.log('收到401错误，开始智能处理', {
+    console.log('收到401错误', {
       needAuth,
       isRetryAfterRefresh,
       url
@@ -311,10 +238,12 @@ class RequestUtil {
           console.log('检测到有效session，尝试自动续签');
 
           // 尝试自动续签
-          const refreshResult = await this.refreshSessionToken();
+          const refreshResult = await authService.refreshSession();
           if (refreshResult.success) {
             console.log('续签成功，重试原始请求');
             // 续签成功，重试原始请求
+            authService.setSession(refreshResult.session)
+
             this.request({
               ...originalOptions,
               isRetryAfterRefresh: true, // 标记为续签后的重试
@@ -343,7 +272,7 @@ class RequestUtil {
         retryWithoutAuth: false,
       })
         .then(resolve)
-        .catch(reject);
+        .catch(reject)
     } else if (this.requiresAuthWithPrompt(url)) {
       reject(new AuthRequiredError('请登录后使用此功能'));
     } else {
@@ -432,7 +361,7 @@ class RequestUtil {
 
   // 文件上传请求
   async upload(url, filePath, formData = {}, options = {}) {
-    const token = await this.getAuthToken();
+    const token = await this.getValidAuthToken();
     const headers = {
       apikey: this.config.anonKey,
       ...options.headers,

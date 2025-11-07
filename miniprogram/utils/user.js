@@ -100,7 +100,10 @@ Deno.serve(async (req)=>{
       }
       console.log('Processing session refresh request...');
       try {
-        const { data: refreshData, error: refreshError } = await supabaseAdmin.auth.admin.refreshSession(refresh_token);
+        // 使用正确的 refresh token 方法
+        const { data: refreshData, error: refreshError } = await supabaseAdmin.auth.refreshSession({
+          refresh_token: refresh_token
+        });
         if (refreshError || !refreshData.session) {
           throw new Error(`Session refresh failed: ${refreshError?.message}`);
         }
