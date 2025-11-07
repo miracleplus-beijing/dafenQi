@@ -1,13 +1,14 @@
 /**
  * 音频服务
  * 处理音频播放、下载、上传等功能
- */
+ */ const {AuthRequiredError} = require("../utils/request.js");
 
 class AudioService {
   constructor() {
     this.supabaseUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co';
     this.supabaseAnonKey =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmZjYWZnbmh6amlhdXVrc3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0MjY4NjAsImV4cCI6MjA3MTAwMjg2MH0.uxO5eyw0Usyd59UKz-S7bTrmOnNPg9Ld9wJ6pDMIQUA';
+    this.authService = require('./auth.service.js')
   }
 
   // 获取 Supabase 密钥
@@ -15,29 +16,14 @@ class AudioService {
     return this.supabaseAnonKey;
   }
 
-  /**
-   * 获取用户JWT token
-   * @returns {string|null} JWT token或null
-   */
-  getUserAccessToken() {
-    try {
-      const session = wx.getStorageSync('supabase_session');
-      if (session && session.access_token) {
-        return session.access_token;
-      }
-      return null;
-    } catch (error) {
-      console.warn('获取用户token失败:', error);
-      return null;
-    }
-  }
+
 
   /**
    * 检查当前用户是否已登录
    * @returns {boolean} 是否已登录
    */
   isUserLoggedIn() {
-    const token = this.getUserAccessToken();
+    const token = this.authService.getSession().access_token;
     return token !== null;
   }
 
@@ -471,7 +457,7 @@ class AudioService {
   makeRequest(url, method = 'GET', data = null, requireAuth = false) {
     return new Promise((resolve, reject) => {
       // 智能选择认证方式
-      const userToken = this.getUserAccessToken();
+      const userToken = authService.getSession().access_token;
       let authorizationHeader;
 
       if (requireAuth && !userToken) {

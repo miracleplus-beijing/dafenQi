@@ -3,7 +3,6 @@ const authService = require('./auth.service.js')
 const storageService = require('./storage.service.js')
 const requestUtil = require('../utils/request.js')
 const { AuthRequiredError } = require('../utils/request.js')
-const recommendationService = require('./recommendation/index.js')
 const commentService = require('./comment.service.js')
 const insightService = require('./insight.service.js')
 
@@ -12,7 +11,6 @@ class ApiService {
     this.auth = authService
     this.storage = storageService
     this.request = requestUtil
-    this.recommendation = recommendationService
     this.comment = commentService
     this.insight = insightService
   }

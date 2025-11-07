@@ -38,112 +38,9 @@ class SmartPreloadController {
     };
 
     // 初始化监控
-    this.initPerformanceMonitoring();
-  }
-
-  /**
-   * 初始化性能监控
-   */
-  initPerformanceMonitoring() {
-    // 监听内存警告
-    wx.onMemoryWarning(res => {
-      console.warn('内存警告:', res.level);
-      this.handleMemoryPressure(res.level);
-    });
-
-    // 定期检测网络性能
-    this.startNetworkSpeedTest();
-  }
-
-  /**
-   * 处理内存压力
-   * @param {number} level - 内存警告级别
-   */
-  handleMemoryPressure(level) {
-    // level: 5(严重) 10(中等) 15(轻微)
-    let pressureLevel = 1;
-    if (level >= 15)
-      pressureLevel = 1; // 轻微
-    else if (level >= 10)
-      pressureLevel = 3; // 中等
-    else if (level >= 5) pressureLevel = 5; // 严重
-
-    this.adaptiveConfig.memoryPressure = pressureLevel;
-
-    // 根据内存压力调整预加载策略
-    if (pressureLevel >= 4) {
-      this.preloadRange = 1; // 严重内存压力，仅预加载1块
-      lruCache.smartCleanup(pressureLevel);
-      console.log('内存压力较大，降低预加载范围至1块');
-    } else if (pressureLevel >= 2) {
-      this.preloadRange = 2; // 中等内存压力，预加载2块
-      console.log('中等内存压力，预加载范围调整至2块');
-    }
-  }
-
-  /**
-   * 网络速度测试
-   */
-  startNetworkSpeedTest() {
-    // 每2分钟检测一次网络性能
-    setInterval(
-      () => {
-        this.testNetworkSpeed();
-      },
-      2 * 60 * 1000
-    );
-  }
-
-  /**
-   * 测试网络速度
-   */
-  async testNetworkSpeed() {
-    try {
-      const testUrl =
-        'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg';
-      const startTime = Date.now();
-
-      await new Promise((resolve, reject) => {
-        wx.request({
-          url: testUrl,
-          method: 'GET',
-          success: () => {
-            const loadTime = Date.now() - startTime;
-            this.updateNetworkSpeed(loadTime);
-            resolve();
-          },
-          fail: reject,
-        });
+      wx.onMemoryWarning(res => {
+          console.warn('内存警告:', res.level);
       });
-    } catch (error) {
-      console.warn('网络速度测试失败:', error);
-    }
-  }
-
-  /**
-   * 更新网络速度评估
-   * @param {number} loadTime - 加载时间(毫秒)
-   */
-  updateNetworkSpeed(loadTime) {
-    let speed = 'medium';
-    if (loadTime < 500)
-      speed = 'fast'; // 小于500ms为快速网络
-    else if (loadTime > 2000) speed = 'slow'; // 大于2s为慢速网络
-
-    this.adaptiveConfig.networkSpeed = speed;
-
-    // 根据网络速度调整预加载策略
-    if (speed === 'fast') {
-      this.maxConcurrentLoads = 4;
-      this.preloadRange = Math.min(this.preloadRange + 1, 4);
-    } else if (speed === 'slow') {
-      this.maxConcurrentLoads = 2;
-      this.preloadRange = Math.max(this.preloadRange - 1, 1);
-    }
-
-    console.log(
-      `网络速度评估: ${speed} (${loadTime}ms), 预加载范围: ${this.preloadRange}`
-    );
   }
 
   /**
@@ -323,7 +220,8 @@ class SmartPreloadController {
       }
 
       // 开始加载任务
-      this.startChunkLoad(task);
+      await this.startChunkLoad(task);
+
     }
 
     this.isPreloading = false;
