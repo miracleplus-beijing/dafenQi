@@ -104,11 +104,6 @@ Page({
       wx.navigateTo({
         url: `../web/index?url=${selectedItem.link}&title=${selectedItem.title}`,
       });
-    } else if (selectedItem.type) {
-      console.log('selectedItem', selectedItem);
-      wx.navigateTo({
-        url: `/pages/example/index?envId=${this.data.selectedEnv?.envId}&type=${selectedItem.type}`,
-      });
     } else if (selectedItem.page) {
       wx.navigateTo({
         url: `/pages/${selectedItem.page}/index`,
@@ -129,15 +124,10 @@ Page({
   jumpPage(e) {
     const { type, page } = e.currentTarget.dataset;
     console.log('jump page', type, page);
-    if (type) {
-      wx.navigateTo({
-        url: `/pages/example/index?envId=${this.data.selectedEnv?.envId}&type=${type}`,
-      });
-    } else {
-      wx.navigateTo({
-        url: `/pages/${page}/index?envId=${this.data.selectedEnv?.envId}`,
-      });
-    }
+    
+    wx.navigateTo({
+      url: `/pages/${page}/index?envId=${this.data.selectedEnv?.envId}`,
+    });
   },
 
   onClickDatabase(powerList, selectedItem) {

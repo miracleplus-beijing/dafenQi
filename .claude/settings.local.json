@@ -98,7 +98,8 @@
       "Bash(for:*)",
       "Bash(echo:*)",
       "Bash(done)",
-      "WebFetch(domain:yesicon.app)"
+      "WebFetch(domain:yesicon.app)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []

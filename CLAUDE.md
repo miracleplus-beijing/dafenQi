@@ -4,16 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**达芬Qi说** is a WeChat miniprogram for audio podcast platform with Supabase backend integration. Built with native WeChat miniprogram framework (libVersion: 2.20.1), using glass-easel component framework and WeUI extended library for enhanced UI components.
+**达芬Qi说** is a WeChat miniprogram for audio podcast platform with Supabase backend integration. Built with native WeChat miniprogram framework (libVersion: 3.10.2), using glass-easel component framework, TDesign UI library (v1.10.1), and comprehensive service-oriented architecture.
 
 ## Architecture
 
 ### Core Structure
-- **Entry**: `miniprogram/app.js` - Global state management
-- **Pages**: `miniprogram/pages/` - Tab-based navigation (browse, category, profile)
-- **Services**: `miniprogram/services/` - Business logic (auth, audio, storage)
+- **Entry**: `miniprogram/app.js` - Global state management and lifecycle
+- **Pages**: `miniprogram/pages/` - 16 pages with 3 tab navigation (browse, category, profile)
+- **Services**: `miniprogram/services/` - 12 specialized business logic services
+- **Components**: `miniprogram/components/` - 4 custom reusable components
+- **Utils**: `miniprogram/utils/` - 3 utility modules (request, icon-config, text-utils)
 - **Assets**: `miniprogram/images/` - Icons and static resources
-- **Cloud**: `cloudfunctions/` - WeChat cloud functions
+- **UI Framework**: TDesign miniprogram v1.10.1 with 20+ components
 
 ### Global State (app.js:2-19)
 ```javascript
@@ -37,90 +39,87 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
+### npm Scripts (miniprogram/)
+```bash
+npm run lint              # Check code with ESLint
+npm run lint:fix          # Auto-fix ESLint issues
+npm run format            # Format code with Prettier
+npm run check-format      # Check if code is formatted
+```
+
 ### WeChat Developer Tools
 - **Preview**: Use WeChat Developer Tools "Preview" button
 - **Upload**: Use "Upload" for production deployment
-- **Test**: Use "Test" tab for testing on device
+- **Test**: Use "Test" tab for device testing
+- **Build**: Use "Build npm" for TDesign components
 
-### Key Files to Watch
+### Key Configuration Files
 - `miniprogram/app.js` - Global state & lifecycle
-- `miniprogram/app.json` - Routing & tab configuration  
-- `project.config.json` - WeChat project settings
+- `miniprogram/app.json` - Routing & tab configuration
+- `project.config.json` - WeChat project settings (AppID: wxdfbf85ea64f424da)
+- `miniprogram/package.json` - Dependencies and scripts
 
 ## Page Structure
 
-### TabBar Navigation (app.json:19-44)
-1. **Browse** (`pages/browse/browse`) - Main podcast browsing
-2. **Category** (`pages/category/category`) - Podcast categories
-3. **Profile** (`pages/profile/profile`) - User account/settings
+### TabBar Navigation (app.json:38-57)
+1. **Browse** (`pages/browse/browse`) - Main podcast browsing and playback
+2. **Category** (`pages/category/category`) - Podcast categories and academic fields
+3. **Profile** (`pages/profile/profile`) - User account, settings, and profile management
 
 ### Additional Pages
-- Search (`pages/search/search`) - Podcast search functionality
-- Login (`pages/login/login`) - User authentication
-- History (`pages/history/history`) - Playback history
-- Favorites (`pages/favorites/favorites`) - Saved podcasts
-- Settings (`pages/settings/settings`) - App preferences
-- Feedback (`pages/feedback/feedback`) - User feedback
-- Ranking (`pages/ranking/ranking`) - Podcast rankings
-- Privacy Policy (`pages/privacy-policy/privacy-policy`) - Comprehensive privacy protection statement detailing data collection (user info, device info, operation logs), user rights, data storage practices, and contact information (product@miracleplus.com)
-- Service Agreement (`pages/service-agreement/service-agreement`) - Terms of service
-- Data Collection (`pages/data-collection/data-collection`) - Data collection notice
-- Personal Info (`pages/personal-info/personal-info`) - Personal information management
+- **Search** (`pages/search/search`) - Podcast search functionality
+- **Login** (`pages/login/login`) - User authentication and WeChat OAuth
+- **History** (`pages/history/history`) - Playback history tracking
+- **Favorites** (`pages/favorites/favorites`) - User saved podcasts
+- **Settings** (`pages/settings/settings`) - App preferences and configurations
+- **Feedback** (`pages/feedback/feedback`) - User feedback collection
+- **Ranking** (`pages/ranking/ranking`) - Podcast popularity rankings
+- **Personal Info** (`pages/personal-info/personal-info`) - Personal data management
+- **Account Cancel** (`pages/account-cancel/account-cancel`) - Account deletion workflow
+
+### Privacy & Legal Pages
+- **Privacy Policy** (`pages/privacy-policy/privacy-policy`) - Comprehensive privacy protection statement
+- **Service Agreement** (`pages/service-agreement/service-agreement`) - Terms of service
+- **Data Collection** (`pages/data-collection/data-collection`) - Data collection transparency notice
+
+### Legacy Pages
+- **Index** (`pages/index/index`) - Legacy entry page (superseded by browse)
 
 ## Key Services
 
-### Authentication (services/auth.service.js)
-Core authentication service handling WeChat OAuth2 integration with Supabase backend:
-- **WeChat Login Flow**: `loginWithWechat()` - Mock OpenID generation and user creation/lookup
-- **User Management**: `findOrCreateUser()`, `updateUserInfo()` - User profiles with WeChat integration
-- **Session Management**: `saveUserSession()`, `getLocalUserSession()` - 7-day session persistence
-- **Avatar Upload**: Private bucket storage with signed URL generation for user avatars
-- **Supabase Integration**: Direct REST API calls for user operations with `supabaseRequest()`
+The app uses 12 specialized services following a service-oriented architecture:
 
-### Storage Service (services/storage.service.js)
-File storage abstraction layer for Supabase Storage:
-- **Public User Files**: `uploadUserFileToPublicBucket()` - Secure user content storage
-- **Signed URLs**: `generateUserFileSignedUrl()` - Temporary access to private files
-- **File Management**: Upload, delete, and list operations for various file types
-- **Image Processing**: Compression and optimization for WeChat constraints
+### Authentication & User Management
+- **`auth.service.js`** - WeChat OAuth2, session management, user creation/lookup
+- **`profile.service.js`** - Complete user profile management with storage integration (deprecated in current build)
 
-### API Service (services/api.service.js)  
-Centralized API layer organizing all backend operations:
-- **Podcast Operations**: `podcast.getList()`, `podcast.getDetail()`, `podcast.getRecommended()`
-- **User Operations**: `user.getFavorites()`, `user.addFavorite()`, `user.getHistory()`
-- **Category Management**: `category.getList()`, `category.getPodcasts()`
-- **Search**: `search.podcasts()`, `search.getHotKeywords()`
-- **Statistics**: `stats.recordPlay()`, `stats.getPodcastStats()`
+### Content & Data Services
+- **`api.service.js`** - Centralized API facade for all Supabase operations
+- **`category.service.js`** - Academic field and category management
+- **`comment.service.js`** - User comments and social interactions
+- **`insight.service.js`** - AI-generated content insights and cognitive extraction
 
-### Profile Service (services/profile.service.js)
-Comprehensive user profile management service integrating storage and data synchronization:
-- **Complete Profile Management**: `getUserCompleteProfile()`, `updateUserProfile()` - Full user profile with storage integration
-- **Avatar Handling**: `handleAvatarUpdate()`, `cleanupOldAvatars()` - Private storage with automatic cleanup
-- **Storage Integration**: `getUserStorageStats()`, `batchGenerateSignedUrls()` - File management and statistics
-- **Global State Sync**: `syncToGlobalState()` - Automatic state synchronization across app
-- **Profile Completeness**: `checkProfileCompleteness()` - Profile validation and completion tracking
+### Media & Storage Services
+- **`audio.service.js`** - Core audio playback and control
+- **`audio-preloader.service.js`** - Smart audio preloading and caching
+- **`audio-chunk-manager.service.js`** - Audio chunk management for streaming
+- **`smart-preload-controller.service.js`** - Intelligent content preloading strategy
+- **`storage.service.js`** - File upload/download, Supabase Storage abstraction
+- **`image.service.js`** - Image processing and optimization
 
-### Audio Management (services/audio-preloader.service.js)
-- Audio preloading and caching
-- Playback state management
-- Progress tracking
+### Performance & Utility Services
+- **`lru-cache.service.js`** - Least Recently Used caching implementation
 
-### Recommendation System (services/recommendation/index.js)
-Comprehensive AI-powered recommendation engine with multiple services:
-- **Personalized Recommendations**: `getPersonalizedRecommendations()` - User-based collaborative filtering
-- **Popular Recommendations**: `getPopularRecommendations()` - Trending content discovery
-- **Performance Monitoring**: Built-in health checks, performance stats, and degradation handling
-- **User Behavior Tracking**: Click and conversion recording for algorithm improvement
-- **Fallback System**: Graceful degradation when recommendation service is unavailable
-- **Health Monitoring**: Real-time service health checks with automatic recovery
+### Service Architecture Pattern
+```javascript
+// Standard service response format
+{ success: true, data: responseData }   // Success
+{ success: false, error: errorMessage } // Error
 
-### Insight Service (services/insight.service.js)
-AI-generated content insights and cognitive extraction:
-- **Podcast Insights**: `getInsightsByPodcastId()`, `getMainInsightByPodcastId()` - AI-generated summaries and analysis
-- **Content Types**: Summary, analysis, questions, quotes, highlights with metadata
-- **User Interactions**: Like/view tracking, user engagement recording
-- **Fallback Data**: Default insights when database content unavailable
-- **Related Content**: Keywords, papers, authors linking for academic context
+// Service import pattern
+const { authService } = require('../../services/auth.service.js')
+const { apiService } = require('../../services/api.service.js')
+```
 
 ## Supabase Integration
 
@@ -276,15 +275,57 @@ The app uses a service-oriented architecture with clear separation:
 4. **Global State** (`app.js`) - Centralized state management with local storage persistence
 
 ### Global State Management
-Central state in `app.js` globalData with automatic persistence:
-- **Authentication State**: `userInfo`, `isLoggedIn`, `isGuestMode`
-- **Playback State**: `currentPodcast`, `isPlaying`, `currentProgress`, `maxProgress`  
-- **User Data**: `favoriteList`, `historyList` (synced to localStorage)
-- **App Settings**: `settings.autoPlay`, `settings.downloadQuality`, `settings.theme`
+Central state in `app.js` globalData with automatic persistence and lifecycle management:
 
-State is accessed via `getApp().globalData` and automatically persisted via:
-- `loadLocalData()` on app launch (app.js:72)
-- `saveLocalData()` on app hide (app.js:86)
+**Core State Structure** (app.js:2-21):
+```javascript
+{
+  // Authentication
+  userInfo: null,           // User profile data
+  isLoggedIn: false,        // Login status
+  isGuestMode: false,       // Guest mode flag
+
+  // Audio Playback
+  currentProgress: 0,       // Current playback position
+  maxProgress: 100,         // Total duration
+  isPlaying: false,         // Playback state
+  currentPodcast: null,     // Active podcast data
+
+  // User Data Collections
+  favoriteList: [],         // User favorites (synced to localStorage)
+  historyList: [],          // Playback history (synced to localStorage)
+
+  // App Preferences
+  settings: {
+    autoPlay: false,        // Auto-play disabled by default
+    downloadQuality: 'high',
+    theme: 'light'
+  },
+
+  // Backend Configuration
+  supabaseUrl: 'https://gxvfcafgnhzjiauukssj.supabase.co',
+  supabaseAnonKey: 'eyJhbGci...'  // JWT token for Supabase API
+}
+```
+
+**Lifecycle Management**:
+- **onLaunch** (app.js:23): Initialize privacy check, auth service, and load local data
+- **onShow** (app.js:39): App becomes visible, check for updates
+- **onHide** (app.js:43): Save all data to local storage
+
+**State Access Pattern**:
+```javascript
+const app = getApp()
+const userData = app.globalData.userInfo
+app.globalData.isPlaying = true
+app.saveLocalData()  // Manual save if needed
+```
+
+**Built-in State Methods**:
+- `addToFavorites(podcastId)` - Add podcast to favorites with UI feedback
+- `addToHistory(podcastData)` - Track playback history
+- `loadLocalData()` - Restore from wx.storage on app launch
+- `saveLocalData()` - Persist to wx.storage on app hide
 
 ### Error Handling Pattern
 Services return consistent result objects:
@@ -301,6 +342,36 @@ Two-tier storage system:
 - **Private Buckets**: User content - signed URLs with expiration (24h default)
 
 User files follow path structure: `{userId}/{fileType}/{filename}` in `user_profile` bucket
+
+### TDesign UI Framework Integration
+**Version**: v1.10.1 (miniprogram/package.json)
+**Installation**: Built via npm and WeChat "Build npm" process
+**Location**: `miniprogram/miniprogram_npm/tdesign-miniprogram/`
+
+**Key Components Available**:
+- **Navigation**: navbar, tab-bar, tab-bar-item, tabs, tab-panel
+- **Layout**: grid, grid-item, row, col, divider, sticky
+- **Form**: button, input, checkbox, radio, switch, picker, search
+- **Display**: icon, image, avatar, badge, tag, progress, loading
+- **Feedback**: toast, dialog, message, overlay, popup
+- **Advanced**: calendar, color-picker, image-viewer, qrcode
+
+**Usage Pattern**:
+```wxml
+<!-- In page .wxml files -->
+<t-button variant="fill" size="large">Primary Button</t-button>
+<t-icon name="heart" size="24px"></t-icon>
+<t-loading theme="circular" size="24px"></t-loading>
+```
+
+**Custom Components** (4 total in `miniprogram/components/`):
+- `category-card` - Academic category display
+- `featured-card` - Featured content cards
+- `ranking-list` - Podcast ranking display
+- `cloudTipModal` - Cloud service tips modal
+
+**Icon Guidelines**:
+**IMPORTANT**: Must prioritize TDesign icons first. When TDesign icons cannot meet requirements, notify user to explain icon choice and let them replace manually.
 
 ## Development Workflow
 

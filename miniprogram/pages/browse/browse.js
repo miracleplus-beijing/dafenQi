@@ -964,9 +964,6 @@ Page({
   startPlayback: function (currentPodcast) {
     const { audioContext } = this.data;
 
-    // 显示加载状态
-    // this.showCustomLoading('加载播客...')
-
     // 检查是否需要切换音频源
     const currentSrc = audioContext.src || '';
     const newSrc = currentPodcast.audio_url;

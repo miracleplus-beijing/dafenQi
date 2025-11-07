@@ -457,7 +457,7 @@ class AudioService {
   makeRequest(url, method = 'GET', data = null, requireAuth = false) {
     return new Promise((resolve, reject) => {
       // 智能选择认证方式
-      const userToken = authService.getSession().access_token;
+      const userToken = this.authService.getSession().access_token;
       let authorizationHeader;
 
       if (requireAuth && !userToken) {
