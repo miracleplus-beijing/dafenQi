@@ -1,160 +1,213 @@
-<!-- 漫游页面 - 简约博客美学重设计 -->
+<!-- 漫游页面 - 双模式设计 -->
 <view class="browse-page">
 
-  <!-- 加载指示器 -->
-  <view wx:if="{{index === currentIndex && isPlaying && audioLoading}}"
-          class="podcast-loader">
-      <image src="{{cdnImages.loadingIcon}}" class="loader-icon" alt="加载中"></image>
+  <!-- Swiper模式 -->
+  <view wx:if="{{browseMode === 'swiper'}}" class="swiper-mode">
+    <!-- 加载指示器 -->
+    <view wx:if="{{index === currentIndex && isPlaying && audioLoading}}"
+            class="podcast-loader">
+        <image src="{{cdnImages.loadingIcon}}" class="loader-icon" alt="加载中"></image>
+    </view>
+
+    <!-- 主要内容区域 -->
+    <view wx:if="{{!loading && podcastList.length > 0}}">
+      <swiper class="browse-swiper"
+              vertical="true"
+              indicator-dots="false"
+              autoplay="{{false}}"
+              interval="999999"
+              circular="false"
+              current="{{currentIndex}}"
+              duration="300"
+              easing-function="easeInOutCubic"
+              bindchange="handleSwiperChange"
+              bindtouchstart="handleTouchStart"
+              bindtouchmove="handleTouchMove">
+
+        <swiper-item wx:for="{{podcastList}}" wx:key="id" class="browse-container">
+
+          <!-- 内容展示区域 (60%) -->
+          <view class="content-display">
+
+            <!-- 播客封面 -->
+            <view class="podcast-cover {{index === currentIndex && isPlaying ? 'playing' : ''}}">
+
+              <view class="cover-image-container">
+                <image wx:if="{{item.cover_url}}"
+                       src="{{item.cover_url}}"
+                       class="cover-image"
+                       mode="aspectFill"
+                       alt="{{item.title}}" />
+                <view wx:else class="cover-placeholder">
+                  <view class="cover-icon">🎵</view>
+                  <view class="cover-title">{{item.title}}</view>
+                </view>
+
+                <!-- 暂停遮罩效果 -->
+                <view wx:if="{{index === currentIndex && !isPlaying}}" class="pause-overlay" >
+                  <t-icon name="play" size="128rpx" class="pause-icon" />
+                </view>
+              </view>
+            </view>
+
+            <!-- 标题区域 -->
+            <view class="title-section">
+              <text class="main-title">{{item.title}}</text>
+              <text class="sub-title">{{item.channel_name || '达芬Qi说'}}</text>
+            </view>
+
+            <!-- 内容摘要区域 (替代认知卡片) -->
+            <view class="content-summary">
+              <view class="summary-label">
+                <text>内容摘要</text>
+                <t-icon name="bulb" size="32rpx" color="#ed8936" class="summary-icon" />
+              </view>
+              <text class="summary-text">{{item.description || '这是一期精彩的播客内容，包含了丰富的知识点和深度思考。'}}</text>
+            </view>
+          </view>
+
+          <!-- 播放控制区域 (40%) -->
+          <view class="playback-section">
+
+            <!-- 进度控制 -->
+            <view class="progress-section">
+              <view class="time-info">
+                <text class="current-time">{{currentTimeFormatted}}</text>
+                <text class="total-time">{{totalTimeFormatted}}</text>
+              </view>
+
+              <view class="progress-container">
+                <t-slider
+                  value="{{currentProgress}}"
+                  min="{{0}}"
+                  max="{{100}}"
+                  step="{{0.1}}"
+                  theme="filled"
+                  color="#ed8936"
+                  track-color="#e2e8f0"
+                  class="custom-slider"
+                  bindchange="handleSliderChange"
+                  bindchanging="handleSliderChanging"
+                  bindtouchstart="handleSliderTouchStart"
+                  bindtouchend="handleSliderTouchEnd"
+                  show-value="{{false}}"
+                />
+              </view>
+            </view>
+
+            <!-- 播放控制按钮 -->
+            <view class="playback-controls">
+              <!-- 播放速度 -->
+              <view class="control-btn" bindtap="handleSpeedChange">
+                <text class="speed-display">{{playbackSpeed}}×</text>
+              </view>
+
+              <!-- 后退15秒 -->
+              <view class="control-btn" bindtap="handleRewind">
+                <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/backward-15s.svg" class="control-icon"></image>
+              </view>
+              <!-- 播放/暂停按钮 -->
+              <view class="play-btn" bindtap="handlePlayPause">
+
+                <t-icon wx:if="{{ isPlaying }}" size="80rpx" name="pause" class="play-icon"  data-name="pause" bind:click="onIconTap" />
+                <t-icon wx:else name="play" size="80rpx" class="play-icon"  data-name="play" bind:click="onIconTap" />
+
+              </view>
+
+              <!-- 前进30秒 -->
+              <view class="control-btn" bindtap="handleFastForward">
+                <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/forward-30s.svg" class="control-icon" />
+              </view>
+
+              <!-- 更多操作 -->
+              <view class="control-btn" bindtap="handleMore">
+                <text class="more-icon">⋯</text>
+              </view>
+            </view>
+          </view>
+
+        </swiper-item>
+      </swiper>
+    </view>
   </view>
-  <!-- 主要内容区域 -->
-  <view wx:if="{{!loading && podcastList.length > 0}}">
-    <swiper class="browse-swiper"
-            vertical="true"
-            indicator-dots="false"
-            autoplay="{{false}}"
-            interval="999999"
-            circular="false"
-            current="{{currentIndex}}"
-            duration="300"
-            easing-function="easeInOutCubic"
-            bindchange="handleSwiperChange"
-            bindtouchstart="handleTouchStart"
-            bindtouchmove="handleTouchMove">
 
-      <swiper-item wx:for="{{podcastList}}" wx:key="id" class="browse-container">
+  <!-- 瀑布流模式 -->
+  <view wx:if="{{browseMode === 'waterfall'}}" class="waterfall-mode">
+    <!-- 瀑布流头部 -->
+    <waterfall-header
+      search-value="{{searchKeyword}}"
+      filter-options="{{filterOptions}}"
+      batch-mode="{{batchMode}}"
+      selected-count="{{selectedItems.length}}"
+      bind:searchchange="handleWaterfallSearchChange"
+      bind:searchsubmit="handleWaterfallSearchSubmit"
+      bind:searchclear="handleWaterfallSearchClear"
+      bind:filterchange="handleWaterfallFilterChange"
+      bind:clearfilters="handleWaterfallClearFilters"
+      bind:togglebatch="handleWaterfallToggleBatch"
+      bind:batchaction="handleWaterfallBatchAction" />
 
-        <!-- 内容展示区域 (60%) -->
-        <view class="content-display">
+    <!-- 瀑布流内容区域 -->
+    <scroll-view class="waterfall-content"
+                 scroll-y
+                 enable-back-to-top
+                 bindscrolltolower="handleWaterfallScrollToLower">
 
-          <!-- 播客封面 -->
-          <view class="podcast-cover {{index === currentIndex && isPlaying ? 'playing' : ''}}">
-
-            <view class="cover-image-container">
-              <image wx:if="{{item.cover_url}}"
-                     src="{{item.cover_url}}"
-                     class="cover-image"
-                     mode="aspectFill"
-                     alt="{{item.title}}" />
-              <view wx:else class="cover-placeholder">
-                <view class="cover-icon">🎵</view>
-                <view class="cover-title">{{item.title}}</view>
-              </view>
-
-              <!-- 暂停遮罩效果 -->
-              <view wx:if="{{index === currentIndex && !isPlaying}}" class="pause-overlay" >
-                <t-icon name="play" size="128rpx" class="pause-icon" />
-              </view>
-            </view>
-            <view class="podcast-card">
-            博客脚本占位符
-            </view>
-
-   
-
-  
-
-          </view>
-
-          <!-- 标题区域 -->
-          <view class="title-section">
-            <text class="main-title">{{item.title}}</text>
-            <text class="sub-title">{{item.channel_name || '达芬Qi说'}}</text>
-          </view>
-
-          <!-- 横向操作栏 -->
-          <view class="horizontal-actions">
-            <view class="horizontal-action-btn {{item.isFavorited ? 'favorited' : ''}}" bindtap="handleFavorite">
-              <image src="{{item.isFavorited ? 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/collection_selected.svg' : 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/collection_unselected.svg'}}"
-                     class="horizontal-action-icon" />
-            </view>
-
-            <view class="horizontal-action-btn" bindtap="handleOpenComments">
-              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/comment_quote.svg"
-                     class="horizontal-action-icon" />
-            </view>
-
-            <view class="horizontal-action-btn">
-              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/share.svg"
-                     class="horizontal-action-icon" />
-            </view>
-          </view>
-
-          <!-- 内容摘要区域 (替代认知卡片) -->
-          <view class="content-summary">
-            <view class="summary-label">
-              <text>内容摘要</text>
-              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/insight.svg"
-                     class="summary-icon" />
-            </view>
-            <text class="summary-text">{{item.description || '这是一期精彩的播客内容，包含了丰富的知识点和深度思考。'}}</text>
-          </view>
+      <!-- 双列网格布局 -->
+      <view class="waterfall-grid">
+        <!-- 左列 -->
+        <view class="grid-column left-column">
+          <waterfall-card
+            wx:for="{{leftColumnList}}"
+            wx:key="id"
+            podcast="{{item}}"
+            is-selected="{{item.isSelected}}"
+            batch-mode="{{batchMode}}"
+            is-playing="{{globalPlayer.currentPodcast && globalPlayer.currentPodcast.id === item.id && globalPlayer.isPlaying}}"
+            bind:preview="handleWaterfallCardPreview"
+            bind:play="handleWaterfallCardPlay"
+            bind:favorite="handleWaterfallCardFavorite"
+            bind:more="handleWaterfallCardMore"
+            bind:select="handleWaterfallCardSelect"
+            bind:longpress="handleWaterfallCardLongPress" />
         </view>
 
-        <!-- 播放控制区域 (40%) -->
-        <view class="playback-section">
-
-          <!-- 进度控制 -->
-          <view class="progress-section">
-            <view class="time-info">
-              <text class="current-time">{{currentTimeFormatted}}</text>
-              <text class="total-time">{{totalTimeFormatted}}</text>
-            </view>
-
-            <view class="progress-container">
-              <t-slider
-                value="{{currentProgress}}"
-                min="{{0}}"
-                max="{{100}}"
-                step="{{0.1}}"
-                theme="filled"
-                color="#ed8936"
-                track-color="#e2e8f0"
-                class="custom-slider"
-                bindchange="handleSliderChange"
-                bindchanging="handleSliderChanging"
-                bindtouchstart="handleSliderTouchStart"
-                bindtouchend="handleSliderTouchEnd"
-                show-value="{{false}}"
-              />
-            </view>
-          </view>
-
-          <!-- 播放控制按钮 -->
-          <view class="playback-controls">
-            <!-- 播放速度 -->
-            <view class="control-btn" bindtap="handleSpeedChange">
-              <text class="speed-display">{{playbackSpeed}}×</text>
-            </view>
-
-            <!-- 后退15秒 -->
-            <view class="control-btn" bindtap="handleRewind">
-              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/backward-15s.svg"
-                     class="control-icon" />
-            </view>
-            <!-- 播放/暂停按钮 -->
-            <view class="play-btn" bindtap="handlePlayPause">
-
-              <t-icon wx:if="{{ isPlaying }}" size="80rpx" name="pause" class="play-icon"  data-name="pause" bind:click="onIconTap" />
-              <t-icon wx:else name="play" size="80rpx" class="play-icon"  data-name="play" bind:click="onIconTap" />
-
-            </view>
-
-            <!-- 前进30秒 -->
-            <view class="control-btn" bindtap="handleFastForward">
-              <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/forward-30s.svg"
-                     class="control-icon" />
-
-            </view>
-
-            <!-- 更多操作 -->
-            <view class="control-btn" bindtap="handleMore">
-              <text class="more-icon">⋯</text>
-            </view>
-          </view>
+        <!-- 右列 -->
+        <view class="grid-column right-column">
+          <waterfall-card
+            wx:for="{{rightColumnList}}"
+            wx:key="id"
+            podcast="{{item}}"
+            is-selected="{{item.isSelected}}"
+            batch-mode="{{batchMode}}"
+            is-playing="{{globalPlayer.currentPodcast && globalPlayer.currentPodcast.id === item.id && globalPlayer.isPlaying}}"
+            bind:preview="handleWaterfallCardPreview"
+            bind:play="handleWaterfallCardPlay"
+            bind:favorite="handleWaterfallCardFavorite"
+            bind:more="handleWaterfallCardMore"
+            bind:select="handleWaterfallCardSelect"
+            bind:longpress="handleWaterfallCardLongPress" />
         </view>
+      </view>
 
-      </swiper-item>
-    </swiper>
+      <!-- 加载更多指示器 -->
+      <view wx:if="{{waterfallLoading}}" class="waterfall-loading">
+        <t-loading theme="circular" size="24px" />
+        <text>加载中...</text>
+      </view>
+
+      <!-- 没有更多数据 -->
+      <view wx:if="{{!hasMoreWaterfallData && waterfallList.length > 0}}" class="no-more-data">
+        <text>没有更多内容了</text>
+      </view>
+
+      <!-- 空数据提示 -->
+      <view wx:if="{{waterfallList.length === 0 && !loading}}" class="empty-state">
+        <t-icon name="inbox" size="120rpx" color="#cbd5e0" />
+        <text class="empty-text">暂无内容</text>
+        <text class="empty-hint">{{isSearchMode ? '试试其他搜索词' : '下拉刷新试试'}}</text>
+      </view>
+    </scroll-view>
   </view>
 
   <!-- 加载指示器 -->
@@ -177,6 +230,49 @@
     </view>
   </view>
 
+  <!-- 更多操作弹窗 -->
+  <view class="more-popup {{showMorePopup ? 'show' : ''}}" catchtouchmove="preventScroll">
+    <view class="popup-mask" bindtap="handleCloseMorePopup"></view>
+    <view class="popup-content more-popup-content">
+      <view class="popup-header">
+        <text class="popup-title">更多操作</text>
+        <view class="popup-close" bindtap="handleCloseMorePopup">
+          <t-icon name="close" size="48rpx" class="close-icon" />
+        </view>
+      </view>
+
+      <!-- 操作选项列表 -->
+      <view class="more-actions-list">
+        <!-- 收藏操作 -->
+        <view class="more-action-item" bindtap="handleFavorite">
+          <t-icon name="{{podcastList[currentIndex].isFavorited ? 'heart-filled' : 'heart'}}"
+                  size="48rpx"
+                  color="{{podcastList[currentIndex].isFavorited ? '#ed8936' : '#718096'}}"
+                  class="action-icon" />
+          <text class="action-text">{{podcastList[currentIndex].isFavorited ? '取消收藏' : '收藏'}}</text>
+        </view>
+
+        <!-- 评论操作 -->
+        <view class="more-action-item" bindtap="handleOpenComments">
+          <t-icon name="chat" size="48rpx" color="#718096" class="action-icon" />
+          <text class="action-text">评论</text>
+        </view>
+
+        <!-- 分享操作 -->
+        <view class="more-action-item" bindtap="handleShare">
+          <t-icon name="share" size="48rpx" color="#718096" class="action-icon" />
+          <text class="action-text">分享</text>
+        </view>
+
+        <!-- 下载操作 -->
+        <view class="more-action-item" bindtap="handleDownload">
+          <t-icon name="download" size="48rpx" color="#718096" class="action-icon" />
+          <text class="action-text">下载</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
   <!-- 评论弹窗 -->
   <view class="comment-popup {{showCommentPopup ? 'show' : ''}}" catchtouchmove="preventScroll">
     <view class="popup-mask" bindtap="handleCloseComments"></view>
@@ -184,8 +280,7 @@
       <view class="popup-header">
         <text class="popup-title">评论</text>
         <view class="popup-close" bindtap="handleCloseComments">
-          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/close.svg"
-                 class="close-icon" />
+          <t-icon name="close" size="48rpx" class="close-icon" />
         </view>
       </view>
 
@@ -206,8 +301,10 @@
               <view class="comment-action-btn like-btn {{item.isLiked ? 'liked' : ''}}"
                     bindtap="handleLikeComment"
                     data-comment-id="{{item.id}}">
-                <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/like-small.svg"
-                       class="like-icon" />
+                <t-icon name="{{item.isLiked ? 'heart-filled' : 'heart'}}"
+                        size="32rpx"
+                        color="{{item.isLiked ? '#ed8936' : '#718096'}}"
+                        class="like-icon" />
                 <text>{{item.like_count > 0 ? item.like_count : ''}}</text>
               </view>
             </view>
@@ -235,6 +332,31 @@
       </view>
     </view>
   </view>
+
+  <!-- 全局迷你播放器 -->
+  <mini-player
+    wx:if="{{browseMode === 'waterfall'}}"
+    current-podcast="{{globalPlayer.currentPodcast}}"
+    is-playing="{{globalPlayer.isPlaying}}"
+    current-progress="{{globalPlayer.currentProgress}}"
+    is-visible="{{globalPlayer.isVisible}}"
+    safe-area-bottom="{{safeAreaBottom}}"
+    bind:playpause="handleGlobalPlayerPlayPause"
+    bind:expand="handleGlobalPlayerExpand"
+    bind:close="handleGlobalPlayerClose" />
+
+  <!-- 快速预览弹窗 -->
+  <quick-preview
+    visible="{{showQuickPreview}}"
+    podcast="{{quickPreviewPodcast}}"
+    bind:trialplay="handleQuickPreviewTrialPlay"
+    bind:trialpause="handleQuickPreviewTrialPause"
+    bind:trialstop="handleQuickPreviewTrialStop"
+    bind:favorite="handleQuickPreviewFavorite"
+    bind:share="handleQuickPreviewShare"
+    bind:addtoplaylist="handleQuickPreviewAddToPlaylist"
+    bind:playfull="handleQuickPreviewPlayFull"
+    bind:close="handleQuickPreviewClose" />
 
   <t-toast id="t-toast" />
 

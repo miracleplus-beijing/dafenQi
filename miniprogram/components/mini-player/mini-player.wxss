@@ -1,0 +1,130 @@
+/* 迷你播放器样式 */
+.mini-player {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: -200rpx; /* 初始隐藏在底部 */
+  height: 120rpx;
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+  box-shadow: 0 -4rpx 16rpx rgba(26, 54, 93, 0.3);
+  border-radius: 24rpx 24rpx 0 0;
+  z-index: 1000;
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  backdrop-filter: blur(10rpx);
+  margin: 0 16rpx;
+}
+
+.mini-player.show {
+  bottom: 0;
+}
+
+.player-content {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  height: 120rpx;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.cover-container {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  margin-right: 24rpx;
+  position: relative;
+}
+
+.cover-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 16rpx;
+  transition: transform 0.3s ease;
+}
+
+.cover-image.rotating {
+  animation: rotate 10s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.podcast-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  margin-right: 24rpx;
+}
+
+.podcast-title {
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 40rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 8rpx;
+}
+
+.podcast-channel {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 24rpx;
+  line-height: 32rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.play-controls {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.control-btn {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.control-btn:active {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(0.95);
+}
+
+.close-btn {
+  width: 60rpx;
+  height: 60rpx;
+}
+
+.progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 6rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 0 0 24rpx 24rpx;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #ed8936;
+  border-radius: 0 0 24rpx 24rpx;
+  transition: width 0.2s ease;
+}

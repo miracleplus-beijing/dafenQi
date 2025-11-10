@@ -59,6 +59,9 @@ Page({
     replyingToCommentId: null, // 正在回复的评论ID
     floatingCommentTimer: null, // 评论轮换定时器
 
+    // 更多操作弹窗相关状态
+    showMorePopup: false, // 是否显示更多操作弹窗
+
     // 播放速度相关
     playbackSpeed: 1.0, // 当前播放速度
 
@@ -67,14 +70,63 @@ Page({
     loginTipMessage: '', // 登录提示消息
     isPersonalized: true, // 是否为个性化推荐
 
+    // 双模式状态
+    browseMode: 'swiper', // 'swi000per' | 'waterfall'
+
+    // 全局播放器状态
+    globalPlayer: {
+      isVisible: false,
+      isPlaying: false,
+      currentPodcast: null,
+      currentProgress: 0,
+    },
+
+    // 安全区域
+    safeAreaBottom: 0,
+
+    // 瀑布流模式状态
+    waterfallList: [], // 瀑布流数据
+    searchKeyword: '', // 搜索关键词
+    filterOptions: {
+      category: '',
+      timeRange: '',
+      sortType: 'latest', // 'latest', 'popular', 'duration'
+    },
+    isSearchMode: false,
+    batchMode: false, // 批量选择模式
+    selectedItems: [], // 选中的项目
+
+    // 瀑布流双列数据
+    leftColumnList: [], // 左列数据
+    rightColumnList: [], // 右列数据
+    waterfallLoading: false, // 瀑布流加载状态
+    hasMoreWaterfallData: true, // 是否还有更多数据
+
     // 个性化推荐相关
     personalizedRecommendations: [], // 个性化推荐列表
     recommendationsLoading: false, // 推荐加载状态
     recommendationMode: 'personalized', // 固定为个性化推荐模式
+
+    // 快速预览相关状态
+    showQuickPreview: false, // 是否显示快速预览弹窗
+    quickPreviewPodcast: null, // 快速预览的播客数据
   },
 
   onLoad: function (options) {
     console.log('漫游页面加载', options);
+
+    // 获取安全区域信息
+    const systemInfo = wx.getSystemInfoSync();
+    this.setData({
+      safeAreaBottom: systemInfo.safeArea ? systemInfo.screenHeight - systemInfo.safeArea.bottom : 0,
+    });
+
+    // 初始化当前模式
+    const app = getApp();
+    this.setData({
+      browseMode: app.globalData.browseMode,
+      globalPlayer: app.globalData.globalPlayer,
+    });
 
     // 初始化音频上下文
     this.initAudioContext();
@@ -98,6 +150,213 @@ Page({
     }
   },
 
+  // 处理Tab栏点击
+  onTabItemTap: function (item) {
+    if (item.index === 0) {
+      // 点击漫游tab，切换模式
+      console.log('点击漫游tab，切换浏览模式');
+      this.switchBrowseMode();
+    }
+  },
+
+  // 切换浏览模式（带动画）
+  switchBrowseMode: function () {
+    const app = getApp();
+    const currentMode = app.globalData.browseMode;
+    const newMode = currentMode === 'swiper' ? 'waterfall' : 'swiper';
+
+    console.log('切换浏览模式:', currentMode, '->', newMode);
+
+    // 设置切换动画
+    this.setModeTransition(currentMode, newMode);
+
+    // 更新全局状态
+    app.globalData.browseMode = newMode;
+
+    // 延迟切换数据，等待动画开始
+    setTimeout(() => {
+      this.setData({
+        browseMode: newMode,
+      });
+
+      // 如果切换到瀑布流模式且数据为空，加载瀑布流数据
+      if (newMode === 'waterfall' && this.data.waterfallList.length === 0) {
+        this.loadWaterfallData();
+      }
+
+      // 更新Tab栏图标
+      app.updateTabBarIcon(newMode);
+
+    }, 150); // 动画开始后150ms切换数据
+
+    // 显示切换提示（带动画）
+    this.showModeSwichIndicator(newMode);
+
+    return newMode;
+  },
+
+  // 设置模式切换动画
+  setModeTransition: function(oldMode, newMode) {
+    // 性能优化：使用requestAnimationFrame
+    wx.nextTick(() => {
+      // 添加切换动画类
+      const query = this.createSelectorQuery();
+
+      if (oldMode === 'swiper') {
+        query.select('.swiper-mode').boundingClientRect();
+      } else {
+        query.select('.waterfall-mode').boundingClientRect();
+      }
+
+      query.exec((res) => {
+        if (res[0]) {
+          // 触发动画逻辑
+          console.log('切换动画已启动:', oldMode, '->', newMode);
+        }
+      });
+    });
+  },
+
+  // 显示模式切换指示器
+  showModeSwichIndicator: function(newMode) {
+    // 显示切换提示toast
+    wx.showToast({
+      title: newMode === 'swiper' ? '滑动模式' : '瀑布流模式',
+      icon: 'none',
+      duration: 1000,
+    });
+
+    // 可以在这里添加更复杂的视觉反馈
+    // 比如显示一个临时的模式切换指示器
+  },
+
+  // 加载瀑布流数据（性能优化版）
+  async loadWaterfallData(loadMore = false) {
+    try {
+      console.log('加载瀑布流数据', { loadMore });
+
+      // 防止重复加载
+      if (this.data.waterfallLoading) {
+        console.log('正在加载中，跳过重复请求');
+        return;
+      }
+
+      if (!loadMore) {
+        this.setData({
+          loading: true,
+          waterfallLoading: false,
+        });
+      } else {
+        this.setData({ waterfallLoading: true });
+      }
+
+      // 性能优化：批量获取数据
+      const batchSize = loadMore ? 10 : 20; // 首次加载更多数据
+      const result = await this.fetchPodcastsFromDatabase(1, { limit: batchSize });
+
+      if (result.success && result.data.length > 0) {
+        // 使用Web Worker思想：在后台处理数据转换
+        const processedData = await this.processPodcastData(result.data);
+
+        // 更新瀑布流数据
+        const finalWaterfallList = loadMore
+          ? [...this.data.waterfallList, ...processedData]
+          : processedData;
+
+        this.setData({
+          waterfallList: finalWaterfallList,
+          loading: false,
+          waterfallLoading: false,
+        });
+
+        // 性能优化：使用节流函数重新分配双列数据
+        this.throttledRedistributeData(finalWaterfallList);
+
+        console.log('瀑布流数据加载成功:', processedData.length);
+      } else {
+        this.setData({
+          loading: false,
+          waterfallLoading: false,
+          hasMoreWaterfallData: false,
+        });
+      }
+    } catch (error) {
+      console.error('加载瀑布流数据失败:', error);
+      this.setData({
+        loading: false,
+        waterfallLoading: false,
+      });
+    }
+  },
+
+  // 处理播客数据（优化版）
+  async processPodcastData(rawData) {
+    return new Promise((resolve) => {
+      // 使用setTimeout模拟异步处理，避免阻塞主线程
+      setTimeout(() => {
+        const processedData = rawData.map(podcast => {
+          const channelName = podcast.channels
+            ? podcast.channels.name
+            : podcast.channel_name || '奇绩前沿信号';
+
+          return {
+            id: podcast.id,
+            title: podcast.title,
+            description: podcast.description,
+            audio_url: podcast.audio_url,
+            cover_url: this.getPodcastCoverUrl(channelName, podcast.cover_url),
+            channel_name: channelName,
+            duration: podcast.duration || 0,
+            play_count: podcast.play_count || 0,
+            like_count: podcast.like_count || 0,
+            favorite_count: podcast.favorite_count || 0,
+            created_at: podcast.created_at,
+            isSelected: false,
+            isFavorited: false,
+          };
+        });
+        resolve(processedData);
+      }, 0);
+    });
+  },
+
+  // 节流版本的数据重新分配
+  throttledRedistributeData: function(waterfallList) {
+    // 简单的节流实现
+    if (this._redistributeTimer) {
+      clearTimeout(this._redistributeTimer);
+    }
+
+    this._redistributeTimer = setTimeout(() => {
+      this.redistributeWaterfallData(waterfallList);
+    }, 100);
+  },
+
+  // 重新分配瀑布流双列数据
+  redistributeWaterfallData(waterfallList) {
+    const leftColumn = [];
+    const rightColumn = [];
+
+    // 简单的交替分配算法
+    waterfallList.forEach((item, index) => {
+      if (index % 2 === 0) {
+        leftColumn.push(item);
+      } else {
+        rightColumn.push(item);
+      }
+    });
+
+    this.setData({
+      leftColumnList: leftColumn,
+      rightColumnList: rightColumn,
+    });
+
+    console.log('双列数据分配完成:', {
+      left: leftColumn.length,
+      right: rightColumn.length,
+    });
+  },
+
   // 智能降级的个性化推荐加载
   async loadPersonalizedRecommendations() {
     try {
@@ -105,7 +364,7 @@ Page({
       this.setData({ recommendationsLoading: true });
 
       // 智能降级逻辑：优先尝试个性化推荐
-      if (app.globalData.isLoggedIn && userInfo && userInfo.id) {
+      if (userInfo) {
         console.log('尝试加载个性化推荐');
         const result =
           await apiService.recommendation.getPersonalizedRecommendations(
@@ -449,6 +708,9 @@ Page({
     // 保存播放进度
     this.savePlayProgress();
 
+    // 清理定时器
+    this.cleanupTimers();
+
     // 销毁音频上下文
     if (
       this.data.audioContext &&
@@ -460,6 +722,37 @@ Page({
     // 清理预加载资源
     this.cleanupPreloadedAudio();
     audioPreloader.destroyAll();
+  },
+
+  // 清理定时器和内存
+  cleanupTimers: function() {
+    // 清理重新分配定时器
+    if (this._redistributeTimer) {
+      clearTimeout(this._redistributeTimer);
+      this._redistributeTimer = null;
+    }
+
+    // 清理评论轮换定时器
+    if (this.data.floatingCommentTimer) {
+      clearInterval(this.data.floatingCommentTimer);
+      this.setData({ floatingCommentTimer: null });
+    }
+
+    // 清理其他定时器
+    console.log('页面定时器已清理');
+  },
+
+  // 页面性能监控
+  onPagePerformance: function() {
+    // 简单的性能监控
+    const performance = wx.getPerformance ? wx.getPerformance() : null;
+    if (performance) {
+      console.log('页面性能数据:', {
+        navigationStart: performance.navigationStart,
+        loadEventEnd: performance.loadEventEnd,
+        loadTime: performance.loadEventEnd - performance.navigationStart
+      });
+    }
   },
 
   // 获取当前用户ID
@@ -1227,6 +1520,9 @@ Page({
       return;
     }
 
+    // 关闭更多操作弹窗
+    this.setData({ showMorePopup: false });
+
     // 检查用户登录状态
     const loginStatus = authService.checkLoginStatus();
     if (!loginStatus) {
@@ -1286,7 +1582,7 @@ Page({
       currentPodcast.id,
       newIsFavorited,
       this.getCurrentUserId()
-    );
+    )
   },
 
   // 异步更新收藏状态到数据库（仅登录用户）
@@ -1522,7 +1818,12 @@ Page({
 
   handleOpenComments() {
     console.log('打开评论弹窗');
-    this.setData({ showCommentPopup: true });
+
+    // 先关闭更多操作弹窗
+    this.setData({
+      showMorePopup: false,
+      showCommentPopup: true
+    });
 
     // 加载当前播客的评论
     const { podcastList, currentIndex } = this.data;
@@ -1719,19 +2020,744 @@ Page({
 
   // 处理更多操作
   handleMore: function () {
-    const items = ['下载', '设为铃声', '举报'];
+    console.log('打开更多操作弹窗');
+    this.setData({ showMorePopup: true });
+  },
 
-    wx.showActionSheet({
-      itemList: items,
-      success: res => {
-        console.log('选择了:', items[res.tapIndex]);
+  // 关闭更多操作弹窗
+  handleCloseMorePopup: function () {
+    console.log('关闭更多操作弹窗');
+    this.setData({ showMorePopup: false });
+  },
 
+  // 处理分享操作
+  handleShare: function () {
+    console.log('分享播客');
+    const { currentIndex, podcastList } = this.data;
+    const currentPodcast = podcastList[currentIndex];
+
+    if (!currentPodcast) return;
+
+    // 关闭弹窗
+    this.setData({ showMorePopup: false });
+
+    // 触发分享
+    wx.showShareMenu({
+      withShareTicket: true,
+      success: () => {
+        console.log('分享菜单显示成功');
+      },
+      fail: (error) => {
+        console.error('分享菜单显示失败:', error);
         wx.showToast({
-          title: '功能开发中',
+          title: '分享功能暂不可用',
           icon: 'none',
           duration: 1500,
         });
+      }
+    });
+  },
+
+  // 处理下载操作
+  handleDownload: function () {
+    console.log('下载播客');
+    // 关闭弹窗
+    this.setData({ showMorePopup: false });
+
+    wx.showToast({
+      title: '下载功能开发中',
+      icon: 'none',
+      duration: 1500,
+    });
+  },
+
+  // 防止弹窗滚动穿透
+  preventScroll: function (e) {
+    // 阻止默认滚动行为
+    return false;
+  },
+
+  // === 全局播放器控制方法 ===
+
+  // 全局播放器播放/暂停
+  handleGlobalPlayerPlayPause: function (e) {
+    console.log('全局播放器播放/暂停', e.detail);
+    // 这里应该调用实际的音频控制逻辑
+    const app = getApp();
+    const newIsPlaying = !this.data.globalPlayer.isPlaying;
+
+    this.setData({
+      'globalPlayer.isPlaying': newIsPlaying,
+    });
+
+    app.updateGlobalPlayerState({
+      isPlaying: newIsPlaying,
+    });
+  },
+
+  // 全局播放器展开
+  handleGlobalPlayerExpand: function () {
+    console.log('全局播放器展开');
+    // 切换回swiper模式并定位到当前播放的播客
+    this.expandToSwiperMode();
+  },
+
+  // 全局播放器关闭
+  handleGlobalPlayerClose: function () {
+    console.log('全局播放器关闭');
+    const app = getApp();
+
+    this.setData({
+      'globalPlayer.isVisible': false,
+    });
+
+    app.hideGlobalPlayer();
+
+    // 停止播放
+    if (this.data.audioContext) {
+      this.data.audioContext.stop();
+      this.setData({
+        isPlaying: false,
+        'globalPlayer.isPlaying': false,
+      });
+    }
+  },
+
+  // 展开到Swiper模式
+  expandToSwiperMode: function () {
+    const app = getApp();
+    const currentPodcast = this.data.globalPlayer.currentPodcast;
+
+    // 切换到swiper模式
+    app.globalData.browseMode = 'swiper';
+    this.setData({
+      browseMode: 'swiper',
+    });
+
+    // 更新tab栏图标
+    app.updateTabBarIcon('swiper');
+
+    // 如果有当前播放的播客，定位到该播客
+    if (currentPodcast) {
+      const targetIndex = this.data.podcastList.findIndex(
+        podcast => podcast.id === currentPodcast.id
+      );
+
+      if (targetIndex >= 0) {
+        this.setData({
+          currentIndex: targetIndex,
+        });
+      }
+    }
+
+    // 隐藏全局播放器
+    this.setData({
+      'globalPlayer.isVisible': false,
+    });
+    app.hideGlobalPlayer();
+  },
+
+  // === 瀑布流模式相关方法 ===
+
+  // 瀑布流搜索相关
+  handleWaterfallSearchChange: function (e) {
+    console.log('瀑布流搜索变化:', e.detail.value);
+    this.setData({
+      searchKeyword: e.detail.value,
+    });
+  },
+
+  handleWaterfallSearchSubmit: function (e) {
+    console.log('瀑布流搜索提交:', e.detail.value);
+    this.performWaterfallSearch(e.detail.value);
+  },
+
+  handleWaterfallSearchClear: function () {
+    console.log('瀑布流搜索清除');
+    this.setData({
+      searchKeyword: '',
+      isSearchMode: false,
+    });
+    this.loadWaterfallData(false);
+  },
+
+  // 执行瀑布流搜索
+  performWaterfallSearch: function (keyword) {
+    if (!keyword.trim()) return;
+
+    this.setData({
+      isSearchMode: true,
+      searchKeyword: keyword,
+    });
+
+    // TODO: 实现实际的搜索逻辑
+    console.log('执行搜索:', keyword);
+    this.loadWaterfallData(false);
+  },
+
+  // 瀑布流筛选相关
+  handleWaterfallFilterChange: function (e) {
+    console.log('瀑布流筛选变化:', e.detail);
+    const { type, value } = e.detail;
+
+    this.setData({
+      [`filterOptions.${type}`]: value,
+    });
+
+    // 重新加载数据
+    this.loadWaterfallData(false);
+  },
+
+  handleWaterfallClearFilters: function () {
+    console.log('瀑布流清除筛选');
+    this.setData({
+      filterOptions: {
+        category: '',
+        timeRange: '',
+        sortType: 'latest',
       },
+    });
+
+    this.loadWaterfallData(false);
+  },
+
+  // 瀑布流批量操作相关
+  handleWaterfallToggleBatch: function () {
+    const newBatchMode = !this.data.batchMode;
+    console.log('瀑布流切换批量模式:', newBatchMode);
+
+    this.setData({
+      batchMode: newBatchMode,
+      selectedItems: [], // 清空选中项目
+    });
+
+    // 清空所有项目的选中状态
+    this.clearAllSelection();
+  },
+
+  handleWaterfallBatchAction: function (e) {
+    console.log('瀑布流批量操作:', e.detail.type);
+    const { type } = e.detail;
+    const { selectedItems } = this.data;
+
+    if (selectedItems.length === 0) {
+      wx.showToast({
+        title: '请先选择项目',
+        icon: 'none',
+        duration: 1500,
+      });
+      return;
+    }
+
+    switch (type) {
+      case 'favorite':
+        this.handleBatchFavorite(selectedItems);
+        break;
+      case 'download':
+        this.handleBatchDownload(selectedItems);
+        break;
+      case 'share':
+        this.handleBatchShare(selectedItems);
+        break;
+    }
+  },
+
+  // 瀑布流卡片事件处理
+  handleWaterfallCardPreview: function (e) {
+    console.log('瀑布流卡片预览:', e.detail.podcast);
+    // TODO: 显示预览弹窗
+    this.showQuickPreview(e.detail.podcast);
+  },
+
+  handleWaterfallCardPlay: function (e) {
+    console.log('瀑布流卡片播放:', e.detail.podcast);
+    const podcast = e.detail.podcast;
+
+    // 显示全局播放器
+    const app = getApp();
+    app.showGlobalPlayer(podcast);
+
+    this.setData({
+      'globalPlayer.isVisible': true,
+      'globalPlayer.currentPodcast': podcast,
+      'globalPlayer.isPlaying': true,
+    });
+
+    // TODO: 实际播放逻辑
+  },
+
+  handleWaterfallCardFavorite: function (e) {
+    console.log('瀑布流卡片收藏:', e.detail);
+    const { podcast, favorited } = e.detail;
+
+    // 更新本地状态
+    this.updateWaterfallItemFavoriteState(podcast.id, favorited);
+
+    // TODO: 同步到数据库
+    wx.showToast({
+      title: favorited ? '已添加到收藏' : '已取消收藏',
+      icon: 'success',
+      duration: 1000,
+    });
+  },
+
+  handleWaterfallCardMore: function (e) {
+    console.log('瀑布流卡片更多操作:', e.detail.podcast);
+    // TODO: 显示更多操作菜单
+  },
+
+  handleWaterfallCardSelect: function (e) {
+    console.log('瀑布流卡片选择:', e.detail);
+    const { podcast, selected } = e.detail;
+
+    this.updateWaterfallItemSelectState(podcast.id, selected);
+  },
+
+  handleWaterfallCardLongPress: function (e) {
+    console.log('瀑布流卡片长按:', e.detail.podcast);
+    // 进入批量模式并选中该项
+    this.setData({
+      batchMode: true,
+    });
+
+    this.updateWaterfallItemSelectState(e.detail.podcast.id, true);
+  },
+
+  // 瀑布流滚动到底部
+  handleWaterfallScrollToLower: function () {
+    console.log('瀑布流滚动到底部');
+    if (this.data.hasMoreWaterfallData && !this.data.waterfallLoading) {
+      this.loadWaterfallData(true);
+    }
+  },
+
+  // 工具方法
+  updateWaterfallItemFavoriteState: function (podcastId, isFavorited) {
+    const { leftColumnList, rightColumnList } = this.data;
+
+    // 更新左列
+    const newLeftColumn = leftColumnList.map(item =>
+      item.id === podcastId ? { ...item, isFavorited } : item
+    );
+
+    // 更新右列
+    const newRightColumn = rightColumnList.map(item =>
+      item.id === podcastId ? { ...item, isFavorited } : item
+    );
+
+    this.setData({
+      leftColumnList: newLeftColumn,
+      rightColumnList: newRightColumn,
+    });
+  },
+
+  updateWaterfallItemSelectState: function (podcastId, isSelected) {
+    const { leftColumnList, rightColumnList, selectedItems } = this.data;
+
+    // 更新左列
+    const newLeftColumn = leftColumnList.map(item =>
+      item.id === podcastId ? { ...item, isSelected } : item
+    );
+
+    // 更新右列
+    const newRightColumn = rightColumnList.map(item =>
+      item.id === podcastId ? { ...item, isSelected } : item
+    );
+
+    // 更新选中项目列表
+    let newSelectedItems;
+    if (isSelected) {
+      // 添加到选中列表
+      const selectedPodcast = [...leftColumnList, ...rightColumnList].find(
+        item => item.id === podcastId
+      );
+      newSelectedItems = [...selectedItems, selectedPodcast];
+    } else {
+      // 从选中列表移除
+      newSelectedItems = selectedItems.filter(item => item.id !== podcastId);
+    }
+
+    this.setData({
+      leftColumnList: newLeftColumn,
+      rightColumnList: newRightColumn,
+      selectedItems: newSelectedItems,
+    });
+  },
+
+  clearAllSelection: function () {
+    const newLeftColumn = this.data.leftColumnList.map(item => ({
+      ...item,
+      isSelected: false,
+    }));
+
+    const newRightColumn = this.data.rightColumnList.map(item => ({
+      ...item,
+      isSelected: false,
+    }));
+
+    this.setData({
+      leftColumnList: newLeftColumn,
+      rightColumnList: newRightColumn,
+      selectedItems: [],
+    });
+  },
+
+  // 批量操作实现
+  async handleBatchFavorite(selectedItems) {
+    console.log('批量收藏:', selectedItems);
+
+    // 检查登录状态
+    const loginStatus = authService.checkLoginStatus();
+    if (!loginStatus) {
+      wx.showModal({
+        title: '需要登录',
+        content: '批量收藏功能需要登录后使用，是否前往登录？',
+        confirmText: '去登录',
+        cancelText: '取消',
+        success: res => {
+          if (res.confirm) {
+            wx.navigateTo({ url: '/pages/login/login' });
+          }
+        },
+      });
+      return;
+    }
+
+    const userId = this.getCurrentUserId();
+    if (!userId) return;
+
+    // 显示加载提示
+    wx.showLoading({ title: '批量收藏中...' });
+
+    try {
+      const audioService = require('../../services/audio.service.js');
+      const app = getApp();
+      let successCount = 0;
+      let errorCount = 0;
+
+      // 批量收藏操作
+      for (const item of selectedItems) {
+        try {
+          const result = await audioService.addToFavorites(userId, item.id);
+          if (result.success) {
+            successCount++;
+            // 更新本地状态
+            this.updateWaterfallItemFavoriteState(item.id, true);
+            // 更新全局状态
+            app.addToFavorites({
+              id: item.id,
+              title: item.title,
+              cover_url: item.cover_url,
+              channel: item.channel_name,
+              favoriteTime: Date.now(),
+            });
+          } else {
+            errorCount++;
+            console.error('收藏失败:', item.title, result.error);
+          }
+        } catch (error) {
+          errorCount++;
+          console.error('收藏异常:', item.title, error);
+        }
+      }
+
+      wx.hideLoading();
+
+      // 显示结果提示
+      if (errorCount === 0) {
+        wx.showToast({
+          title: `已收藏 ${successCount} 项`,
+          icon: 'success',
+          duration: 2000,
+        });
+      } else {
+        wx.showModal({
+          title: '批量收藏结果',
+          content: `成功收藏 ${successCount} 项，失败 ${errorCount} 项`,
+          showCancel: false,
+          confirmText: '知道了',
+        });
+      }
+
+      // 退出批量模式并清空选中项
+      this.setData({
+        batchMode: false,
+        selectedItems: [],
+      });
+      this.clearAllSelection();
+
+    } catch (error) {
+      wx.hideLoading();
+      console.error('批量收藏失败:', error);
+      wx.showToast({
+        title: '批量收藏失败',
+        icon: 'none',
+        duration: 2000,
+      });
+    }
+  },
+
+  async handleBatchDownload(selectedItems) {
+    console.log('批量下载:', selectedItems);
+
+    // 显示确认对话框
+    const confirmResult = await new Promise((resolve) => {
+      wx.showModal({
+        title: '批量下载确认',
+        content: `即将下载 ${selectedItems.length} 个播客文件，下载过程中请保持网络连接。`,
+        confirmText: '开始下载',
+        cancelText: '取消',
+        success: resolve
+      });
+    });
+
+    if (!confirmResult.confirm) return;
+
+    // 显示加载提示
+    wx.showLoading({ title: '准备下载...' });
+
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const [index, item] of selectedItems.entries()) {
+        try {
+          // 更新进度提示
+          wx.showLoading({
+            title: `下载中 ${index + 1}/${selectedItems.length}`
+          });
+
+          // 下载音频文件
+          const downloadResult = await new Promise((resolve, reject) => {
+            wx.downloadFile({
+              url: item.audio_url,
+              success: resolve,
+              fail: reject
+            });
+          });
+
+          if (downloadResult.statusCode === 200) {
+            // 保存到相册或文件系统
+            const saveResult = await new Promise((resolve, reject) => {
+              wx.saveFile({
+                tempFilePath: downloadResult.tempFilePath,
+                success: resolve,
+                fail: reject
+              });
+            });
+
+            if (saveResult.savedFilePath) {
+              successCount++;
+              console.log('下载成功:', item.title, saveResult.savedFilePath);
+            }
+          }
+
+        } catch (error) {
+          errorCount++;
+          console.error('下载失败:', item.title, error);
+        }
+      }
+
+      wx.hideLoading();
+
+      // 显示结果提示
+      if (errorCount === 0) {
+        wx.showToast({
+          title: `下载完成 ${successCount} 项`,
+          icon: 'success',
+          duration: 2000,
+        });
+      } else {
+        wx.showModal({
+          title: '批量下载结果',
+          content: `成功下载 ${successCount} 项，失败 ${errorCount} 项`,
+          showCancel: false,
+          confirmText: '知道了',
+        });
+      }
+
+      // 退出批量模式
+      this.setData({
+        batchMode: false,
+        selectedItems: [],
+      });
+      this.clearAllSelection();
+
+    } catch (error) {
+      wx.hideLoading();
+      console.error('批量下载失败:', error);
+      wx.showToast({
+        title: '批量下载失败',
+        icon: 'none',
+        duration: 2000,
+      });
+    }
+  },
+
+  handleBatchShare(selectedItems) {
+    console.log('批量分享:', selectedItems);
+
+    if (selectedItems.length === 0) return;
+
+    // 为批量分享生成分享内容
+    const titles = selectedItems.slice(0, 3).map(item => item.title);
+    const shareTitle = selectedItems.length === 1
+      ? selectedItems[0].title
+      : `${titles.join('、')}${selectedItems.length > 3 ? '等' : ''} 共${selectedItems.length}个播客`;
+
+    // 调用微信分享
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline'],
+      success: () => {
+        // 手动触发分享（因为批量分享需要特殊处理）
+        this.handleBatchShareToApp(selectedItems, shareTitle);
+      },
+      fail: (error) => {
+        console.error('分享菜单显示失败:', error);
+        wx.showToast({
+          title: '分享功能暂不可用',
+          icon: 'none',
+          duration: 1500,
+        });
+      }
+    });
+  },
+
+  // 处理批量分享到应用
+  handleBatchShareToApp(selectedItems, shareTitle) {
+    // 生成分享数据
+    const shareData = {
+      title: shareTitle,
+      desc: `来自达芬Qi说的精选播客内容，快来收听吧！`,
+      path: '/pages/browse/browse?shareType=batch',
+      imageUrl: selectedItems[0].cover_url,
+      batchData: selectedItems.map(item => ({
+        id: item.id,
+        title: item.title,
+        cover_url: item.cover_url
+      }))
+    };
+
+    // 临时存储分享数据（用于接收方获取）
+    try {
+      wx.setStorageSync('batchShareData', shareData);
+    } catch (error) {
+      console.error('存储分享数据失败:', error);
+    }
+
+    // 显示成功提示
+    wx.showToast({
+      title: '分享内容已准备就绪',
+      icon: 'success',
+      duration: 1000,
+    });
+
+    // 退出批量模式
+    this.setData({
+      batchMode: false,
+      selectedItems: [],
+    });
+    this.clearAllSelection();
+  },
+
+  // 快速预览
+  showQuickPreview: function (podcast) {
+    console.log('显示快速预览:', podcast.title);
+
+    this.setData({
+      showQuickPreview: true,
+      quickPreviewPodcast: podcast
+    });
+  },
+
+  // === 快速预览事件处理方法 ===
+
+  // 处理快速预览试听播放
+  handleQuickPreviewTrialPlay: function(e) {
+    const { podcast, trialDuration } = e.detail;
+    console.log('快速预览开始试听:', podcast.title, '时长:', trialDuration + '秒');
+
+    // TODO: 实现真实的30秒试听逻辑
+    // 可以通过音频上下文播放前30秒，或者特殊的试听URL
+  },
+
+  // 处理快速预览试听暂停
+  handleQuickPreviewTrialPause: function(e) {
+    const { podcast, currentTime } = e.detail;
+    console.log('快速预览暂停试听:', podcast.title, '当前时间:', currentTime + '秒');
+  },
+
+  // 处理快速预览试听停止
+  handleQuickPreviewTrialStop: function(e) {
+    const { podcast } = e.detail;
+    console.log('快速预览停止试听:', podcast.title);
+  },
+
+  // 处理快速预览收藏
+  handleQuickPreviewFavorite: function(e) {
+    const { podcast, favorited } = e.detail;
+    console.log('快速预览收藏操作:', podcast.title, '收藏状态:', favorited);
+
+    // 更新本地状态
+    this.updateWaterfallItemFavoriteState(podcast.id, favorited);
+
+    // 调用现有的收藏逻辑
+    const userId = this.getCurrentUserId();
+    if (userId) {
+      this.updateFavoriteStatus(podcast.id, favorited, userId);
+    }
+  },
+
+  // 处理快速预览分享
+  handleQuickPreviewShare: function(e) {
+    const { podcast } = e.detail;
+    console.log('快速预览分享:', podcast.title);
+
+    // 调用微信分享API
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline']
+    });
+  },
+
+  // 处理快速预览添加到播放列表
+  handleQuickPreviewAddToPlaylist: function(e) {
+    const { podcast } = e.detail;
+    console.log('快速预览添加到播放列表:', podcast.title);
+
+    // TODO: 实现播放列表功能
+    // 目前先添加到历史记录
+    const app = getApp();
+    app.addToHistory(podcast);
+  },
+
+  // 处理快速预览完整播放
+  handleQuickPreviewPlayFull: function(e) {
+    const { podcast } = e.detail;
+    console.log('快速预览开始完整播放:', podcast.title);
+
+    // 显示全局播放器
+    const app = getApp();
+    app.showGlobalPlayer(podcast);
+
+    this.setData({
+      'globalPlayer.isVisible': true,
+      'globalPlayer.currentPodcast': podcast,
+      'globalPlayer.isPlaying': true,
+    });
+
+    // 如果在瀑布流模式，保持在瀑布流
+    // 如果用户想要切换到swiper模式，可以点击展开按钮
+  },
+
+  // 处理快速预览关闭
+  handleQuickPreviewClose: function(e) {
+    console.log('关闭快速预览');
+
+    this.setData({
+      showQuickPreview: false,
+      quickPreviewPodcast: null
     });
   },
 

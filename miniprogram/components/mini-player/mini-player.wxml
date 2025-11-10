@@ -1,0 +1,44 @@
+<!-- 迷你播放器组件 -->
+<view class="mini-player {{isVisible ? 'show' : ''}}" wx:if="{{currentPodcast}}"
+      bindtap="handleExpand"
+      style="bottom: {{safeAreaBottom}}px;">
+
+  <!-- 播放器主体 -->
+  <view class="player-content">
+    <!-- 封面 -->
+    <view class="cover-container">
+      <image src="{{currentPodcast.cover_url}}"
+             class="cover-image {{isPlaying ? 'rotating' : ''}}"
+             mode="aspectFill" />
+    </view>
+
+    <!-- 播客信息 -->
+    <view class="podcast-info">
+      <text class="podcast-title">{{currentPodcast.title}}</text>
+      <text class="podcast-channel">{{currentPodcast.channel_name}}</text>
+    </view>
+
+    <!-- 播放控制 -->
+    <view class="play-controls">
+      <!-- 播放/暂停按钮 -->
+      <view class="control-btn" catchtap="handlePlayPause">
+        <t-icon name="{{isPlaying ? 'pause' : 'play'}}"
+                size="56rpx"
+                color="#ffffff" />
+      </view>
+
+      <!-- 关闭按钮 -->
+      <view class="control-btn close-btn" catchtap="handleClose">
+        <t-icon name="close"
+                size="48rpx"
+                color="#ffffff" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 进度条 -->
+  <view class="progress-bar">
+    <view class="progress-fill"
+          style="width: {{currentProgress}}%;"></view>
+  </view>
+</view>

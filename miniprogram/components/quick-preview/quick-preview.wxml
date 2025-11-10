@@ -1,0 +1,120 @@
+<!-- 快速预览组件 -->
+<view class="quick-preview-modal" wx:if="{{visible}}" catchtouchmove="preventScroll">
+  <!-- 背景遮罩 -->
+  <view class="preview-mask" bindtap="handleClose"></view>
+
+  <!-- 预览内容 -->
+  <view class="preview-content" animation="{{contentAnimation}}">
+    <!-- 关闭按钮 -->
+    <view class="close-btn" bindtap="handleClose">
+      <t-icon name="close" size="48rpx" color="#718096" />
+    </view>
+
+    <!-- 播客信息区域 -->
+    <view class="podcast-info-section">
+      <!-- 封面和基础信息 -->
+      <view class="cover-info">
+        <view class="cover-container">
+          <image src="{{podcast.cover_url}}" class="podcast-cover" mode="aspectFill" />
+          <!-- 播放按钮覆盖层 -->
+          <view class="play-overlay" bindtap="handlePlay">
+            <view class="play-button {{isPlaying ? 'playing' : ''}}">
+              <t-icon name="{{isPlaying ? 'pause' : 'play'}}" size="64rpx" color="#ffffff" />
+            </view>
+          </view>
+          <!-- 试听标识 -->
+          <view class="trial-badge">
+            <text>30秒试听</text>
+          </view>
+        </view>
+
+        <!-- 播客详细信息 -->
+        <view class="info-details">
+          <text class="podcast-title">{{podcast.title}}</text>
+          <text class="podcast-channel">{{podcast.channel_name}}</text>
+          <view class="podcast-stats">
+            <view class="stat-item">
+              <t-icon name="play-circle" size="32rpx" color="#718096" />
+              <text>{{formattedPlayCount}}</text>
+            </view>
+            <view class="stat-item">
+              <t-icon name="heart" size="32rpx" color="#718096" />
+              <text>{{formattedLikeCount}}</text>
+            </view>
+            <view class="stat-item">
+              <t-icon name="time" size="32rpx" color="#718096" />
+              <text>{{formattedDuration}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 播客描述 -->
+      <view class="description-section">
+        <view class="section-title">
+          <t-icon name="file-text" size="32rpx" color="#ed8936" />
+          <text>内容简介</text>
+        </view>
+        <text class="description-text">{{podcast.description || '这是一期精彩的播客内容，包含了丰富的知识点和深度思考。'}}</text>
+      </view>
+
+      <!-- 试听播放器 -->
+      <view class="trial-player-section" wx:if="{{isPlaying || currentProgress > 0}}">
+        <view class="player-info">
+          <text class="current-time">{{currentTimeFormatted}}</text>
+          <text class="trial-text">试听中...</text>
+          <text class="remaining-time">剩余{{remainingTimeFormatted}}</text>
+        </view>
+        <view class="progress-container">
+          <t-slider
+            value="{{currentProgress}}"
+            min="{{0}}"
+            max="{{100}}"
+            theme="filled"
+            color="#ed8936"
+            track-color="#e2e8f0"
+            class="trial-slider"
+            disabled="{{true}}"
+            show-value="{{false}}"
+          />
+        </view>
+      </view>
+    </view>
+
+    <!-- 快捷操作区域 -->
+    <view class="quick-actions-section">
+      <view class="action-row">
+        <!-- 收藏按钮 -->
+        <view class="action-btn {{podcast.isFavorited ? 'favorited' : ''}}" bindtap="handleFavorite">
+          <t-icon name="{{podcast.isFavorited ? 'heart-filled' : 'heart'}}"
+                  size="48rpx"
+                  color="{{podcast.isFavorited ? '#ed8936' : '#718096'}}" />
+          <text>{{podcast.isFavorited ? '已收藏' : '收藏'}}</text>
+        </view>
+
+        <!-- 分享按钮 -->
+        <view class="action-btn" bindtap="handleShare">
+          <t-icon name="share" size="48rpx" color="#718096" />
+          <text>分享</text>
+        </view>
+
+        <!-- 添加到播放列表 -->
+        <view class="action-btn" bindtap="handleAddToPlaylist">
+          <t-icon name="queue-music" size="48rpx" color="#718096" />
+          <text>播放列表</text>
+        </view>
+      </view>
+
+      <!-- 主要操作 -->
+      <view class="primary-actions">
+        <view class="primary-btn outline" bindtap="handleClose">
+          <text>关闭</text>
+        </view>
+        <view class="primary-btn filled" bindtap="handlePlayFull">
+          <t-icon name="play" size="32rpx" color="#ffffff" />
+          <text>完整播放</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

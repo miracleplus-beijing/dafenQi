@@ -717,18 +717,8 @@ class AuthService {
         has_user_info: !!(user?.nickname && user?.avatar_url),
       };
     } else {
-      console.log('supabase 无法获取到当前用户信息');
-      return {
-        id: null,
-        email: null,
-        nickName: null,
-        avatarUrl: null, // 使用动态生成的头像URL
-        nickname: null, // 保持兼容性
-        avatar_url: null, // 原始avatar_url用于重新生成
-        wechat_openid: null,
-        display_name: null,
-        has_user_info: false,
-      };
+      console.log('未登录');
+      return null
     }
   }
 

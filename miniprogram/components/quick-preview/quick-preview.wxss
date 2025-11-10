@@ -1,0 +1,375 @@
+/* 快速预览组件样式 */
+
+.quick-preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* 背景遮罩 */
+.preview-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(26, 54, 93, 0.6);
+  backdrop-filter: blur(8rpx);
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* 预览内容容器 */
+.preview-content {
+  position: relative;
+  width: 100%;
+  max-height: 80vh;
+  background: var(--bg-primary);
+  border-radius: var(--border-radius-xl) var(--border-radius-xl) 0 0;
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* 关闭按钮 */
+.close-btn {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  width: 60rpx;
+  height: 60rpx;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.close-btn:active {
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* === 播客信息区域 === */
+.podcast-info-section {
+  flex: 1;
+  padding: var(--spacing-lg);
+  padding-top: var(--spacing-2xl);
+  overflow-y: auto;
+}
+
+/* 封面和信息 */
+.cover-info {
+  display: flex;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+  align-items: flex-start;
+}
+
+.cover-container {
+  position: relative;
+  width: 200rpx;
+  height: 200rpx;
+  flex-shrink: 0;
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.podcast-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 播放覆盖层 */
+.play-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(26, 54, 93, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2rpx);
+  transition: all 0.3s ease;
+}
+
+.play-button {
+  width: 96rpx;
+  height: 96rpx;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.play-button:active {
+  transform: scale(0.9);
+}
+
+.play-button.playing {
+  background: var(--accent-color);
+}
+
+/* 试听标识 */
+.trial-badge {
+  position: absolute;
+  bottom: var(--spacing-xs);
+  left: var(--spacing-xs);
+  background: rgba(237, 137, 54, 0.9);
+  color: white;
+  padding: 6rpx var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+/* 详细信息 */
+.info-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.podcast-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.podcast-channel {
+  font-size: var(--font-size-md);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.podcast-stats {
+  display: flex;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-xs);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+/* 描述区域 */
+.description-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.description-text {
+  font-size: var(--font-size-md);
+  color: var(--text-primary);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* === 试听播放器区域 === */
+.trial-player-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--secondary-color);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.player-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-sm);
+}
+
+.current-time,
+.remaining-time {
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+  font-family: 'SF Pro Display', -apple-system, sans-serif;
+}
+
+.trial-text {
+  color: var(--accent-color);
+  font-weight: var(--font-weight-semibold);
+}
+
+.progress-container {
+  height: 20rpx;
+  display: flex;
+  align-items: center;
+}
+
+.trial-slider {
+  width: 100%;
+  height: 20rpx;
+  opacity: 0.8;
+}
+
+/* === 快捷操作区域 === */
+.quick-actions-section {
+  background: var(--bg-secondary);
+  padding: var(--spacing-lg);
+  border-top: 1px solid var(--secondary-color);
+}
+
+.action-row {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: var(--spacing-lg);
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  transition: all 0.2s ease;
+  min-width: 120rpx;
+}
+
+.action-btn:active {
+  transform: scale(0.95);
+  background: rgba(237, 137, 54, 0.1);
+}
+
+.action-btn text {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.action-btn.favorited text {
+  color: var(--accent-color);
+}
+
+/* 主要操作按钮 */
+.primary-actions {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.primary-btn {
+  flex: 1;
+  height: 88rpx;
+  border-radius: var(--border-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  transition: all 0.2s ease;
+}
+
+.primary-btn:active {
+  transform: translateY(2rpx);
+}
+
+.primary-btn.outline {
+  background: transparent;
+  border: 2px solid var(--secondary-color);
+  color: var(--text-secondary);
+}
+
+.primary-btn.outline:active {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.primary-btn.filled {
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-light) 100%);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.primary-btn.filled:active {
+  background: var(--accent-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+/* === 动画效果 === */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* === 响应式设计 === */
+@media (max-width: 376px) {
+  .cover-info {
+    gap: var(--spacing-md);
+  }
+
+  .cover-container {
+    width: 160rpx;
+    height: 160rpx;
+  }
+
+  .podcast-title {
+    font-size: var(--font-size-md);
+  }
+
+  .action-btn {
+    min-width: 100rpx;
+    padding: var(--spacing-sm);
+  }
+
+  .primary-btn {
+    height: 80rpx;
+    font-size: var(--font-size-md);
+  }
+}

@@ -1,0 +1,237 @@
+/* 瀑布流头部组件样式 */
+.waterfall-header {
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-sm);
+  z-index: 100;
+  position: relative;
+}
+
+/* 搜索区域 */
+.search-section {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--bg-primary);
+}
+
+.search-input {
+  width: 100%;
+  border-radius: var(--border-radius-lg);
+}
+
+/* 筛选区域 */
+.filter-section {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--secondary-dark);
+  position: relative;
+}
+
+/* 主筛选tab栏 */
+.main-filter-tabs {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-lg);
+  gap: var(--spacing-md);
+}
+
+/* 筛选tab */
+.filter-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-primary);
+  border: 1px solid var(--secondary-color);
+  border-radius: var(--border-radius-sm);
+  transition: all 0.2s ease;
+  min-height: 72rpx;
+  box-sizing: border-box;
+}
+
+.filter-tab:active {
+  transform: scale(0.98);
+}
+
+/* Tab激活状态 */
+.filter-tab.active {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: #ffffff;
+}
+
+.filter-tab.active .tab-title,
+.filter-tab.active .tab-selection {
+  color: #ffffff;
+}
+
+.filter-tab.active .tab-arrow {
+  color: #ffffff;
+}
+
+/* Tab有选择状态（未激活时显示选中内容） */
+.filter-tab.has-selection:not(.active) {
+  background: rgba(237, 137, 54, 0.1);
+  border-color: var(--accent-color);
+}
+
+.filter-tab.has-selection:not(.active) .tab-title {
+  color: var(--accent-color);
+}
+
+/* Tab标题 */
+.tab-title {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+/* Tab选中内容显示 */
+.tab-selection {
+  font-size: var(--font-size-sm);
+  color: var(--accent-color);
+  margin-left: var(--spacing-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60rpx;
+}
+
+/* Tab箭头 */
+.tab-arrow {
+  color: var(--text-tertiary);
+  transition: transform 0.2s ease;
+  margin-left: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.filter-tab.active .tab-arrow {
+  transform: rotate(180deg);
+}
+
+/* 清除按钮 */
+.clear-btn {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: var(--border-radius-sm);
+  background: var(--bg-primary);
+  border: 1px solid var(--secondary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.clear-btn:active {
+  background: var(--secondary-color);
+  transform: scale(0.95);
+}
+
+/* 下拉选项面板 */
+.dropdown-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--secondary-color);
+  border-top: none;
+  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 200;
+  max-height: 600rpx;
+  overflow-y: auto;
+}
+
+/* 选项组 */
+.option-group {
+  padding: var(--spacing-sm) 0;
+}
+
+/* 选项项 */
+.option-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+}
+
+.option-item:last-child {
+  border-bottom: none;
+}
+
+.option-item:active {
+  background: var(--bg-secondary);
+}
+
+/* 已选择的选项 */
+.option-item.selected {
+  background: rgba(237, 137, 54, 0.1);
+}
+
+.option-item.selected .option-label {
+  color: var(--accent-color);
+  font-weight: var(--font-weight-medium);
+}
+
+/* 选项标签 */
+.option-label {
+  font-size: var(--font-size-md);
+  color: var(--text-primary);
+  flex: 1;
+}
+
+/* 下拉面板遮罩 */
+.dropdown-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 150;
+}
+
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .main-filter-tabs {
+    padding: var(--spacing-sm) var(--spacing-md);
+    gap: var(--spacing-sm);
+  }
+
+  .filter-tab {
+    padding: 10rpx 12rpx;
+    min-height: 64rpx;
+  }
+
+  .tab-title {
+    font-size: var(--font-size-sm);
+  }
+
+  .tab-selection {
+    font-size: var(--font-size-xs);
+    max-width: 40rpx;
+  }
+
+  .clear-btn {
+    width: 56rpx;
+    height: 56rpx;
+  }
+}
+
+/* 动画效果 */
+.dropdown-panel {
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

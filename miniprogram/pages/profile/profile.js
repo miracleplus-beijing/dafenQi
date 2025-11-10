@@ -284,6 +284,12 @@ Page({
     console.log(currentUser);
     const isLoggedIn = await authService.checkLoginStatus();
 
+    console.log(isLoggedIn)
+    if (!isLoggedIn) {
+      console.log("请登录")
+      return
+    }
+
     this.setData({
       isLoggedIn: isLoggedIn,
       userInfo: currentUser || {

@@ -1,0 +1,85 @@
+<!-- 瀑布流头部搜索筛选组件 -->
+<view class="waterfall-header">
+  <!-- 搜索栏 -->
+  <view class="search-section">
+    <t-search
+      value="{{searchValue}}"
+      placeholder="搜索播客、频道、作者..."
+      bind:change="handleSearchChange"
+      bind:submit="handleSearchSubmit"
+      bind:clear="handleSearchClear"
+      class="search-input" />
+  </view>
+
+  <!-- 筛选栏 -->
+  <view class="filter-section">
+    <!-- 主筛选tab栏 -->
+    <view class="main-filter-tabs">
+      <!-- 分类tab -->
+      <view class="filter-tab {{currentActiveTab === 'category' ? 'active' : ''}} {{filterOptions.category ? 'has-selection' : ''}}"
+            bindtap="toggleFilterTab" data-tab="category">
+        <text class="tab-title">分类</text>
+        <text wx:if="{{filterOptions.category}}" class="tab-selection">{{getCategoryLabel(filterOptions.category)}}</text>
+        <t-icon name="{{currentActiveTab === 'category' ? 'chevron-up' : 'chevron-down'}}" size="28rpx" class="tab-arrow" />
+      </view>
+
+      <!-- 时间tab -->
+      <view class="filter-tab {{currentActiveTab === 'time' ? 'active' : ''}} {{filterOptions.timeRange ? 'has-selection' : ''}}"
+            bindtap="toggleFilterTab" data-tab="time">
+        <text class="tab-title">时间</text>
+        <text wx:if="{{filterOptions.timeRange}}" class="tab-selection">{{getTimeLabel(filterOptions.timeRange)}}</text>
+        <t-icon name="{{currentActiveTab === 'time' ? 'chevron-up' : 'chevron-down'}}" size="28rpx" class="tab-arrow" />
+      </view>
+
+      <!-- 排序tab -->
+      <view class="filter-tab {{currentActiveTab === 'sort' ? 'active' : ''}} {{filterOptions.sortType !== 'latest' ? 'has-selection' : ''}}"
+            bindtap="toggleFilterTab" data-tab="sort">
+        <text class="tab-title">排序</text>
+        <text wx:if="{{filterOptions.sortType !== 'latest'}}" class="tab-selection">{{getSortLabel(filterOptions.sortType)}}</text>
+        <t-icon name="{{currentActiveTab === 'sort' ? 'chevron-up' : 'chevron-down'}}" size="28rpx" class="tab-arrow" />
+      </view>
+
+      <!-- 清除筛选按钮 -->
+      <view wx:if="{{hasActiveFilters}}" class="clear-btn" bindtap="clearFilters">
+        <t-icon name="refresh" size="28rpx" />
+      </view>
+    </view>
+
+    <!-- 下拉选项面板 -->
+    <view wx:if="{{currentActiveTab}}" class="dropdown-panel">
+      <!-- 分类选项 -->
+      <view wx:if="{{currentActiveTab === 'category'}}" class="option-group">
+        <view wx:for="{{categoryOptions}}" wx:key="value"
+              class="option-item {{filterOptions.category === item.value ? 'selected' : ''}}"
+              bindtap="handleOptionSelect" data-type="category" data-value="{{item.value}}">
+          <text class="option-label">{{item.label}}</text>
+          <t-icon wx:if="{{filterOptions.category === item.value}}" name="check" size="32rpx" color="#ed8936" />
+        </view>
+      </view>
+
+      <!-- 时间选项 -->
+      <view wx:if="{{currentActiveTab === 'time'}}" class="option-group">
+        <view wx:for="{{timeOptions}}" wx:key="value"
+              class="option-item {{filterOptions.timeRange === item.value ? 'selected' : ''}}"
+              bindtap="handleOptionSelect" data-type="timeRange" data-value="{{item.value}}">
+          <text class="option-label">{{item.label}}</text>
+          <t-icon wx:if="{{filterOptions.timeRange === item.value}}" name="check" size="32rpx" color="#ed8936" />
+        </view>
+      </view>
+
+      <!-- 排序选项 -->
+      <view wx:if="{{currentActiveTab === 'sort'}}" class="option-group">
+        <view wx:for="{{sortOptions}}" wx:key="value"
+              class="option-item {{filterOptions.sortType === item.value ? 'selected' : ''}}"
+              bindtap="handleOptionSelect" data-type="sortType" data-value="{{item.value}}">
+          <text class="option-label">{{item.label}}</text>
+          <t-icon wx:if="{{filterOptions.sortType === item.value}}" name="check" size="32rpx" color="#ed8936" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 下拉面板遮罩 -->
+    <view wx:if="{{currentActiveTab}}" class="dropdown-mask" bindtap="closeDropdown"></view>
+  </view>
+
+</view>

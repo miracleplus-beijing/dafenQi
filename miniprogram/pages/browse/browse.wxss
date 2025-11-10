@@ -64,6 +64,10 @@ page {
     --shadow-lg: 0 8px 25px rgba(26, 54, 93, 0.15);
 
     --shadow-xl: 0 12px 35px rgba(26, 54, 93, 0.2);
+
+    /* 动画参数 */
+    --animation-duration: 0.3s;
+    --animation-timing: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 .browse-page {
@@ -72,6 +76,29 @@ page {
     background: var(--bg-primary);
     position: relative;
     overflow: hidden;
+}
+
+/* === 模式切换动画 === */
+.swiper-mode {
+    opacity: 1;
+    transform: translateX(0);
+    transition: all var(--animation-duration) var(--animation-timing);
+}
+
+.swiper-mode.hiding {
+    opacity: 0;
+    transform: translateX(-100%);
+}
+
+.waterfall-mode {
+    opacity: 1;
+    transform: translateX(0);
+    transition: all var(--animation-duration) var(--animation-timing);
+}
+
+.waterfall-mode.hiding {
+    opacity: 0;
+    transform: translateX(100%);
 }
 
 
@@ -84,7 +111,6 @@ page {
 
 .browse-container {
     width: 100%;
-    height: 100%;
     background: var(--bg-primary);
     position: relative;
     display: flex;
@@ -93,6 +119,7 @@ page {
     justify-content: center;
     user-select: none;
     padding: var(--spacing-lg) 0;
+    height: 100vh;
     box-sizing: border-box;
 
     /* 页面切换动画 */
@@ -112,12 +139,11 @@ page {
 
 /* === 内容展示区域 === */
 .content-display {
-    flex: 3;
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 40rpx;
+    gap: 50rpx;
     justify-content: center;
     max-width: 800rpx;
     margin: 0 auto;
@@ -129,12 +155,11 @@ page {
     overflow: hidden;
     position: relative;
     margin: 0 50rpx;
-    margin-bottom: 48rpx;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 24rpx;
-    width: 650rpx;
+    width: 400rpx;
   background-color: #f0f4f8;
   border: none;
   border-radius: 20rpx;
@@ -142,8 +167,8 @@ page {
 
 .cover-image-container {
     position: relative;
-    width: 300rpx;
-    height: 300rpx;
+    width: 400rpx;
+    height: 400rpx;
     border-radius: 16rpx;
     overflow: hidden;
 }
@@ -237,16 +262,6 @@ page {
     transition: opacity 0.3s ease;
 }
 
-.podcast-card {
-  flex: 1;
-  box-sizing: border-box;
-  padding: 20rpx 6rpx;
-  padding-top: 36rpx;
-  height: 100%;
-  color: #949494;
-  font-size: var(--font-size-md);
-  text-align: center;
-}
 .overlay-icon {
     width: 32px;
     height: 32px;
@@ -431,14 +446,13 @@ page {
 
 /* === 播放控制区域 === */
 .playback-section {
-    flex: 2;
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     max-width: 800rpx;
     margin-top: 30rpx;
-    gap: 30rpx;
+    gap: 50rpx;
     justify-content: space-between;
 }
 
@@ -446,7 +460,6 @@ page {
 .progress-section {
     width: 100%;
     padding: 0 48rpx;
-    margin-bottom: 48rpx;
 }
 
 .time-info {
@@ -638,7 +651,6 @@ page {
 
     .progress-section {
         padding: 0 32rpx;
-        margin-bottom: 32rpx;
     }
     .summary-text {
         font-size: var(--font-size-md);
@@ -781,6 +793,266 @@ page {
     font-size: var(--font-size-md);
     font-weight: var(--font-weight-medium);
     text-align: center;
+}
+
+/* === 瀑布流模式样式 === */
+.waterfall-mode {
+  width: 100%;
+  height: 100vh;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  opacity: 1;
+  transform: translateX(0);
+  transition: all var(--animation-duration) var(--animation-timing);
+}
+
+.waterfall-mode.hiding {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+/* === 性能优化样式 === */
+.waterfall-content {
+  flex: 1;
+  height: 0;
+  /* padding-bottom: calc(120rpx + env(safe-area-inset-bottom)); */
+  /* 启用硬件加速 */
+  transform: translateZ(0);
+  -webkit-overflow-scrolling: touch;
+  /* 优化滚动性能 */
+  will-change: scroll-position;
+}
+
+.waterfall-grid {
+  display: flex;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  /* 性能优化 */
+  contain: layout style;
+}
+
+.grid-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  /* 启用复合图层 */
+  transform: translateZ(0);
+  will-change: contents;
+}
+
+/* === 卡片进入动画 === */
+.waterfall-card {
+  opacity: 0;
+  transform: translateY(30rpx) scale(0.9);
+  animation: cardFadeIn 0.4s var(--animation-timing) forwards;
+}
+
+.waterfall-card:nth-child(even) {
+  animation-delay: 0.1s;
+}
+
+.waterfall-card:nth-child(odd) {
+  animation-delay: 0.05s;
+}
+
+@keyframes cardFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* === 瀑布流头部动画 === */
+.waterfall-header {
+  opacity: 0;
+  transform: translateY(-20rpx);
+  animation: headerSlideDown 0.3s var(--animation-timing) forwards;
+}
+
+@keyframes headerSlideDown {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === 切换按钮动画效果 === */
+.tab-switch-indicator {
+  position: fixed;
+  bottom: calc(120rpx + env(safe-area-inset-bottom));
+  right: var(--spacing-lg);
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  transform: scale(0.8) rotate(-90deg);
+  transition: all var(--animation-duration) var(--animation-timing);
+  pointer-events: none;
+}
+
+.tab-switch-indicator.show {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  pointer-events: all;
+}
+
+.tab-switch-indicator.pulse {
+  animation: switchPulse 0.6s ease-in-out;
+}
+
+@keyframes switchPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* 加载状态 */
+.waterfall-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.no-more-data {
+  text-align: center;
+  padding: var(--spacing-lg);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+/* 空数据状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-4xl) var(--spacing-lg);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.empty-text {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  margin: var(--spacing-md) 0 var(--spacing-sm);
+}
+
+.empty-hint {
+  font-size: var(--font-size-sm);
+  opacity: 0.7;
+}
+
+/* 临时内容 - 保留原有的简单布局作为后备 */
+.temp-waterfall-content {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: var(--font-size-lg);
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+  padding: var(--spacing-md);
+}
+
+.grid-item {
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease;
+}
+
+.grid-item:active {
+  transform: scale(0.98);
+}
+
+.item-cover {
+  width: 100%;
+  height: 200rpx;
+  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+}
+
+.item-title {
+  padding: var(--spacing-sm);
+  font-size: var(--font-size-md);
+  color: var(--text-primary);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* === 更多操作弹窗样式 === */
+.more-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    visibility: hidden;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.more-popup.show {
+    visibility: visible;
+    opacity: 1;
+}
+
+.more-popup-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    background: var(--bg-primary);
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+    box-shadow: var(--shadow-xl);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.more-popup.show .more-popup-content {
+    transform: translateY(0);
+}
+
+.more-actions-list {
+    padding: var(--spacing-md) 0 var(--spacing-lg);
+}
+
+.more-action-item {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    transition: background-color 0.2s ease;
+}
+
+.more-action-item:active {
+    background-color: var(--bg-secondary);
+}
+
+.action-icon {
+    margin-right: var(--spacing-md);
+}
+
+.action-text {
+    color: var(--text-primary);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-medium);
 }
 
 /* === 评论弹窗样式 === */

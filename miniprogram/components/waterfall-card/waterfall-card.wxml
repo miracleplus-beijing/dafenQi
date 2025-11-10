@@ -1,0 +1,81 @@
+<!-- 瀑布流卡片组件 -->
+<view class="waterfall-card {{isSelected ? 'selected' : ''}}"
+      bindtap="handleCardTap"
+      bindlongpress="handleCardLongPress">
+
+  <!-- 选择标识 -->
+  <view wx:if="{{batchMode}}" class="select-indicator">
+    <t-icon name="{{isSelected ? 'check-circle-filled' : 'circle'}}"
+            size="32rpx"
+            color="{{isSelected ? '#ed8936' : '#cbd5e0'}}" />
+  </view>
+
+  <!-- 播客封面 -->
+  <view class="card-cover">
+    <image src="{{podcast.cover_url}}"
+           class="cover-image"
+           mode="aspectFill"
+           lazy-load="{{true}}"
+           bindload="handleImageLoad"
+           binderror="handleImageError" />
+
+    <!-- 播放状态指示器 -->
+    <view wx:if="{{isPlaying}}" class="play-indicator">
+      <view class="play-waves">
+        <view class="wave"></view>
+        <view class="wave"></view>
+        <view class="wave"></view>
+      </view>
+    </view>
+
+    <!-- 时长显示 -->
+    <view wx:if="{{podcast.duration}}" class="duration-badge">
+      <text>{{formattedDuration}}</text>
+    </view>
+
+    <!-- 播放按钮悬浮层 -->
+    <view class="play-overlay" bindtap="handlePlayTap" data-prevent-bubble="true">
+      <t-icon name="play" size="48rpx" color="#ffffff" />
+    </view>
+  </view>
+
+  <!-- 卡片信息 -->
+  <view class="card-info">
+    <!-- 标题 -->
+    <text class="card-title">{{podcast.title}}</text>
+
+    <!-- 频道信息 -->
+    <view class="channel-info">
+      <text class="channel-name">{{podcast.channel_name}}</text>
+      <!-- <text class="publish-time">{{formattedTime}}</text> -->
+    </view>
+
+    <!-- 统计信息 -->
+    <view class="stats-info">
+      <view class="stat-item">
+        <t-icon name="play-circle" size="24rpx" color="#718096" />
+        <text>{{formattedPlayCount}}</text>
+      </view>
+
+      <view class="stat-item">
+        <t-icon name="heart" size="24rpx" color="#718096" />
+        <text>{{formattedLikeCount}}</text>
+      </view>
+    </view>
+
+    <!-- 快速操作 -->
+    <view class="quick-actions">
+      <view class="action-btn {{podcast.isFavorited ? 'favorited' : ''}}"
+            bindtap="handleFavoriteTap"
+            data-prevent-bubble="true">
+        <t-icon name="{{podcast.isFavorited ? 'heart-filled' : 'heart'}}"
+                size="32rpx"
+                color="{{podcast.isFavorited ? '#ed8936' : '#718096'}}" />
+      </view>
+
+      <view class="action-btn" bindtap="handleMoreTap" data-prevent-bubble="true">
+        <t-icon name="more" size="32rpx" color="#718096" />
+      </view>
+    </view>
+  </view>
+</view>

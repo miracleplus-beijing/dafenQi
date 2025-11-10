@@ -14,6 +14,19 @@ App({
       downloadQuality: 'high',
       theme: 'light',
     },
+
+    // 双模式状态管理
+    browseMode: 'swiper', // 'swiper' | 'waterfall'
+
+    // 全局播放器状态
+    globalPlayer: {
+      isVisible: false,
+      isPlaying: false,
+      currentPodcast: null,
+      currentProgress: 0,
+      maxProgress: 100,
+    },
+
     // Supabase配置
     supabaseUrl: 'https://gxvfcafgnhzjiauukssj.supabase.co',
     supabaseAnonKey:
@@ -76,10 +89,12 @@ App({
       const historyList = wx.getStorageSync('historyList') || [];
       const settings =
         wx.getStorageSync('settings') || this.globalData.settings;
+      const browseMode = wx.getStorageSync('browseMode') || 'swiper';
 
       this.globalData.favoriteList = favoriteList;
       this.globalData.historyList = historyList;
       this.globalData.settings = settings;
+      this.globalData.browseMode = browseMode;
     } catch (e) {
       console.error('加载本地数据失败', e);
     }
@@ -90,6 +105,7 @@ App({
       wx.setStorageSync('favoriteList', this.globalData.favoriteList);
       wx.setStorageSync('historyList', this.globalData.historyList);
       wx.setStorageSync('settings', this.globalData.settings);
+      wx.setStorageSync('browseMode', this.globalData.browseMode);
     } catch (e) {
       console.error('保存本地数据失败', e);
     }
@@ -159,6 +175,67 @@ App({
       ...newSettings,
     };
     this.saveLocalData();
+  },
+
+  // 模式切换方法
+  switchBrowseMode: function () {
+    const currentMode = this.globalData.browseMode;
+    const newMode = currentMode === 'swiper' ? 'waterfall' : 'swiper';
+
+    console.log(`切换浏览模式：${currentMode} -> ${newMode}`);
+
+    this.globalData.browseMode = newMode;
+    this.saveLocalData();
+
+    // 更新tab栏图标
+    this.updateTabBarIcon(newMode);
+
+    return newMode;
+  },
+
+  // 更新tab栏图标
+  updateTabBarIcon: function (mode) {
+    try {
+      const iconPath = mode === 'swiper'
+        ? 'images/icons/browse-swiper.png'
+        : 'images/icons/browse-waterfall.png';
+      const selectedIconPath = mode === 'swiper'
+      ? 'images/icons/browse-swiper.png'
+      : 'images/icons/browse-waterfall.png';
+        // ? 'images/icons/browse-swiper-active.png'
+        // : 'images/icons/browse-waterfall-active.png';
+
+      wx.setTabBarItem({
+        index: 0,
+        iconPath: iconPath,
+        selectedIconPath: selectedIconPath,
+        success: () => {
+          console.log('tab栏图标更新成功');
+        },
+        fail: (error) => {
+          console.error('tab栏图标更新失败:', error);
+        }
+      });
+    } catch (error) {
+      console.error('更新tab栏图标异常:', error);
+    }
+  },
+
+  // 全局播放器控制方法
+  showGlobalPlayer: function (podcastData) {
+    this.globalData.globalPlayer.isVisible = true;
+    this.globalData.globalPlayer.currentPodcast = podcastData;
+  },
+
+  hideGlobalPlayer: function () {
+    this.globalData.globalPlayer.isVisible = false;
+  },
+
+  updateGlobalPlayerState: function (state) {
+    this.globalData.globalPlayer = {
+      ...this.globalData.globalPlayer,
+      ...state,
+    };
   },
 
   // 初始化全局隐私检查
