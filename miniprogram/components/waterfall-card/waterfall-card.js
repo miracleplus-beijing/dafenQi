@@ -24,15 +24,27 @@ Component({
   /**
    * 组件的初始数据
    */
-  data: {},
+  data: {
+    // 格式化后的显示数据
+    formattedDuration: '0秒',
+    formattedPlayCount: '0',
+    formattedLikeCount: '0',
+    formattedTime: '',
+  },
 
   /**
-   * 组件的计算属性
+   * 组件的方法列表
    */
-  computed: {
+  methods: {
     // 格式化时长
-    formattedDuration() {
-      const duration = this.properties.podcast.duration || 0;
+    getFormattedDuration: function() {
+      // 安全检查，确保 podcast 对象存在
+      const podcast = this.properties.podcast;
+      if (!podcast || typeof podcast !== 'object') {
+        return '0秒';
+      }
+
+      const duration = podcast.duration || 0;
       if (duration < 60) {
         return `${Math.floor(duration)}秒`;
       } else if (duration < 3600) {
@@ -46,8 +58,14 @@ Component({
     },
 
     // 格式化播放量
-    formattedPlayCount() {
-      const count = this.properties.podcast.play_count || 0;
+    getFormattedPlayCount: function() {
+      // 安全检查，确保 podcast 对象存在
+      const podcast = this.properties.podcast;
+      if (!podcast || typeof podcast !== 'object') {
+        return '0';
+      }
+
+      const count = podcast.play_count || 0;
       if (count >= 10000) {
         return `${(count / 10000).toFixed(1)}万`;
       } else if (count >= 1000) {
@@ -57,8 +75,14 @@ Component({
     },
 
     // 格式化点赞数
-    formattedLikeCount() {
-      const count = this.properties.podcast.like_count || 0;
+    getFormattedLikeCount: function() {
+      // 安全检查，确保 podcast 对象存在
+      const podcast = this.properties.podcast;
+      if (!podcast || typeof podcast !== 'object') {
+        return '0';
+      }
+
+      const count = podcast.like_count || 0;
       if (count >= 10000) {
         return `${(count / 10000).toFixed(1)}万`;
       } else if (count >= 1000) {
@@ -68,8 +92,14 @@ Component({
     },
 
     // 格式化时间
-    formattedTime() {
-      const createdAt = this.properties.podcast.created_at;
+    getFormattedTime: function() {
+      // 安全检查，确保 podcast 对象存在
+      const podcast = this.properties.podcast;
+      if (!podcast || typeof podcast !== 'object') {
+        return '';
+      }
+
+      const createdAt = podcast.created_at;
       if (!createdAt) return '';
 
       const now = new Date();
@@ -94,34 +124,64 @@ Component({
         return `${years}年前`;
       }
     },
-  },
 
-  /**
-   * 组件的方法列表
-   */
-  methods: {
+    // 安全更新计算数据的方法
+    updateComputedData: function () {
+      try {
+        this.setData({
+          formattedDuration: this.getFormattedDuration(),
+          formattedPlayCount: this.getFormattedPlayCount(),
+          formattedLikeCount: this.getFormattedLikeCount(),
+          formattedTime: this.getFormattedTime(),
+        });
+      } catch (error) {
+        console.error('waterfall-card 计算属性更新失败:', error);
+        // 设置默认值
+        this.setData({
+          formattedDuration: '0秒',
+          formattedPlayCount: '0',
+          formattedLikeCount: '0',
+          formattedTime: '',
+        });
+      }
+    },
+
     // 卡片点击
     handleCardTap: function (e) {
+      // 安全检查 podcast 对象
+      const podcast = this.properties.podcast;
+      if (!podcast || typeof podcast !== 'object') {
+        console.warn('waterfall-card: podcast 对象不存在，无法执行点击操作');
+        return;
+      }
+
       if (this.properties.batchMode) {
         // 批量模式下切换选择状态
         this.triggerEvent('select', {
-          podcast: this.properties.podcast,
+          podcast: podcast,
           selected: !this.properties.isSelected,
         });
       } else {
         // 普通模式下触发预览
         this.triggerEvent('preview', {
-          podcast: this.properties.podcast,
+          podcast: podcast,
         });
       }
     },
 
     // 长按卡片
     handleCardLongPress: function () {
+      // 安全检查 podcast 对象
+      const podcast = this.properties.podcast;
+      if (!podcast || typeof podcast !== 'object') {
+        console.warn('waterfall-card: podcast 对象不存在，无法执行长按操作');
+        return;
+      }
+
       if (!this.properties.batchMode) {
         // 非批量模式下长按进入批量模式
         this.triggerEvent('longpress', {
-          podcast: this.properties.podcast,
+          podcast: podcast,
         });
       }
     },
@@ -131,8 +191,15 @@ Component({
       // 阻止事件冒泡
       e.stopPropagation();
 
+      // 安全检查 podcast 对象
+      const podcast = this.properties.podcast;
+      if (!podcast || typeof podcast !== 'object') {
+        console.warn('waterfall-card: podcast 对象不存在，无法执行播放操作');
+        return;
+      }
+
       this.triggerEvent('play', {
-        podcast: this.properties.podcast,
+        podcast: podcast,
       });
     },
 
@@ -141,9 +208,16 @@ Component({
       // 阻止事件冒泡
       e.stopPropagation();
 
+      // 安全检查 podcast 对象
+      const podcast = this.properties.podcast;
+      if (!podcast || typeof podcast !== 'object') {
+        console.warn('waterfall-card: podcast 对象不存在，无法执行收藏操作');
+        return;
+      }
+
       this.triggerEvent('favorite', {
-        podcast: this.properties.podcast,
-        favorited: !this.properties.podcast.isFavorited,
+        podcast: podcast,
+        favorited: !podcast.isFavorited,
       });
     },
 
@@ -152,8 +226,15 @@ Component({
       // 阻止事件冒泡
       e.stopPropagation();
 
+      // 安全检查 podcast 对象
+      const podcast = this.properties.podcast;
+      if (!podcast || typeof podcast !== 'object') {
+        console.warn('waterfall-card: podcast 对象不存在，无法执行更多操作');
+        return;
+      }
+
       this.triggerEvent('more', {
-        podcast: this.properties.podcast,
+        podcast: podcast,
       });
     },
 
@@ -174,13 +255,8 @@ Component({
    */
   lifetimes: {
     attached: function () {
-      // 更新计算属性
-      this.setData({
-        formattedDuration: this.computed.formattedDuration(),
-        formattedPlayCount: this.computed.formattedPlayCount(),
-        formattedLikeCount: this.computed.formattedLikeCount(),
-        formattedTime: this.computed.formattedTime(),
-      });
+      // 安全地更新计算属性
+      this.updateComputedData();
     },
   },
 
@@ -188,14 +264,11 @@ Component({
    * 组件属性观察器
    */
   observers: {
-    'podcast.**': function () {
+    'podcast.**': function (newPodcast) {
       // 当podcast数据变化时，重新计算显示数据
-      this.setData({
-        formattedDuration: this.computed.formattedDuration(),
-        formattedPlayCount: this.computed.formattedPlayCount(),
-        formattedLikeCount: this.computed.formattedLikeCount(),
-        formattedTime: this.computed.formattedTime(),
-      });
+      if (newPodcast && typeof newPodcast === 'object') {
+        this.updateComputedData();
+      }
     },
   },
 });

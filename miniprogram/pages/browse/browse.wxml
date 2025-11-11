@@ -151,6 +151,12 @@
     <scroll-view class="waterfall-content"
                  scroll-y
                  enable-back-to-top
+                 refresher-enabled="{{true}}"
+                 refresher-threshold="{{50}}"
+                 refresher-default-style="white"
+                 refresher-background="#f8f9fa"
+                 refresher-triggered="{{waterfallRefreshing}}"
+                 bindrefresherrefresh="handleWaterfallRefresh"
                  bindscrolltolower="handleWaterfallScrollToLower">
 
       <!-- 双列网格布局 -->
@@ -202,7 +208,7 @@
       </view>
 
       <!-- 空数据提示 -->
-      <view wx:if="{{waterfallList.length === 0 && !loading}}" class="empty-state">
+      <view wx:if="{{waterfallList.length === 0 && !loading && !waterfallRefreshing}}" class="empty-state">
         <t-icon name="inbox" size="120rpx" color="#cbd5e0" />
         <text class="empty-text">暂无内容</text>
         <text class="empty-hint">{{isSearchMode ? '试试其他搜索词' : '下拉刷新试试'}}</text>

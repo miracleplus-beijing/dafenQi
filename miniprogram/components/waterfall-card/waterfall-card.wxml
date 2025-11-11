@@ -50,18 +50,7 @@
       <!-- <text class="publish-time">{{formattedTime}}</text> -->
     </view>
 
-    <!-- 统计信息 -->
-    <view class="stats-info">
-      <view class="stat-item">
-        <t-icon name="play-circle" size="24rpx" color="#718096" />
-        <text>{{formattedPlayCount}}</text>
-      </view>
-
-      <view class="stat-item">
-        <t-icon name="heart" size="24rpx" color="#718096" />
-        <text>{{formattedLikeCount}}</text>
-      </view>
-    </view>
+   
 
     <!-- 快速操作 -->
     <view class="quick-actions">

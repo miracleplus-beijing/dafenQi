@@ -47,22 +47,30 @@ Component({
       { label: '时长', value: 'duration' },
       { label: '播放量', value: 'play_count' },
     ],
-  },
 
-  /**
-   * 组件的计算属性
-   */
-  computed: {
-    hasActiveFilters() {
-      const { filterOptions } = this.properties;
-      return filterOptions.category || filterOptions.timeRange || filterOptions.sortType !== 'latest';
-    },
+    // 计算属性结果
+    hasActiveFilters: false,
   },
 
   /**
    * 组件的方法列表
    */
   methods: {
+    // 检查是否有活跃的筛选器
+    checkActiveFilters: function() {
+      const { filterOptions } = this.properties;
+      if (!filterOptions || typeof filterOptions !== 'object') {
+        return false;
+      }
+      return filterOptions.category || filterOptions.timeRange || filterOptions.sortType !== 'latest';
+    },
+
+    // 更新活跃筛选器状态
+    updateActiveFiltersState: function() {
+      this.setData({
+        hasActiveFilters: this.checkActiveFilters()
+      });
+    },
     // 搜索相关
     handleSearchChange: function (e) {
       this.triggerEvent('searchchange', {
@@ -144,10 +152,22 @@ Component({
   lifetimes: {
     attached: function () {
       console.log('瀑布流头部组件已加载');
+      // 初始化活跃筛选器状态
+      this.updateActiveFiltersState();
     },
 
-    detached: function () {
-      console.log('瀑布流头部组件已卸载');
+
+  },
+
+  /**
+   * 组件属性观察器
+   */
+  observers: {
+    'filterOptions.**': function (newFilterOptions) {
+      // 当筛选选项变化时，更新活跃筛选器状态
+      if (newFilterOptions && typeof newFilterOptions === 'object') {
+        this.updateActiveFiltersState();
+      }
     },
   },
 });

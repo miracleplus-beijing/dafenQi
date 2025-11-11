@@ -100,6 +100,7 @@ Page({
     leftColumnList: [], // 左列数据
     rightColumnList: [], // 右列数据
     waterfallLoading: false, // 瀑布流加载状态
+    waterfallRefreshing: false, // 瀑布流下拉刷新状态
     hasMoreWaterfallData: true, // 是否还有更多数据
 
     // 个性化推荐相关
@@ -117,8 +118,9 @@ Page({
 
     // 获取安全区域信息
     const systemInfo = wx.getSystemInfoSync();
+    console.log("systemInfo: " + systemInfo.safeArea)
     this.setData({
-      safeAreaBottom: systemInfo.safeArea ? systemInfo.screenHeight - systemInfo.safeArea.bottom : 0,
+      safeAreaBottom: 0,
     });
 
     // 初始化当前模式
@@ -233,7 +235,7 @@ Page({
   // 加载瀑布流数据（性能优化版）
   async loadWaterfallData(loadMore = false) {
     try {
-      console.log('加载瀑布流数据', { loadMore });
+      console.log('加载瀑布流数据', { loadMore, refreshing: this.data.waterfallRefreshing });
 
       // 防止重复加载
       if (this.data.waterfallLoading) {
@@ -242,10 +244,13 @@ Page({
       }
 
       if (!loadMore) {
-        this.setData({
-          loading: true,
-          waterfallLoading: false,
-        });
+        // 如果是刷新模式，不显示全局 loading
+        if (!this.data.waterfallRefreshing) {
+          this.setData({
+            loading: true,
+            waterfallLoading: false,
+          });
+        }
       } else {
         this.setData({ waterfallLoading: true });
       }
@@ -265,7 +270,7 @@ Page({
 
         this.setData({
           waterfallList: finalWaterfallList,
-          loading: false,
+          loading: this.data.waterfallRefreshing ? this.data.loading : false, // 刷新状态下不修改全局loading
           waterfallLoading: false,
         });
 
@@ -275,7 +280,7 @@ Page({
         console.log('瀑布流数据加载成功:', processedData.length);
       } else {
         this.setData({
-          loading: false,
+          loading: this.data.waterfallRefreshing ? this.data.loading : false, // 刷新状态下不修改全局loading
           waterfallLoading: false,
           hasMoreWaterfallData: false,
         });
@@ -283,7 +288,7 @@ Page({
     } catch (error) {
       console.error('加载瀑布流数据失败:', error);
       this.setData({
-        loading: false,
+        loading: this.data.waterfallRefreshing ? this.data.loading : false, // 刷新状态下不修改全局loading
         waterfallLoading: false,
       });
     }
@@ -405,10 +410,14 @@ Page({
   // 热门推荐降级方案
   async loadPopularRecommendations() {
     try {
-      console.log('加载热门推荐作为降级方案');
-      const result =
-        await apiService.recommendation.getPopularRecommendations(20);
+      // console.log('加载热门推荐作为降级方案');
+      // console.log()
+      // const result =
+      //   await apiService.recommendation.getPopularRecommendations(20);
 
+      const result = {
+        success: false
+      }
       if (result.success) {
         this.setData({
           personalizedRecommendations: result.data || [],
@@ -761,7 +770,7 @@ Page({
       // 如果全局状态没有，尝试从本地存储获取
       return authService.getCurrentUser().id;
     } catch (error) {
-      console.error('获取用户ID失败:', error);
+      console.info('无法获取 userId，返回 null:', error);
       return null;
     }
   },
@@ -2323,10 +2332,133 @@ Page({
     this.updateWaterfallItemSelectState(e.detail.podcast.id, true);
   },
 
+  // 瀑布流下拉刷新
+  handleWaterfallRefresh: function () {
+    console.log('瀑布流下拉刷新触发');
+
+    // 如果正在加载中，不处理刷新
+    if (this.data.waterfallLoading || this.data.waterfallRefreshing) {
+      console.log('正在加载中，跳过刷新请求');
+      return;
+    }
+
+    // 防抖机制：如果上次刷新时间少于2秒，则忽略
+    const now = Date.now();
+    if (this.lastRefreshTime && (now - this.lastRefreshTime < 2000)) {
+      console.log('刷新过于频繁，跳过请求');
+      this.setData({
+        waterfallRefreshing: false
+      });
+      return;
+    }
+    this.lastRefreshTime = now;
+
+    // 设置刷新状态
+    this.setData({
+      waterfallRefreshing: true
+    });
+
+    // 执行刷新逻辑
+    this.refreshWaterfallData();
+  },
+
+  // 刷新瀑布流数据
+  async refreshWaterfallData() {
+    try {
+      console.log('开始刷新瀑布流数据');
+
+      // 保存当前数据作为备份，以防刷新失败需要恢复
+      const currentData = {
+        waterfallList: [...this.data.waterfallList],
+        leftColumnList: [...this.data.leftColumnList],
+        rightColumnList: [...this.data.rightColumnList],
+        hasMoreWaterfallData: this.data.hasMoreWaterfallData
+      };
+
+      // 使用临时变量存储新数据，不影响当前显示
+      let newWaterfallList = [];
+
+      // 直接调用数据获取逻辑，不通过 loadWaterfallData 以避免状态干扰
+      const batchSize = 20;
+      const result = await this.fetchPodcastsFromDatabase(1, { limit: batchSize });
+
+      if (result.success && result.data.length > 0) {
+        // 处理新数据
+        const processedData = await this.processPodcastData(result.data);
+        newWaterfallList = processedData;
+
+        // 一次性更新所有数据
+        this.setData({
+          waterfallList: newWaterfallList,
+          hasMoreWaterfallData: result.data.length === batchSize
+        });
+
+        // 重新分配双列数据
+        this.throttledRedistributeData(newWaterfallList);
+
+        // 延迟一点时间，让用户感受到刷新过程
+        setTimeout(() => {
+          this.setData({
+            waterfallRefreshing: false
+          });
+
+          // 显示刷新成功提示
+          wx.showToast({
+            title: '刷新成功',
+            icon: 'success',
+            duration: 1000
+          });
+
+          console.log('瀑布流数据刷新完成，新数据条数:', newWaterfallList.length);
+        }, 300);
+
+      } else {
+        // 没有新数据，但也要关闭刷新状态
+        setTimeout(() => {
+          this.setData({
+            waterfallRefreshing: false
+          });
+
+          wx.showToast({
+            title: '暂无新内容',
+            icon: 'none',
+            duration: 1000
+          });
+        }, 300);
+      }
+
+    } catch (error) {
+      console.error('瀑布流刷新失败:', error);
+
+      // 刷新失败，保持原有数据，只关闭刷新状态
+      this.setData({
+        waterfallRefreshing: false
+      });
+
+      wx.showToast({
+        title: '刷新失败',
+        icon: 'error',
+        duration: 1000
+      });
+    }
+  },
+
+  // 公共刷新方法（可被其他功能调用）
+  refreshWaterfallManually: function() {
+    console.log('手动刷新瀑布流');
+
+    // 设置状态并执行刷新
+    this.setData({
+      waterfallRefreshing: true
+    });
+
+    this.refreshWaterfallData();
+  },
+
   // 瀑布流滚动到底部
   handleWaterfallScrollToLower: function () {
     console.log('瀑布流滚动到底部');
-    if (this.data.hasMoreWaterfallData && !this.data.waterfallLoading) {
+    if (this.data.hasMoreWaterfallData && !this.data.waterfallLoading && !this.data.waterfallRefreshing) {
       this.loadWaterfallData(true);
     }
   },

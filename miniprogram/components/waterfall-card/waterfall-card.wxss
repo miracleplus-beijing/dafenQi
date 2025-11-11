@@ -160,21 +160,6 @@
   font-size: var(--font-size-xs);
 }
 
-/* 统计信息 */
-.stats-info {
-  display: flex;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-sm);
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  color: var(--text-secondary);
-  font-size: var(--font-size-xs);
-}
-
 /* 快速操作 */
 .quick-actions {
   display: flex;
