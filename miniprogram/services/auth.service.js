@@ -256,7 +256,7 @@ class AuthService {
         return { data: null, error: null };
       }
 
-      console.log('成功恢复session，用户:', session.user);
+      console.log('获取session，sessession.user:', session.user);
       return { data: session, error: null };
     } catch (error) {
       console.error('从本地存储恢复session失败:', error);
@@ -287,7 +287,6 @@ class AuthService {
       // 从存储恢复会话和用户信息
       const sessionResult = this.getSession();
 
-      console.log(sessionResult);
       if (sessionResult.data) {
         const user = sessionResult.data.user;
         const avatarUrl = this.getAvatarDisplayUrl({
@@ -695,7 +694,8 @@ class AuthService {
   getCurrentUser() {
     // 优先从Supabase Auth获取
     const userResult = this.getUser();
-    console.log(userResult);
+    //
+    console.log('处理后的user:' + userResult);
     if (userResult.data) {
       const user = userResult.data;
 

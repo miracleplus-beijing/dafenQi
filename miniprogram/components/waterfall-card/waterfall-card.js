@@ -220,17 +220,15 @@ Component({
       }
 
       try {
-        const audioService = require('../../services/audio.service.js');
         const apiService = require('../../services/api.service.js');
         const auth = require('../../services/auth.service.js');
         const user = auth.getCurrentUser && auth.getCurrentUser();
 
-          if (next) {
-              apiService.user.addFavorite(user.id, podcast.id)
-          } else {
-              apiService.user.removeFavorite(user.id, podcast.id)
-          }
-
+        if (next) {
+          apiService.user.addFavorite(user.id, podcast.id);
+        } else {
+          apiService.user.removeFavorite(user.id, podcast.id);
+        }
       } catch (err) {
         console.warn('同步收藏状态异常:', err);
       }

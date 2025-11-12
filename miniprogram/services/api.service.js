@@ -35,36 +35,34 @@ class ApiService {
 
   // 播客相关 API
   podcast = {
-
     // 获取播客列表
     list: async (options = {}) => {
       try {
-          const {
-              page = 1,
-              limit = 10,
-              channel_id = null,
-              search = null,
-              order_by = 'created_at',
-              order_direction = 'desc',
-          } = options;
-          const offset = (page - 1) * limit;
-          // 手动构建查询参数（兼容微信小程序）- 包含频道关联查询
-          const queryParams = {
-              select: `id,title,description,cover_url,audio_url,duration,channel_id,play_count,like_count,favorite_count,created_at,channels(name)`,
-              order: `${order_by}.${order_direction}`,
-              limit: `${limit}`,
-              offset: `${offset}`,
-              status: `eq.published`,
-          }
-            // 添加过滤条件
-          if (channel_id) {
-              queryParams.channel_id = `eq.${channel_id}`;
-          }
+        const {
+          page = 1,
+          limit = 10,
+          channel_id = null,
+          search = null,
+          order_by = 'created_at',
+          order_direction = 'desc',
+        } = options;
+        const offset = (page - 1) * limit;
+        // 手动构建查询参数（兼容微信小程序）- 包含频道关联查询
+        const queryParams = {
+          select: `id,title,description,cover_url,audio_url,duration,channel_id,play_count,like_count,favorite_count,created_at,channels(name)`,
+          order: `${order_by}.${order_direction}`,
+          limit: `${limit}`,
+          offset: `${offset}`,
+          status: `eq.published`,
+        };
+        // 添加过滤条件
+        if (channel_id) {
+          queryParams.channel_id = `eq.${channel_id}`;
+        }
 
-          if (search) {
-              queryParams.title = `ilike.%${encodeURIComponent(search)}%`;
-          }
-
+        if (search) {
+          queryParams.title = `ilike.%${encodeURIComponent(search)}%`;
+        }
 
         const result = await requestUtil.get('/rest/v1/podcasts', queryParams);
 
@@ -143,20 +141,20 @@ class ApiService {
 
     // 添加收藏
     addFavorite: async (userId, podcastId) => {
-      await audioService.addToFavorites(userId, podcastId)
+      await audioService.addToFavorites(userId, podcastId);
     },
 
     // 移除收藏
     removeFavorite: async (userId, podcastId) => {
       try {
-          // 检查用户是否已登录
-          if (!this.isUserLoggedIn()) {
-              return {
-                  success: false,
-                  error: '请先登录后操作',
-                  errorType: 'auth_required',
-              };
-          }
+        // 检查用户是否已登录
+        if (!this.isUserLoggedIn()) {
+          return {
+            success: false,
+            error: '请先登录后操作',
+            errorType: 'auth_required',
+          };
+        }
         // 构建正确的DELETE URL，使用查询参数而不是data
         await requestUtil.delete(
           `/rest/v1/user_favorites?user_id=eq.${userId}&podcast_id=eq.${podcastId}`,
