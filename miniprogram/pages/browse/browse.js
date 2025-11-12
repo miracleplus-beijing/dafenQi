@@ -370,31 +370,32 @@ Page({
 
       // 智能降级逻辑：优先尝试个性化推荐
       if (userInfo) {
-        console.log('尝试加载个性化推荐');
-        const result =
-          await apiService.recommendation.getPersonalizedRecommendations(
-            userInfo.id,
-            {
-              algorithm: 'hybrid',
-              count: 20,
-              includeReasons: true,
-            }
-          );
+        console.log("个性化未实现")
+        // console.log('尝试加载个性化推荐');
+        // const result =
+        //   await apiService.recommendation.getPersonalizedRecommendations(
+        //     userInfo.id,
+        //     {
+        //       algorithm: 'hybrid',
+        //       count: 20,
+        //       includeReasons: true,
+        //     }
+        //   );
 
-        if (result.success) {
-          this.setData({
-            personalizedRecommendations: result.data || [],
-            recommendationsLoading: false,
-            isPersonalized: true,
-          });
-          console.log('个性化推荐加载成功');
-          return;
-        } else if (result.needLogin) {
-          console.log('个性化推荐需要登录，降级到热门推荐');
-          this.showLoginTip('登录后可获得个性化推荐');
-        } else {
-          console.warn('个性化推荐加载失败，降级到热门推荐:', result.error);
-        }
+        // if (result.success) {
+        //   this.setData({
+        //     personalizedRecommendations: result.data || [],
+        //     recommendationsLoading: false,
+        //     isPersonalized: true,
+        //   });
+        //   console.log('个性化推荐加载成功');
+        //   return;
+        // } else if (result.needLogin) {
+        //   console.log('个性化推荐需要登录，降级到热门推荐');
+        //   this.showLoginTip('登录后可获得个性化推荐');
+        // } else {
+        //   console.warn('个性化推荐加载失败，降级到热门推荐:', result.error);
+        // }
       } else {
         console.log('用户未登录，直接使用热门推荐');
       }
@@ -840,7 +841,6 @@ Page({
       const currentTime = audioContext.currentTime || 0;
       const duration = audioContext.duration || 0;
 
-      // 移除过于严格的条件判断，确保进度条能正常更新
       if (duration > 0 && !this.data.isDraggingThumb) {
         const progress = (currentTime / duration) * 100;
         const progressRatio = currentTime / duration;
@@ -1430,23 +1430,7 @@ Page({
     });
   },
 
-  // Slider 拖拽过程中（实时反馈，类似 Vue 的 @input）
-  handleSliderChanging: function (e) {
-    if (!this.data.isDraggingThumb) return;
 
-    const { audioDuration } = this.data;
-    if (!audioDuration) return;
-
-    const percentage = e.detail.value;
-    const seekTime = (percentage / 100) * audioDuration;
-
-    // 实时更新UI显示，但不seek音频（避免频繁操作）
-    this.setData({
-      currentProgress: percentage,
-      audioPosition: seekTime,
-      currentTimeFormatted: this.formatTime(seekTime),
-    });
-  },
 
   // Slider 拖拽结束（类似 Vue 的 @change）
   handleSliderChange: function (e) {
@@ -1458,7 +1442,7 @@ Page({
     const seekTime = (percentage / 100) * audioDuration;
 
     // 拖拽结束时才真正seek音频
-    audioContext.seek(seekTime);
+    // audioContext.seek(seekTime);
 
     this.setData({
       currentProgress: percentage,
@@ -1475,6 +1459,13 @@ Page({
     this.setData({
       isDraggingThumb: false,
     });
+    const { audioContext, audioDuration } = this.data;
+
+    if (!audioContext || !audioDuration) return;
+
+    const percentage = e.detail.value;
+    const seekTime = (percentage / 100) * audioDuration;
+    audioContext.seek(seekTime);
   },
 
   // 处理后退15秒

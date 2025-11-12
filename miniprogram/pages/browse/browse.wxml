@@ -13,7 +13,7 @@
     <view wx:if="{{!loading && podcastList.length > 0}}">
       <swiper class="browse-swiper"
               vertical="true"
-              indicator-dots="false"
+              indicator-dots="{{false}}"
               autoplay="{{false}}"
               interval="999999"
               circular="false"
@@ -86,10 +86,9 @@
                   color="#ed8936"
                   track-color="#e2e8f0"
                   class="custom-slider"
-                  bindchange="handleSliderChange"
-                  bindchanging="handleSliderChanging"
-                  bindtouchstart="handleSliderTouchStart"
-                  bindtouchend="handleSliderTouchEnd"
+                  bind:change="handleSliderChange"
+                  bind:dragstart="handleSliderTouchStart"
+                  bind:dragend="handleSliderTouchEnd"
                   show-value="{{false}}"
                 />
               </view>
