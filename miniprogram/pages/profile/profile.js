@@ -447,6 +447,7 @@ Page({
 
         console.log('头像更新成功:', normalized.avatarUrl);
       } else {
+        console.log(result.error)
         wx.hideLoading();
         wx.showToast({
           title: '头像更新失败: ' + result.error,

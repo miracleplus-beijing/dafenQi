@@ -8,11 +8,11 @@ class IconConfig {
   constructor() {
     // 学术分类图标映射 (使用TDesign支持的图标名称)
     this.academicIcons = {
-      cs_ai: 'auto-height', // 人工智能 (智能/自动化相关)
+      cs_ai: 'cpu', // 人工智能 (智能/自动化相关)
       cs_cl: 'translate', // 计算语言学 (翻译相关)
       cs_cv: 'camera', // 计算机视觉
       cs_lg: 'chart-line', // 机器学习 (图表相关)
-      cs_ne: 'dns', // 神经与演化 (网络/连接相关)
+      cs_ne: 'chart-scatter', // 神经与演化 (网络/连接相关)
       cs_ro: 'control-platform', // 机器人学 (控制平台相关)
       stat_ml: 'chart-pie', // 统计机器学习
     };

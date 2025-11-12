@@ -394,7 +394,7 @@ class AuthService {
       const authResult = await this.callWechatAuthFunctionWithAuth(
         'update_user_info',
         updateData.userInfo,
-        currentSession.data.session.access_token
+        currentSession.data.access_token
       );
 
       console.log('authResult: ' + authResult);
@@ -402,8 +402,8 @@ class AuthService {
         throw new Error(authResult.error || '更新失败');
       }
 
-      currentSession.data.session.user = authResult.user;
-      await this.setSession(currentSession.data.session);
+      currentSession.data.user = authResult.user;
+      await this.setSession(currentSession.data);
       console.log('用户信息更新成功:', authResult.user);
       return { success: true, user: authResult.user };
     } catch (error) {
