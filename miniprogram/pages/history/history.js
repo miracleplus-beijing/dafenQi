@@ -427,13 +427,7 @@ Page({
    * 清空所有历史记录
    */
   clearAllHistory: function () {
-    if (!this.data.historyList || this.data.historyList.length === 0) {
-      wx.showToast({
-        title: '暂无历史记录',
-        icon: 'none',
-      });
-      return;
-    }
+
 
     wx.showModal({
       title: '确认清空',

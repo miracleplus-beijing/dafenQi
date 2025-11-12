@@ -8,7 +8,6 @@ App({
     isPlaying: false,
     currentPodcast: null,
     favoriteList: [],
-    historyList: [],
     settings: {
       autoPlay: false, // 禁用自动播放
       downloadQuality: 'high',
@@ -31,6 +30,7 @@ App({
     supabaseUrl: 'https://gxvfcafgnhzjiauukssj.supabase.co',
     supabaseAnonKey:
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmZjYWZnbmh6amlhdXVrc3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0MjY4NjAsImV4cCI6MjA3MTAwMjg2MH0.uxO5eyw0Usyd59UKz-S7bTrmOnNPg9Ld9wJ6pDMIQUA',
+    apiService: require('./services/api.service.js'),
   },
 
   onLaunch: function () {
@@ -61,8 +61,7 @@ App({
 
   initAuthService: function () {
     // 导入认证服务
-    const authService = require('./services/auth.service.js');
-    this.authService = authService;
+    this.authService = require('./services/auth.service.js');
   },
 
   async checkLoginStatus() {
@@ -86,13 +85,11 @@ App({
   loadLocalData: function () {
     try {
       const favoriteList = wx.getStorageSync('favoriteList') || [];
-      const historyList = wx.getStorageSync('historyList') || [];
       const settings =
         wx.getStorageSync('settings') || this.globalData.settings;
       const browseMode = wx.getStorageSync('browseMode') || 'swiper';
 
       this.globalData.favoriteList = favoriteList;
-      this.globalData.historyList = historyList;
       this.globalData.settings = settings;
       this.globalData.browseMode = browseMode;
     } catch (e) {
@@ -103,7 +100,6 @@ App({
   saveLocalData: function () {
     try {
       wx.setStorageSync('favoriteList', this.globalData.favoriteList);
-      wx.setStorageSync('historyList', this.globalData.historyList);
       wx.setStorageSync('settings', this.globalData.settings);
       wx.setStorageSync('browseMode', this.globalData.browseMode);
     } catch (e) {
@@ -146,13 +142,14 @@ App({
     return false;
   },
 
-  addToHistory: function (item) {
-    const history = this.globalData.historyList;
+  addToHistory: async function (item) {
+    const history = this.globalData.apiService.user.getPlayHistory();
     const index = history.findIndex(h => h.id === item.id);
 
     // 如果已存在，先删除旧记录
     if (index !== -1) {
       history.splice(index, 1);
+        await this.globalData.apiService.user.removeHistory(this.globalData.userInfo.id, item.id);
     }
 
     // 添加到开头
@@ -160,13 +157,14 @@ App({
       ...item,
       playTime: new Date().getTime(),
     });
+    await this.globalData.apiService.user.addHistory(this.globalData.userInfo.id, item);
 
     // 限制历史记录数量
     if (history.length > 100) {
       history.splice(100);
     }
 
-    this.saveLocalData();
+    return history;
   },
 
   updateSettings: function (newSettings) {

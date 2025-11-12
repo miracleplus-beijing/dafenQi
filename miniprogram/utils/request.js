@@ -85,7 +85,6 @@ class RequestUtil {
         app.globalData.isLoggedIn = false;
         // 清理用户相关数据
         app.globalData.favoriteList = [];
-        app.globalData.historyList = [];
       }
 
       console.log('用户已退出登录');

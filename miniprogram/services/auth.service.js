@@ -293,18 +293,18 @@ class AuthService {
       if (sessionResult.data) {
         const user = sessionResult.data.user;
         const avatarUrl = this.getAvatarDisplayUrl({
-          avatar_url: user?.avatar_url,
+          avatar_url: user.user_metadata?.avatar_url,
         });
         const currentUser = {
           id: user.id,
           email: user.email,
-          nickName: user?.nickname || '微信用户', // 统一使用nickName
+          nickName: user?.user_metadata.nickname || '微信用户', // 统一使用nickName
           avatarUrl: avatarUrl, // 使用动态生成的头像URL
-          nickname: user?.nickname || '微信用户', // 保持兼容性
-          avatar_url: user?.avatar_url, // 原始avatar_url用于重新生成
-          wechat_openid: user?.wechat_openid,
-          display_name: user?.nickname || '微信用户',
-          has_user_info: !!(user?.nickname && user?.avatar_url),
+          nickname: user?.user_metadata.nickname || '微信用户', // 保持兼容性
+          avatar_url: avatarUrl, // 原始avatar_url用于重新生成
+          wechat_openid: user?.user_metadata.wechat_openid,
+          display_name: user?.user_metadata.nickname || '微信用户',
+          has_user_info: !!(user?.user_metadata.nickname && avatarUrl),
         };
         return { data: currentUser, error: null };
       }
@@ -678,7 +678,7 @@ class AuthService {
     try {
       // 检查Supabase Auth会话
       const sessionResult = this.getSession();
-      if (sessionResult.data?.user) {
+      if (sessionResult?.data?.user) {
         // this.setSession(sessionResult.data)
 
         return true;

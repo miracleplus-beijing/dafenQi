@@ -1,6 +1,6 @@
 // 个人信息清单页面逻辑
 const app = getApp();
-
+const apiService = require('../../services/api.service.js')
 Page({
   data: {
     userInfo: {},
@@ -24,7 +24,7 @@ Page({
   loadUserData() {
     const globalUserInfo = app.globalData.userInfo;
     const favoriteList = app.globalData.favoriteList || [];
-    const historyList = app.globalData.historyList || [];
+    const historyList = apiService.user.getPlayHistory()
 
     let academicFieldsText = '未设置';
     if (
@@ -88,7 +88,6 @@ Page({
       success: res => {
         if (res.confirm) {
           // 清除历史记录
-          app.globalData.historyList = [];
           app.saveLocalData();
 
           this.setData({
@@ -116,7 +115,6 @@ Page({
         if (res.confirm) {
           // 清除所有本地数据
           app.globalData.favoriteList = [];
-          app.globalData.historyList = [];
           app.saveLocalData();
 
           this.setData({
