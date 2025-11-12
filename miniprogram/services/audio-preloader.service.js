@@ -249,58 +249,6 @@ class AudioPreloaderService {
   }
 
   /**
-   * 获取当前音频的缓冲进度 (分块预加载版本)
-   * @param {string} audioUrl - 音频URL
-   * @param {number} currentTime - 当前播放时间
-   * @param {number} duration - 音频总时长
-   * @param {Object} audioContext - 音频上下文对象
-   * @returns {number} 缓冲进度百分比 (0-100)
-   */
-  getBufferProgress(
-    audioUrl,
-    currentTime = 0,
-    duration = 0,
-    audioContext = null
-  ) {
-    if (!duration) return 0;
-
-    // 使用分块预加载数据计算精确缓冲进度
-    const chunkBufferProgress = this.calculateChunkBufferProgress(
-      audioUrl,
-      currentTime,
-      duration
-    );
-    if (chunkBufferProgress >= 0) {
-      return chunkBufferProgress;
-    }
-
-    // 如果无法使用分块数据，使用微信音频上下文的buffered属性
-    if (audioContext && typeof audioContext.buffered === 'number') {
-      const bufferedSeconds = audioContext.buffered;
-      const realBufferProgress = (bufferedSeconds / duration) * 100;
-      return Math.min(100, Math.max(0, realBufferProgress));
-    }
-
-    // 最后的备选方案：基于播放行为的智能估算
-    const playedRatio = currentTime / duration;
-    let estimatedBufferAhead = 30; // 基础30秒缓冲
-
-    if (playedRatio < 0.1) {
-      estimatedBufferAhead = 20; // 开始阶段保守估算
-    } else if (playedRatio > 0.8) {
-      estimatedBufferAhead = duration - currentTime + 5; // 接近结尾
-    }
-
-    const estimatedBufferTime = Math.min(
-      duration,
-      currentTime + estimatedBufferAhead
-    );
-    const estimatedProgress = (estimatedBufferTime / duration) * 100;
-
-    return Math.min(100, Math.max(0, estimatedProgress));
-  }
-
-  /**
    * 基于分块预加载数据计算缓冲进度
    * @param {string} audioUrl - 音频URL
    * @param {number} currentTime - 当前播放时间(秒)

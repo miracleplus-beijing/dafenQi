@@ -4,13 +4,13 @@ Component({
     // 是否显示
     visible: {
       type: Boolean,
-      value: false
+      value: false,
     },
     // 播客数据
     podcast: {
       type: Object,
-      value: {}
-    }
+      value: {},
+    },
   },
 
   data: {
@@ -34,11 +34,11 @@ Component({
     formattedLikeCount: '',
     formattedDuration: '',
     currentTimeFormatted: '0:00',
-    remainingTimeFormatted: '0:30'
+    remainingTimeFormatted: '0:30',
   },
 
   observers: {
-    'visible'(visible) {
+    visible(visible) {
       if (visible) {
         this.onShow();
       } else {
@@ -46,15 +46,15 @@ Component({
       }
     },
 
-    'podcast'(podcast) {
+    podcast(podcast) {
       if (podcast && podcast.id) {
         this.updateFormattedData();
       }
     },
 
-    'currentTime'(currentTime) {
+    currentTime(currentTime) {
       this.updateTimeDisplay();
-    }
+    },
   },
 
   methods: {
@@ -93,7 +93,7 @@ Component({
       this.setData({
         formattedPlayCount,
         formattedLikeCount,
-        formattedDuration
+        formattedDuration,
       });
     },
 
@@ -115,7 +115,7 @@ Component({
 
       this.setData({
         currentTimeFormatted,
-        remainingTimeFormatted
+        remainingTimeFormatted,
       });
     },
     // 组件显示
@@ -135,7 +135,7 @@ Component({
       this.setData({
         isPlaying: false,
         currentProgress: 0,
-        currentTime: 0
+        currentTime: 0,
       });
 
       this.stopTrial();
@@ -168,7 +168,7 @@ Component({
           wx.showToast({
             title: '试听结束，点击完整播放',
             icon: 'none',
-            duration: 2000
+            duration: 2000,
           });
           return;
         }
@@ -178,14 +178,14 @@ Component({
 
         this.setData({
           currentTime: newTime,
-          currentProgress: progress
+          currentProgress: progress,
         });
       }, 1000);
 
       // 触发播放事件
       this.triggerEvent('trialplay', {
         podcast: this.data.podcast,
-        trialDuration: this.data.trialDuration
+        trialDuration: this.data.trialDuration,
       });
     },
 
@@ -201,7 +201,7 @@ Component({
 
       this.triggerEvent('trialpause', {
         podcast: this.data.podcast,
-        currentTime: this.data.currentTime
+        currentTime: this.data.currentTime,
       });
     },
 
@@ -215,7 +215,7 @@ Component({
       this.setData({ isPlaying: false });
 
       this.triggerEvent('trialstop', {
-        podcast: this.data.podcast
+        podcast: this.data.podcast,
       });
     },
 
@@ -226,19 +226,19 @@ Component({
 
       // 更新本地状态（乐观更新）
       this.setData({
-        'podcast.isFavorited': newIsFavorited
+        'podcast.isFavorited': newIsFavorited,
       });
 
       // 触发收藏事件
       this.triggerEvent('favorite', {
         podcast: podcast,
-        favorited: newIsFavorited
+        favorited: newIsFavorited,
       });
 
       wx.showToast({
         title: newIsFavorited ? '已添加到收藏' : '已取消收藏',
         icon: 'success',
-        duration: 1000
+        duration: 1000,
       });
     },
 
@@ -247,13 +247,13 @@ Component({
       console.log('分享播客:', this.data.podcast.title);
 
       this.triggerEvent('share', {
-        podcast: this.data.podcast
+        podcast: this.data.podcast,
       });
 
       wx.showToast({
         title: '分享功能开发中',
         icon: 'none',
-        duration: 1500
+        duration: 1500,
       });
     },
 
@@ -262,13 +262,13 @@ Component({
       console.log('添加到播放列表:', this.data.podcast.title);
 
       this.triggerEvent('addtoplaylist', {
-        podcast: this.data.podcast
+        podcast: this.data.podcast,
       });
 
       wx.showToast({
         title: '已添加到播放列表',
         icon: 'success',
-        duration: 1000
+        duration: 1000,
       });
     },
 
@@ -281,7 +281,7 @@ Component({
 
       // 触发完整播放事件
       this.triggerEvent('playfull', {
-        podcast: this.data.podcast
+        podcast: this.data.podcast,
       });
 
       // 关闭预览
@@ -302,7 +302,7 @@ Component({
     // 防止滚动穿透
     preventScroll() {
       return false;
-    }
+    },
   },
 
   lifetimes: {
@@ -313,6 +313,6 @@ Component({
     detached() {
       console.log('快速预览组件销毁');
       this.stopTrial();
-    }
-  }
+    },
+  },
 });

@@ -38,7 +38,6 @@ Page({
         theme: result.theme,
       });
     });
-
   },
 
   onShow: function () {

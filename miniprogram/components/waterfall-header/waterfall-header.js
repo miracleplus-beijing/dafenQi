@@ -57,18 +57,22 @@ Component({
    */
   methods: {
     // 检查是否有活跃的筛选器
-    checkActiveFilters: function() {
+    checkActiveFilters: function () {
       const { filterOptions } = this.properties;
       if (!filterOptions || typeof filterOptions !== 'object') {
         return false;
       }
-      return filterOptions.category || filterOptions.timeRange || filterOptions.sortType !== 'latest';
+      return (
+        filterOptions.category ||
+        filterOptions.timeRange ||
+        filterOptions.sortType !== 'latest'
+      );
     },
 
     // 更新活跃筛选器状态
-    updateActiveFiltersState: function() {
+    updateActiveFiltersState: function () {
       this.setData({
-        hasActiveFilters: this.checkActiveFilters()
+        hasActiveFilters: this.checkActiveFilters(),
       });
     },
     // 搜索相关
@@ -97,14 +101,14 @@ Component({
       const newTab = currentTab === tab ? '' : tab;
 
       this.setData({
-        currentActiveTab: newTab
+        currentActiveTab: newTab,
       });
     },
 
     // 关闭下拉面板
     closeDropdown: function () {
       this.setData({
-        currentActiveTab: ''
+        currentActiveTab: '',
       });
     },
 
@@ -120,7 +124,7 @@ Component({
 
       // 选择完成后收起面板
       this.setData({
-        currentActiveTab: ''
+        currentActiveTab: '',
       });
     },
 
@@ -131,7 +135,9 @@ Component({
 
     // 获取选项显示标签的辅助方法
     getCategoryLabel: function (value) {
-      const option = this.data.categoryOptions.find(item => item.value === value);
+      const option = this.data.categoryOptions.find(
+        item => item.value === value
+      );
       return option ? option.label : '';
     },
 
@@ -155,8 +161,6 @@ Component({
       // 初始化活跃筛选器状态
       this.updateActiveFiltersState();
     },
-
-
   },
 
   /**

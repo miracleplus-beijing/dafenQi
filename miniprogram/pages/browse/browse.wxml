@@ -136,15 +136,12 @@
     <waterfall-header
       search-value="{{searchKeyword}}"
       filter-options="{{filterOptions}}"
-      batch-mode="{{batchMode}}"
-      selected-count="{{selectedItems.length}}"
       bind:searchchange="handleWaterfallSearchChange"
       bind:searchsubmit="handleWaterfallSearchSubmit"
       bind:searchclear="handleWaterfallSearchClear"
       bind:filterchange="handleWaterfallFilterChange"
       bind:clearfilters="handleWaterfallClearFilters"
-      bind:togglebatch="handleWaterfallToggleBatch"
-      bind:batchaction="handleWaterfallBatchAction" />
+      />
 
     <!-- 瀑布流内容区域 -->
     <scroll-view class="waterfall-content"
@@ -166,15 +163,7 @@
             wx:for="{{leftColumnList}}"
             wx:key="id"
             podcast="{{item}}"
-            is-selected="{{item.isSelected}}"
-            batch-mode="{{batchMode}}"
-            is-playing="{{globalPlayer.currentPodcast && globalPlayer.currentPodcast.id === item.id && globalPlayer.isPlaying}}"
-            bind:preview="handleWaterfallCardPreview"
-            bind:play="handleWaterfallCardPlay"
-            bind:favorite="handleWaterfallCardFavorite"
-            bind:more="handleWaterfallCardMore"
-            bind:select="handleWaterfallCardSelect"
-            bind:longpress="handleWaterfallCardLongPress" />
+            is-playing="{{globalPlayer.currentPodcast && globalPlayer.currentPodcast.id === item.id && globalPlayer.isPlaying}}" />
         </view>
 
         <!-- 右列 -->
@@ -183,15 +172,7 @@
             wx:for="{{rightColumnList}}"
             wx:key="id"
             podcast="{{item}}"
-            is-selected="{{item.isSelected}}"
-            batch-mode="{{batchMode}}"
-            is-playing="{{globalPlayer.currentPodcast && globalPlayer.currentPodcast.id === item.id && globalPlayer.isPlaying}}"
-            bind:preview="handleWaterfallCardPreview"
-            bind:play="handleWaterfallCardPlay"
-            bind:favorite="handleWaterfallCardFavorite"
-            bind:more="handleWaterfallCardMore"
-            bind:select="handleWaterfallCardSelect"
-            bind:longpress="handleWaterfallCardLongPress" />
+            is-playing="{{globalPlayer.currentPodcast && globalPlayer.currentPodcast.id === item.id && globalPlayer.isPlaying}}" />
         </view>
       </view>
 

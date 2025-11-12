@@ -110,7 +110,9 @@ Page({
             id: item.podcast_id,
             title: podcast.title || '未知播客',
             description: podcast.description || '',
-            cover: podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/logo.png',
+            cover:
+              podcast.cover_url ||
+              'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/logo.png',
             audioUrl: podcast.audio_url || '',
             channel: channel.name || '未知来源',
             channelCategory: channel.category || '',
@@ -132,7 +134,7 @@ Page({
               publishDate: podcast.publish_date || '',
               publishDateText: this.formatPublishDate(podcast.publish_date),
               arxivId: podcast.arxiv_id || '',
-              doi: podcast.doi || ''
+              doi: podcast.doi || '',
             },
 
             // 统计数据
@@ -141,7 +143,7 @@ Page({
               likeCount: podcast.like_count || 0,
               favoriteCount: podcast.favorite_count || 0,
               commentCount: podcast.comment_count || 0,
-              shareCount: podcast.share_count || 0
+              shareCount: podcast.share_count || 0,
             },
 
             // 状态信息
@@ -151,7 +153,7 @@ Page({
 
             // 保留原始数据用于播放
             podcastData: podcast,
-            historyData: item
+            historyData: item,
           };
         });
 
@@ -249,10 +251,12 @@ Page({
     }
 
     // 提取作者姓名
-    const authorNames = authors.map(author => {
-      if (typeof author === 'string') return author;
-      return author.name || author.toString();
-    }).filter(name => name && name.trim());
+    const authorNames = authors
+      .map(author => {
+        if (typeof author === 'string') return author;
+        return author.name || author.toString();
+      })
+      .filter(name => name && name.trim());
 
     if (authorNames.length === 0) return '未知作者';
     if (authorNames.length === 1) return authorNames[0];
@@ -320,7 +324,7 @@ Page({
       title: item.title,
       cover_url: item.cover,
       duration: item.duration,
-      ...item.podcastData
+      ...item.podcastData,
     };
 
     // 设置当前播客到全局状态
@@ -336,13 +340,13 @@ Page({
           duration: 1000,
         });
       },
-      fail: (error) => {
+      fail: error => {
         console.error('跳转到漫游页面失败:', error);
         wx.showToast({
           title: '播放失败',
           icon: 'error',
         });
-      }
+      },
     });
   },
 
@@ -367,9 +371,9 @@ Page({
           this.performRemoveFromHistory(podcastId);
         }
       },
-      fail: (error) => {
+      fail: error => {
         console.error('显示删除确认对话框失败:', error);
-      }
+      },
     });
   },
 
@@ -393,7 +397,10 @@ Page({
       });
 
       // 调用API删除历史记录
-      const result = await apiService.user.removeHistory(currentUser.id, podcastId);
+      const result = await apiService.user.removeHistory(
+        currentUser.id,
+        podcastId
+      );
 
       wx.hideLoading();
 
@@ -427,8 +434,6 @@ Page({
    * 清空所有历史记录
    */
   clearAllHistory: function () {
-
-
     wx.showModal({
       title: '确认清空',
       content: '确定要清空所有历史记录吗？此操作不可恢复。',
@@ -439,9 +444,9 @@ Page({
           this.performClearAllHistory();
         }
       },
-      fail: (error) => {
+      fail: error => {
         console.error('显示清空确认对话框失败:', error);
-      }
+      },
     });
   },
 

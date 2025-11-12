@@ -149,7 +149,6 @@ App({
     // 如果已存在，先删除旧记录
     if (index !== -1) {
       history.splice(index, 1);
-        await this.globalData.apiService.user.removeHistory(this.globalData.userInfo.id, item.id);
     }
 
     // 添加到开头
@@ -157,7 +156,11 @@ App({
       ...item,
       playTime: new Date().getTime(),
     });
-    await this.globalData.apiService.user.addHistory(this.globalData.userInfo.id, item);
+    // 已包含 删除 旧的播放记录逻辑
+    await this.globalData.apiService.user.addHistory(
+      this.globalData.userInfo.id,
+      item
+    );
 
     // 限制历史记录数量
     if (history.length > 100) {
@@ -194,14 +197,16 @@ App({
   // 更新tab栏图标
   updateTabBarIcon: function (mode) {
     try {
-      const iconPath = mode === 'swiper'
-        ? 'images/icons/browse-swiper.png'
-        : 'images/icons/browse-waterfall.png';
-      const selectedIconPath = mode === 'swiper'
-      ? 'images/icons/browse-swiper.png'
-      : 'images/icons/browse-waterfall.png';
-        // ? 'images/icons/browse-swiper-active.png'
-        // : 'images/icons/browse-waterfall-active.png';
+      const iconPath =
+        mode === 'swiper'
+          ? 'images/icons/browse-swiper.png'
+          : 'images/icons/browse-waterfall.png';
+      const selectedIconPath =
+        mode === 'swiper'
+          ? 'images/icons/browse-swiper.png'
+          : 'images/icons/browse-waterfall.png';
+      // ? 'images/icons/browse-swiper-active.png'
+      // : 'images/icons/browse-waterfall-active.png';
 
       wx.setTabBarItem({
         index: 0,
@@ -210,9 +215,9 @@ App({
         success: () => {
           console.log('tab栏图标更新成功');
         },
-        fail: (error) => {
+        fail: error => {
           console.error('tab栏图标更新失败:', error);
-        }
+        },
       });
     } catch (error) {
       console.error('更新tab栏图标异常:', error);

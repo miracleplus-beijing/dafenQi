@@ -13,11 +13,8 @@ class RequestUtil {
     };
   }
 
-
-
   // 获取有效认证令牌（带智能验证）
   async getValidAuthToken() {
-
     const authService = require('../services/auth.service.js');
 
     try {
@@ -57,8 +54,6 @@ class RequestUtil {
 
     return expiresAt <= fiveMinutesFromNow;
   }
-
-
 
   // 清理过期session
   clearExpiredSession() {
@@ -213,13 +208,14 @@ class RequestUtil {
 
   // 处理401错误的智能续签逻辑
   async handle401Error(res, originalOptions, resolve, reject) {
-    const { needAuth, retryWithoutAuth, isRetryAfterRefresh, url } = originalOptions;
+    const { needAuth, retryWithoutAuth, isRetryAfterRefresh, url } =
+      originalOptions;
     const authService = require('../services/auth.service.js');
 
     console.log('收到401错误', {
       needAuth,
       isRetryAfterRefresh,
-      url
+      url,
     });
 
     // 如果是续签后的重试请求仍然401，说明续签失败，需要重新登录
@@ -231,36 +227,36 @@ class RequestUtil {
     }
 
     // 如果当前请求需要认证，且有存储的session，尝试自动续签
-      try {
-        const session = wx.getStorageSync('supabase_session');
-        if (session?.access_token && session?.refresh_token) {
-          console.log('检测到有效session，尝试自动续签');
+    try {
+      const session = wx.getStorageSync('supabase_session');
+      if (session?.access_token && session?.refresh_token) {
+        console.log('检测到有效session，尝试自动续签');
 
-          // 尝试自动续签
-          const refreshResult = await authService.refreshSession();
-          if (refreshResult.success) {
-            console.log('续签成功，重试原始请求');
-            // 续签成功，重试原始请求
-            authService.setSession(refreshResult.session)
+        // 尝试自动续签
+        const refreshResult = await authService.refreshSession();
+        if (refreshResult.success) {
+          console.log('续签成功，重试原始请求');
+          // 续签成功，重试原始请求
+          authService.setSession(refreshResult.session);
 
-            this.request({
-              ...originalOptions,
-              isRetryAfterRefresh: true, // 标记为续签后的重试
-            })
-              .then(resolve)
-              .catch(reject);
-            return;
-          } else {
-            console.log('续签失败:', refreshResult.error);
-            // 续签失败，清理session并降级处理
-            this.clearExpiredSession();
-          }
+          this.request({
+            ...originalOptions,
+            isRetryAfterRefresh: true, // 标记为续签后的重试
+          })
+            .then(resolve)
+            .catch(reject);
+          return;
         } else {
-          console.log('无有效session信息');
+          console.log('续签失败:', refreshResult.error);
+          // 续签失败，清理session并降级处理
+          this.clearExpiredSession();
         }
-      } catch (error) {
-        console.error('续签过程出错:', error);
+      } else {
+        console.log('无有效session信息');
       }
+    } catch (error) {
+      console.error('续签过程出错:', error);
+    }
 
     // 降级处理逻辑（续签失败或无session时）
     if (needAuth && retryWithoutAuth && this.canUseAnonymousAccess(url)) {
@@ -271,14 +267,12 @@ class RequestUtil {
         retryWithoutAuth: false,
       })
         .then(resolve)
-        .catch(reject)
+        .catch(reject);
     } else if (this.requiresAuthWithPrompt(url)) {
       reject(new AuthRequiredError('请登录后使用此功能'));
     } else {
       reject(
-        new Error(
-          `认证失败: ${res.statusCode} - ${JSON.stringify(res.data)}`
-        )
+        new Error(`认证失败: ${res.statusCode} - ${JSON.stringify(res.data)}`)
       );
     }
   }

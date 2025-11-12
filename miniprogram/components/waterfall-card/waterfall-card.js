@@ -37,7 +37,7 @@ Component({
    */
   methods: {
     // 格式化时长
-    getFormattedDuration: function() {
+    getFormattedDuration: function () {
       // 安全检查，确保 podcast 对象存在
       const podcast = this.properties.podcast;
       if (!podcast || typeof podcast !== 'object') {
@@ -58,7 +58,7 @@ Component({
     },
 
     // 格式化播放量
-    getFormattedPlayCount: function() {
+    getFormattedPlayCount: function () {
       // 安全检查，确保 podcast 对象存在
       const podcast = this.properties.podcast;
       if (!podcast || typeof podcast !== 'object') {
@@ -75,7 +75,7 @@ Component({
     },
 
     // 格式化点赞数
-    getFormattedLikeCount: function() {
+    getFormattedLikeCount: function () {
       // 安全检查，确保 podcast 对象存在
       const podcast = this.properties.podcast;
       if (!podcast || typeof podcast !== 'object') {
@@ -92,7 +92,7 @@ Component({
     },
 
     // 格式化时间
-    getFormattedTime: function() {
+    getFormattedTime: function () {
       // 安全检查，确保 podcast 对象存在
       const podcast = this.properties.podcast;
       if (!podcast || typeof podcast !== 'object') {
@@ -146,95 +146,123 @@ Component({
       }
     },
 
-    // 卡片点击
-    handleCardTap: function (e) {
-      // 安全检查 podcast 对象
+    // 卡片点击（内部预览）
+    handleCardTap: function () {
       const podcast = this.properties.podcast;
       if (!podcast || typeof podcast !== 'object') {
         console.warn('waterfall-card: podcast 对象不存在，无法执行点击操作');
         return;
       }
 
-      if (this.properties.batchMode) {
-        // 批量模式下切换选择状态
-        this.triggerEvent('select', {
-          podcast: podcast,
-          selected: !this.properties.isSelected,
-        });
-      } else {
-        // 普通模式下触发预览
-        this.triggerEvent('preview', {
-          podcast: podcast,
-        });
-      }
+      // 简易预览：使用模态框作为轻量替代，不依赖父页面
+      wx.showModal({
+        title: podcast.title || '内容预览',
+        content: (podcast.description || '').slice(0, 120) || '暂无简介',
+        confirmText: '播放',
+        cancelText: '关闭',
+        success: res => {
+          if (res.confirm) {
+            this.internalPlay(podcast);
+          }
+        },
+      });
     },
 
-    // 长按卡片
+    // 长按卡片（不再进入批量模式）
     handleCardLongPress: function () {
-      // 安全检查 podcast 对象
       const podcast = this.properties.podcast;
-      if (!podcast || typeof podcast !== 'object') {
-        console.warn('waterfall-card: podcast 对象不存在，无法执行长按操作');
-        return;
-      }
-
-      if (!this.properties.batchMode) {
-        // 非批量模式下长按进入批量模式
-        this.triggerEvent('longpress', {
-          podcast: podcast,
-        });
-      }
+      if (!podcast || typeof podcast !== 'object') return;
+      wx.showToast({ title: '长按暂无更多操作', icon: 'none', duration: 1200 });
     },
 
-    // 播放按钮点击
+    // 播放按钮点击（内部处理）
     handlePlayTap: function (e) {
-      // 阻止事件冒泡
       e.stopPropagation();
-
-      // 安全检查 podcast 对象
       const podcast = this.properties.podcast;
       if (!podcast || typeof podcast !== 'object') {
         console.warn('waterfall-card: podcast 对象不存在，无法执行播放操作');
         return;
       }
-
-      this.triggerEvent('play', {
-        podcast: podcast,
-      });
+      this.internalPlay(podcast);
     },
 
-    // 收藏按钮点击
-    handleFavoriteTap: function (e) {
-      // 阻止事件冒泡
-      e.stopPropagation();
+    // 内部播放实现：调用全局播放器
+    internalPlay: function (podcast) {
+      try {
+        const app = getApp();
+        if (app && typeof app.showGlobalPlayer === 'function') {
+          app.showGlobalPlayer(podcast);
+        } else {
+          console.warn('app.showGlobalPlayer 不可用');
+        }
+        wx.showToast({ title: '开始播放', icon: 'none', duration: 800 });
+      } catch (err) {
+        console.error('internalPlay 失败:', err);
+        wx.showToast({ title: '播放失败', icon: 'none' });
+      }
+    },
 
-      // 安全检查 podcast 对象
+    // 收藏按钮点击（内部处理）
+    handleFavoriteTap: function (e) {
+      e.stopPropagation();
       const podcast = this.properties.podcast;
       if (!podcast || typeof podcast !== 'object') {
         console.warn('waterfall-card: podcast 对象不存在，无法执行收藏操作');
         return;
       }
 
-      this.triggerEvent('favorite', {
-        podcast: podcast,
-        favorited: !podcast.isFavorited,
+      const next = !podcast.isFavorited;
+      // 本地切换收藏态；不依赖父页面
+      try {
+        this.setData({ 'podcast.isFavorited': next });
+      } catch (err) {
+        console.warn('更新收藏状态失败（本地）:', err);
+      }
+
+      try {
+        const audioService = require('../../services/audio.service.js');
+        const apiService = require('../../services/api.service.js');
+        const auth = require('../../services/auth.service.js');
+        const user = auth.getCurrentUser && auth.getCurrentUser();
+
+          if (next) {
+              apiService.user.addFavorite(user.id, podcast.id)
+          } else {
+              apiService.user.removeFavorite(user.id, podcast.id)
+          }
+
+      } catch (err) {
+        console.warn('同步收藏状态异常:', err);
+      }
+
+      wx.showToast({
+        title: next ? '已收藏' : '已取消收藏',
+        icon: 'none',
+        duration: 1000,
       });
     },
 
-    // 更多操作点击
+    // 更多操作点击（内部处理）
     handleMoreTap: function (e) {
-      // 阻止事件冒泡
       e.stopPropagation();
-
-      // 安全检查 podcast 对象
       const podcast = this.properties.podcast;
-      if (!podcast || typeof podcast !== 'object') {
-        console.warn('waterfall-card: podcast 对象不存在，无法执行更多操作');
-        return;
-      }
+      if (!podcast || typeof podcast !== 'object') return;
 
-      this.triggerEvent('more', {
-        podcast: podcast,
+      const favorText = podcast.isFavorited ? '取消收藏' : '收藏';
+      wx.showActionSheet({
+        itemList: [favorText, '分享'],
+        success: res => {
+          if (res.tapIndex === 0) {
+            // 收藏/取消收藏
+            this.handleFavoriteTap({ stopPropagation: () => {} });
+          } else if (res.tapIndex === 1) {
+            // 分享
+            wx.showShareMenu({
+              withShareTicket: true,
+              menus: ['shareAppMessage', 'shareTimeline'],
+            });
+          }
+        },
       });
     },
 

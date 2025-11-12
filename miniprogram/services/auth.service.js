@@ -265,7 +265,6 @@ class AuthService {
     }
   }
 
-
   /**
    * 清理本地存储中的session
    */
@@ -278,7 +277,6 @@ class AuthService {
       console.error('清理本地存储session失败:', error);
     }
   }
-
 
   /**
    * 获取当前认证用户 (异步方法，遵循Supabase最佳实践)
@@ -718,7 +716,7 @@ class AuthService {
       };
     } else {
       console.log('未登录');
-      return null
+      return null;
     }
   }
 

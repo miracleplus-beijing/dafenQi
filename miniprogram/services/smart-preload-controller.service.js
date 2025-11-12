@@ -38,9 +38,9 @@ class SmartPreloadController {
     };
 
     // 初始化监控
-      wx.onMemoryWarning(res => {
-          console.warn('内存警告:', res.level);
-      });
+    wx.onMemoryWarning(res => {
+      console.warn('内存警告:', res.level);
+    });
   }
 
   /**
@@ -221,7 +221,6 @@ class SmartPreloadController {
 
       // 开始加载任务
       await this.startChunkLoad(task);
-
     }
 
     this.isPreloading = false;

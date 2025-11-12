@@ -284,10 +284,10 @@ Page({
     console.log(currentUser);
     const isLoggedIn = await authService.checkLoginStatus();
 
-    console.log(isLoggedIn)
+    console.log(isLoggedIn);
     if (!isLoggedIn) {
-      console.log("请登录")
-      return
+      console.log('请登录');
+      return;
     }
 
     this.setData({
@@ -447,7 +447,7 @@ Page({
 
         console.log('头像更新成功:', normalized.avatarUrl);
       } else {
-        console.log(result.error)
+        console.log(result.error);
         wx.hideLoading();
         wx.showToast({
           title: '头像更新失败: ' + result.error,

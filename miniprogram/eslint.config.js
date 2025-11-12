@@ -3,6 +3,8 @@
 import eslintRecommended from '@eslint/js';
 import prettierPlugin from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
+// 关键修改：导入 @babel/eslint-parser
+import babelParser from '@babel/eslint-parser';
 
 // 如果你使用 TypeScript，需要引入这些
 // import typescriptEslintPlugin from '@typescript-eslint/eslint-plugin';
@@ -44,8 +46,9 @@ export default [
     languageOptions: {
       ecmaVersion: 2021, // 或更高版本，取决于你的项目
       sourceType: 'module',
-        parser: '@babel/eslint-parser', // 确保已安装该依赖
-        // 定义微信小程序特有的全局变量
+      // 关键修改：使用导入的 babelParser 对象，而不是字符串
+      parser: babelParser,
+      // 定义微信小程序特有的全局变量
       globals: {
         // 小程序框架提供的全局 API
         wx: 'readonly',
@@ -54,9 +57,6 @@ export default [
         Component: 'readonly',
         getApp: 'readonly',
         getCurrentPages: 'readonly',
-        // 其他可能需要的全局变量，例如：
-        // console: "readonly",
-        // process: "readonly", // 如果你在小程序里使用了 process.env
         module: 'readonly',
         exports: 'readonly',
         require: 'readonly',
@@ -73,8 +73,9 @@ export default [
         Image: 'readonly', // 解决 'Image' is not defined (如果使用了 new Image())
         performance: 'readonly', // 解决 'performance' is not defined
         atob: 'readonly', // 解决 'atob' is not defined
-
-        // 其他可能需要的全局变量，例如如果你有自定义的全局变量
+      },
+      parserOptions: {
+        requireConfigFile: false, // 核心修复项
       },
     },
     rules: {
@@ -102,12 +103,6 @@ export default [
       'no-unreachable': 'warn',
       // 禁止修改只读的全局变量 (解决 'Read-only global 'Page' should not be modified')
       'no-global-assign': 'error',
-
-      // 你可能希望禁用一些在小程序环境中不常用的 ESLint 规则
-      // 例如，小程序文件通常没有像普通网页那样的 DOM 结构，可能不需要 'no-undef' 以外的其他浏览器相关规则。
-      // 'no-undef': 'error', // 这个我们已经通过 globals 解决了
-      // 'no-empty': 'warn', // 示例：不允许空块语句
-      // 'indent': ['error', 2], // 示例：强制使用 2 个空格缩进
     },
   },
 ];

@@ -1,6 +1,6 @@
 // 个人信息清单页面逻辑
 const app = getApp();
-const apiService = require('../../services/api.service.js')
+const apiService = require('../../services/api.service.js');
 Page({
   data: {
     userInfo: {},
@@ -24,7 +24,7 @@ Page({
   loadUserData() {
     const globalUserInfo = app.globalData.userInfo;
     const favoriteList = app.globalData.favoriteList || [];
-    const historyList = apiService.user.getPlayHistory()
+    const historyList = apiService.user.getPlayHistory();
 
     let academicFieldsText = '未设置';
     if (
