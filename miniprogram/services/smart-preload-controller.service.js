@@ -239,7 +239,7 @@ class SmartPreloadController {
     this.loadingStats.totalLoads++;
 
     try {
-      console.log(`开始加载块: ${audioUrl} chunk ${chunkIndex}`);
+      // console.log(`开始加载块: ${audioUrl} chunk ${chunkIndex}`);
 
       // 获取块的字节范围
       const { start, end } = audioChunkManager.getChunkByteRange(
@@ -259,9 +259,9 @@ class SmartPreloadController {
           const loadTime = Date.now() - startTime;
           this.updateLoadTimeStats(loadTime);
 
-          console.log(
-            `块加载成功: chunk ${chunkIndex}, 大小: ${(chunkData.byteLength / 1024).toFixed(1)}KB, 耗时: ${loadTime}ms`
-          );
+          // console.log(
+          //   `块加载成功: chunk ${chunkIndex}, 大小: ${(chunkData.byteLength / 1024).toFixed(1)}KB, 耗时: ${loadTime}ms`
+          // );
         } else {
           console.warn(`块缓存失败: chunk ${chunkIndex}`);
           this.loadingStats.failedLoads++;

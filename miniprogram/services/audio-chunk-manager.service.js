@@ -312,7 +312,7 @@ class AudioChunkManager {
       }
     }
 
-    console.log(`当前块:${currentChunkIndex}, 预加载块:`, chunks);
+    // console.log(`当前块:${currentChunkIndex}, 预加载块:`, chunks);
     return chunks;
   }
 

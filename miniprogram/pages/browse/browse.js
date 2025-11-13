@@ -690,6 +690,7 @@ Page({
                 isPlaying: true,
                 audioLoading: false,
             });
+            app.setCurrentPodcast(this.data.podcastList[this.data.currentIndex]);
         });
 
         audioContext.onPause(() => {
@@ -1276,7 +1277,9 @@ Page({
             success: res => {
                 if (res.confirm) {
                     // 重新创建音频上下文
-                    const newAudioContext = wx.createInnerAudioContext();
+                    const newAudioContext = wx.createInnerAudioContext({
+                        useWebAudioImplement: false
+                    });
                     this.setData({audioContext: newAudioContext});
                     this.rebindAudioEvents(newAudioContext);
 
@@ -1916,6 +1919,8 @@ Page({
 
     // 来自瀑布流容器的本地播放事件（局部实现 mini-player 弹出与播放）
     handleWaterfallPlay: function (e) {
+
+        console.log("确实调用了 waterfall")
         const { podcast } = e.detail || {};
         if (!podcast) return;
 
@@ -1945,6 +1950,7 @@ Page({
                 'globalPlayer.isPlaying': true,
                 'globalPlayer.currentPodcast': podcast,
             });
+            
         } catch (err) {
             console.warn('handleWaterfallPlay 播放失败:', err);
             wx.showToast({ title: '播放失败', icon: 'none' });

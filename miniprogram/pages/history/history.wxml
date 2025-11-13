@@ -102,11 +102,10 @@
         <view class="item-actions">
           <view
             class="action-btn delete-btn"
-            bindtap="removeFromHistory"
+            catchtap="removeFromHistory"
             data-id="{{item.id}}"
-            catchtap="true"
           >
-            <t-icon name="delete" class="action-icon" />
+            <t-icon name="delete" class="action-icon" catchtap="removeFromHistory" data-id="{{item.id}}" />
           </view>
         </view>
       </view>
