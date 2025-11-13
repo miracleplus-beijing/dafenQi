@@ -1,7 +1,8 @@
 {
   "usingComponents": {
     "t-slider": "tdesign-miniprogram/slider/slider",
-    "t-icon": "tdesign-miniprogram/icon/icon"
+    "t-icon": "tdesign-miniprogram/icon/icon",
+    "waterfall-container": "../../components/waterfall-container/waterfall-container"
   },
   "navigationBarTitleText": "达芬Qi说",
   "navigationBarTextStyle": "black",

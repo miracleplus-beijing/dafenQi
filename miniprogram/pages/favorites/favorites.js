@@ -206,8 +206,8 @@ Page({
       return;
     }
 
-    // 更新全局播放状态，确保数据结构与browse页面兼容
-    app.globalData.currentPodcast = {
+    // 更新全局播放状态，确保数据结构与browse页面兼容，使用新的setCurrentPodcast方法
+    const podcastData = {
       id: item.id,
       title: item.title || '未知播客',
       cover_url: item.cover_url,
@@ -221,6 +221,9 @@ Page({
       favorite_count: item.favorite_count || 0,
       created_at: item.created_at || new Date().toISOString(),
     };
+
+    // 使用新的方法设置当前播客，会自动记录播放历史
+    app.setCurrentPodcast(podcastData);
     app.globalData.isPlaying = true;
 
     // 添加到播放历史（使用统一的数据结构）
@@ -231,7 +234,6 @@ Page({
       channel: item.hosts || item.channel,
       favoriteTime: Date.now(),
     };
-    app.addToHistory(historyItem);
 
     // 跳转到首页进行播放
     wx.switchTab({

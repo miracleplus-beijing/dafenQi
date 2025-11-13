@@ -1,0 +1,82 @@
+<!-- 瀑布流容器组件（封装搜索/筛选/列表/加载/空态） -->
+<view class="waterfall-mode">
+  <!-- 头部：搜索与筛选 -->
+  <waterfall-header
+    search-value="{{searchKeyword}}"
+    filter-options="{{filterOptions}}"
+    bind:searchchange="handleWaterfallSearchChange"
+    bind:searchsubmit="handleWaterfallSearchSubmit"
+    bind:searchclear="handleWaterfallSearchClear"
+    bind:filterchange="handleWaterfallFilterChange"
+    bind:clearfilters="handleWaterfallClearFilters"
+  />
+
+  <!-- 内容区域：支持下拉刷新与触底加载 -->
+  <scroll-view class="waterfall-content"
+               scroll-y
+               enable-back-to-top
+               refresher-enabled="{{true}}"
+               refresher-threshold="{{50}}"
+               refresher-default-style="white"
+               refresher-background="#f8f9fa"
+               refresher-triggered="{{waterfallRefreshing}}"
+               bindrefresherrefresh="handleWaterfallRefresh"
+               bindscrolltolower="handleWaterfallScrollToLower">
+
+    <!-- 双列网格布局 -->
+    <view class="waterfall-grid">
+      <!-- 左列 -->
+      <view class="grid-column left-column">
+        <waterfall-card
+          wx:for="{{leftColumnList}}"
+          wx:key="id"
+          podcast="{{item}}"
+          is-playing="{{isItemPlaying(item.id)}}"
+          bind:play="handleCardPlay"
+          bind:preview="handleCardDetail" />
+      </view>
+
+      <!-- 右列 -->
+      <view class="grid-column right-column">
+        <waterfall-card
+          wx:for="{{rightColumnList}}"
+          wx:key="id"
+          podcast="{{item}}"
+          is-playing="{{isItemPlaying(item.id)}}"
+          bind:play="handleCardPlay"
+          bind:preview="handleCardDetail" />
+      </view>
+    </view>
+
+    <!-- 加载更多指示器 -->
+    <view wx:if="{{waterfallLoading}}" class="waterfall-loading">
+      <t-loading theme="circular" size="24px" />
+      <text>加载中...</text>
+    </view>
+
+    <!-- 没有更多数据 -->
+    <view wx:if="{{!hasMoreWaterfallData && waterfallList.length > 0}}" class="no-more-data">
+      <text>没有更多内容了</text>
+    </view>
+
+    <!-- 空数据提示 -->
+    <view wx:if="{{waterfallList.length === 0 && !loading && !waterfallRefreshing}}" class="empty-state">
+      <t-icon name="inbox" size="120rpx" color="#cbd5e0" />
+      <text class="empty-text">暂无内容</text>
+      <text class="empty-hint">{{isSearchMode ? '试试其他搜索词' : '下拉刷新试试'}}</text>
+    </view>
+  </scroll-view>
+
+  <!-- 快速预览弹窗（可选：保留以兼容原有体验） -->
+  <quick-preview
+    visible="{{showQuickPreview}}"
+    podcast="{{quickPreviewPodcast}}"
+    bind:trialplay="handleQuickPreviewTrialPlay"
+    bind:trialpause="handleQuickPreviewTrialPause"
+    bind:trialstop="handleQuickPreviewTrialStop"
+    bind:favorite="handleQuickPreviewFavorite"
+    bind:share="handleQuickPreviewShare"
+    bind:addtoplaylist="handleQuickPreviewAddToPlaylist"
+    bind:playfull="handleQuickPreviewPlayFull"
+    bind:close="handleQuickPreviewClose" />
+</view>

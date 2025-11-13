@@ -31,7 +31,10 @@ App({
     supabaseAnonKey:
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmZjYWZnbmh6amlhdXVrc3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0MjY4NjAsImV4cCI6MjA3MTAwMjg2MH0.uxO5eyw0Usyd59UKz-S7bTrmOnNPg9Ld9wJ6pDMIQUA',
     apiService: require('./services/api.service.js'),
+    authService: require('./services/auth.service.js')
+
   },
+
 
   onLaunch: function () {
     console.log('达芬Qi说小程序启动');
@@ -39,14 +42,14 @@ App({
     // 初始化隐私检查
     this.initPrivacyCheck();
 
-    // 初始化认证服务
-    this.initAuthService();
-
     // 检查登录状态
     this.checkLoginStatus();
 
     // 加载本地数据
     this.loadLocalData();
+
+    // 初始化全局播放器监听器容器（最小改动）
+    this._globalPlayerListeners = [];
   },
 
   onShow: function (options) {
@@ -59,15 +62,33 @@ App({
     this.saveLocalData();
   },
 
-  initAuthService: function () {
-    // 导入认证服务
-    this.authService = require('./services/auth.service.js');
+  // ===== 全局播放器：发布/订阅（最小改动，避免 TypeError） =====
+  onGlobalPlayerChange: function (listener) {
+    if (!this._globalPlayerListeners) this._globalPlayerListeners = [];
+    if (typeof listener === 'function' && !this._globalPlayerListeners.includes(listener)) {
+      this._globalPlayerListeners.push(listener);
+    }
   },
+
+  offGlobalPlayerChange: function (listener) {
+    if (!this._globalPlayerListeners || !listener) return;
+    const idx = this._globalPlayerListeners.indexOf(listener);
+    if (idx !== -1) this._globalPlayerListeners.splice(idx, 1);
+  },
+
+  _emitGlobalPlayerChange: function () {
+    if (!this._globalPlayerListeners || this._globalPlayerListeners.length === 0) return;
+    const state = this.globalData.globalPlayer;
+    this._globalPlayerListeners.slice().forEach(fn => {
+      try { fn(state); } catch (e) { console.warn('globalPlayer listener error:', e); }
+    });
+  },
+
 
   async checkLoginStatus() {
     try {
-      if (this.authService) {
-        const isLoggedIn = await this.authService.checkLoginStatus();
+      if (this.globalData.authService) {
+        const isLoggedIn = await this.globalData.authService.checkLoginStatus();
         console.log('登录状态检查结果:', isLoggedIn);
       } else {
         // 兼容旧版本检查
@@ -101,7 +122,6 @@ App({
     try {
       wx.setStorageSync('favoriteList', this.globalData.favoriteList);
       wx.setStorageSync('settings', this.globalData.settings);
-      wx.setStorageSync('browseMode', this.globalData.browseMode);
     } catch (e) {
       console.error('保存本地数据失败', e);
     }
@@ -142,33 +162,7 @@ App({
     return false;
   },
 
-  addToHistory: async function (item) {
-    const history = this.globalData.apiService.user.getPlayHistory();
-    const index = history.findIndex(h => h.id === item.id);
 
-    // 如果已存在，先删除旧记录
-    if (index !== -1) {
-      history.splice(index, 1);
-    }
-
-    // 添加到开头
-    history.unshift({
-      ...item,
-      playTime: new Date().getTime(),
-    });
-    // 已包含 删除 旧的播放记录逻辑
-    await this.globalData.apiService.user.addHistory(
-      this.globalData.userInfo.id,
-      item
-    );
-
-    // 限制历史记录数量
-    if (history.length > 100) {
-      history.splice(100);
-    }
-
-    return history;
-  },
 
   updateSettings: function (newSettings) {
     this.globalData.settings = {
@@ -227,11 +221,21 @@ App({
   // 全局播放器控制方法
   showGlobalPlayer: function (podcastData) {
     this.globalData.globalPlayer.isVisible = true;
-    this.globalData.globalPlayer.currentPodcast = podcastData;
+    // 如果播客数据发生变化，使用setCurrentPodcast方法
+    if (podcastData && this.globalData.globalPlayer.currentPodcast?.id !== podcastData.id) {
+      this.setCurrentPodcast(podcastData);
+    } else if (podcastData) {
+      // 如果是相同播客，只更新globalPlayer状态
+      this.globalData.globalPlayer.currentPodcast = podcastData;
+    }
+    // 广播更新
+    this._emitGlobalPlayerChange();
   },
 
   hideGlobalPlayer: function () {
     this.globalData.globalPlayer.isVisible = false;
+    // 广播更新
+    this._emitGlobalPlayerChange();
   },
 
   updateGlobalPlayerState: function (state) {
@@ -239,8 +243,58 @@ App({
       ...this.globalData.globalPlayer,
       ...state,
     };
+    // 广播更新
+    this._emitGlobalPlayerChange();
   },
 
+  // 设置当前播客并自动记录播放历史
+  setCurrentPodcast: function (podcastData) {
+    // 检查是否真的有变化，避免重复记录
+    const currentPodcastId = this.globalData.currentPodcast?.id;
+    const newPodcastId = podcastData?.id;
+
+    if (newPodcastId && newPodcastId !== currentPodcastId) {
+      console.log('当前播客发生变化，准备记录播放历史', {
+        from: currentPodcastId,
+        to: newPodcastId
+      });
+
+      // 更新两个位置的currentPodcast状态
+      this.globalData.currentPodcast = podcastData;
+      this.globalData.globalPlayer.currentPodcast = podcastData;
+
+      // 异步记录播放历史，不阻塞播放流程
+      this.recordPlayHistory(podcastData);
+      // 广播更新
+      this._emitGlobalPlayerChange();
+    } else if (!podcastData) {
+      // 如果传入null，清空当前播客
+      this.globalData.currentPodcast = null;
+      this.globalData.globalPlayer.currentPodcast = null;
+      // 广播更新
+      this._emitGlobalPlayerChange();
+    }
+  },
+
+
+async recordPlayHistory(podcast) {
+  try {
+      if (!this.globalData.isLoggedIn || !this.globalData.userInfo) {
+        console.log('用户未登录，跳过播放历史记录');
+        return;
+      }
+    if (!podcast || !podcast.id) return;
+    const user = this.globalData.authService.getCurrentUser();
+    const userId = user && user.id;
+    if (!userId) return; // 未登录不记录
+    // 非阻塞调用
+      const result = await this.globalData.apiService.user.addHistory(userId, podcastId);
+   if (result.success) {
+        console.log('播放历史记录成功');
+      } else {
+        console.error('播放历史记录失败:', result.error);
+      } } catch (_) {}
+},
   // 初始化全局隐私检查
   initPrivacyCheck: function () {
     // 检查基础库版本

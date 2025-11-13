@@ -1,6 +1,5 @@
 <!-- 瀑布流卡片组件 -->
 <view class="waterfall-card {{isSelected ? 'selected' : ''}}"
-      bindtap="handleCardTap"
       bindlongpress="handleCardLongPress">
 
   <!-- 选择标识 -->

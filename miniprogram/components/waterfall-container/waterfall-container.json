@@ -1,0 +1,13 @@
+{
+  "component": true,
+  "options": {
+    "styleIsolation": "apply-shared"
+  },
+  "usingComponents": {
+    "waterfall-header": "../waterfall-header/waterfall-header",
+    "waterfall-card": "../waterfall-card/waterfall-card",
+    "quick-preview": "../quick-preview/quick-preview",
+    "t-loading": "tdesign-miniprogram/loading/loading",
+    "t-icon": "tdesign-miniprogram/icon/icon"
+  }
+}

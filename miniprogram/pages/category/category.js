@@ -433,9 +433,9 @@ Page({
       type: 'medium',
     });
 
-    // 更新全局播放状态
+    // 更新全局播放状态，使用新的setCurrentPodcast方法
     const app = getApp();
-    app.globalData.currentPodcast = {
+    const podcastData = {
       id: item.id,
       title: item.title,
       description: item.description,
@@ -450,12 +450,12 @@ Page({
       created_at: item.created_at,
     };
 
+    // 使用新的方法设置当前播客，会自动记录播放历史
+    app.setCurrentPodcast(podcastData);
+
     // 设置播放状态
     app.globalData.isPlaying = false; // 先设为false，让browse页面来控制播放
     app.globalData.currentProgress = 0;
-
-    // 添加到历史记录
-    app.addToHistory(app.globalData.currentPodcast);
 
     // 跳转到漫游页面
     wx.switchTab({

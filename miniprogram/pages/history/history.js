@@ -327,8 +327,8 @@ Page({
       ...item.podcastData,
     };
 
-    // 设置当前播客到全局状态
-    app.globalData.currentPodcast = podcastData;
+    // 使用新的方法设置当前播客到全局状态，会自动记录播放历史
+    app.setCurrentPodcast(podcastData);
 
     // 切换到漫游页面进行播放
     wx.switchTab({

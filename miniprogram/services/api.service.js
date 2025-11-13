@@ -178,7 +178,7 @@ class ApiService {
     },
 
     // 添加播放历史
-    addHistory: async (userId, podcastId, playPosition = 0) => {
+    addHistory: async (userId, podcastId) => {
       try {
         // 先删除已存在的记录 - 修复DELETE请求
         await requestUtil.delete(
@@ -194,7 +194,8 @@ class ApiService {
         const result = await requestUtil.post('/rest/v1/user_play_history', {
           user_id: userId,
           podcast_id: podcastId,
-          play_position: playPosition,
+          play_position: 0,
+          play_duration: 0,
           played_at: new Date().toISOString(),
         });
 

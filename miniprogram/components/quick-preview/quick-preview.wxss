@@ -125,18 +125,6 @@
   background: var(--accent-color);
 }
 
-/* 试听标识 */
-.trial-badge {
-  position: absolute;
-  bottom: var(--spacing-xs);
-  left: var(--spacing-xs);
-  background: rgba(237, 137, 54, 0.9);
-  color: white;
-  padding: 6rpx var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-}
 
 /* 详细信息 */
 .info-details {

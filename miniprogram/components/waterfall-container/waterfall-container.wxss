@@ -1,0 +1,108 @@
+/* 瀑布流容器组件样式（从 browse.wxss 按需下沉，保持视觉零变更） */
+
+/* 容器根节点（与页面 .waterfall-mode 一致） */
+.waterfall-mode {
+  width: 100%;
+  height: 100vh;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  opacity: 1;
+  transform: translateX(0);
+  transition: all var(--animation-duration) var(--animation-timing);
+}
+
+.waterfall-mode.hiding {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+/* 内容滚动区域 */
+.waterfall-content {
+  flex: 1;
+  height: 0;
+  transform: translateZ(0);
+  -webkit-overflow-scrolling: touch;
+  will-change: scroll-position;
+  overscroll-behavior: contain;
+}
+
+/* 双列布局 */
+.waterfall-grid {
+  display: flex;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  contain: layout style;
+}
+
+.grid-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transform: translateZ(0);
+  will-change: contents;
+}
+
+/* 卡片进入动画 */
+.waterfall-card {
+  opacity: 0;
+  transform: translateY(30rpx) scale(0.9);
+  animation: cardFadeIn 0.4s var(--animation-timing) forwards;
+}
+
+.waterfall-card:nth-child(even) { animation-delay: 0.1s; }
+.waterfall-card:nth-child(odd) { animation-delay: 0.05s; }
+
+@keyframes cardFadeIn {
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 头部进入动画 */
+.waterfall-header {
+  opacity: 0;
+  transform: translateY(-20rpx);
+  animation: headerSlideDown 0.3s var(--animation-timing) forwards;
+}
+
+@keyframes headerSlideDown {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 加载/空态 */
+.waterfall-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.no-more-data {
+  text-align: center;
+  padding: var(--spacing-lg);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-4xl) var(--spacing-lg);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.empty-text {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  margin: var(--spacing-md) 0 var(--spacing-sm);
+}
+
+.empty-hint {
+  font-size: var(--font-size-sm);
+  opacity: 0.7;
+}

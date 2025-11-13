@@ -18,7 +18,6 @@ Component({
     isPlaying: false,
     currentProgress: 0,
     currentTime: 0,
-    trialDuration: 30, // 30秒试听
 
     // 动画
     contentAnimation: null,
@@ -141,69 +140,10 @@ Component({
       this.stopTrial();
     },
 
-    // 处理播放/暂停
-    handlePlay() {
-      const { isPlaying } = this.data;
+ 
 
-      if (isPlaying) {
-        this.pauseTrial();
-      } else {
-        this.startTrial();
-      }
-    },
+  
 
-    // 开始试听
-    startTrial() {
-      console.log('开始30秒试听');
-
-      this.setData({ isPlaying: true });
-
-      // 模拟音频播放进度（实际应用中应该使用真实的音频API）
-      this.data.trialTimer = setInterval(() => {
-        const { currentTime, trialDuration } = this.data;
-
-        if (currentTime >= trialDuration) {
-          // 试听结束
-          this.stopTrial();
-          wx.showToast({
-            title: '试听结束，点击完整播放',
-            icon: 'none',
-            duration: 2000,
-          });
-          return;
-        }
-
-        const newTime = currentTime + 1;
-        const progress = (newTime / trialDuration) * 100;
-
-        this.setData({
-          currentTime: newTime,
-          currentProgress: progress,
-        });
-      }, 1000);
-
-      // 触发播放事件
-      this.triggerEvent('trialplay', {
-        podcast: this.data.podcast,
-        trialDuration: this.data.trialDuration,
-      });
-    },
-
-    // 暂停试听
-    pauseTrial() {
-      console.log('暂停试听');
-      this.setData({ isPlaying: false });
-
-      if (this.data.trialTimer) {
-        clearInterval(this.data.trialTimer);
-        this.data.trialTimer = null;
-      }
-
-      this.triggerEvent('trialpause', {
-        podcast: this.data.podcast,
-        currentTime: this.data.currentTime,
-      });
-    },
 
     // 停止试听
     stopTrial() {
@@ -276,8 +216,6 @@ Component({
     handlePlayFull() {
       console.log('开始完整播放:', this.data.podcast.title);
 
-      // 停止试听
-      this.stopTrial();
 
       // 触发完整播放事件
       this.triggerEvent('playfull', {

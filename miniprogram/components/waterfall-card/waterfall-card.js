@@ -146,27 +146,7 @@ Component({
       }
     },
 
-    // 卡片点击（内部预览）
-    handleCardTap: function () {
-      const podcast = this.properties.podcast;
-      if (!podcast || typeof podcast !== 'object') {
-        console.warn('waterfall-card: podcast 对象不存在，无法执行点击操作');
-        return;
-      }
-
-      // 简易预览：使用模态框作为轻量替代，不依赖父页面
-      wx.showModal({
-        title: podcast.title || '内容预览',
-        content: (podcast.description || '').slice(0, 120) || '暂无简介',
-        confirmText: '播放',
-        cancelText: '关闭',
-        success: res => {
-          if (res.confirm) {
-            this.internalPlay(podcast);
-          }
-        },
-      });
-    },
+   
 
     // 长按卡片（不再进入批量模式）
     handleCardLongPress: function () {
@@ -177,7 +157,6 @@ Component({
 
     // 播放按钮点击（内部处理）
     handlePlayTap: function (e) {
-      e.stopPropagation();
       const podcast = this.properties.podcast;
       if (!podcast || typeof podcast !== 'object') {
         console.warn('waterfall-card: podcast 对象不存在，无法执行播放操作');
@@ -186,25 +165,18 @@ Component({
       this.internalPlay(podcast);
     },
 
-    // 内部播放实现：调用全局播放器
+    // 内部播放实现：向上冒泡，让父级处理实际播放（局部控制）
     internalPlay: function (podcast) {
       try {
-        const app = getApp();
-        if (app && typeof app.showGlobalPlayer === 'function') {
-          app.showGlobalPlayer(podcast);
-        } else {
-          console.warn('app.showGlobalPlayer 不可用');
-        }
-        wx.showToast({ title: '开始播放', icon: 'none', duration: 800 });
+        this.triggerEvent('play', { podcast });
+
       } catch (err) {
-        console.error('internalPlay 失败:', err);
-        wx.showToast({ title: '播放失败', icon: 'none' });
+        console.error('internalPlay 事件触发失败:', err);
       }
     },
 
     // 收藏按钮点击（内部处理）
     handleFavoriteTap: function (e) {
-      e.stopPropagation();
       const podcast = this.properties.podcast;
       if (!podcast || typeof podcast !== 'object') {
         console.warn('waterfall-card: podcast 对象不存在，无法执行收藏操作');
@@ -242,13 +214,12 @@ Component({
 
     // 更多操作点击（内部处理）
     handleMoreTap: function (e) {
-      e.stopPropagation();
       const podcast = this.properties.podcast;
       if (!podcast || typeof podcast !== 'object') return;
 
       const favorText = podcast.isFavorited ? '取消收藏' : '收藏';
       wx.showActionSheet({
-        itemList: [favorText, '分享'],
+        itemList: [favorText, '分享', '详细'],
         success: res => {
           if (res.tapIndex === 0) {
             // 收藏/取消收藏
@@ -259,6 +230,13 @@ Component({
               withShareTicket: true,
               menus: ['shareAppMessage', 'shareTimeline'],
             });
+          } else if (res.tapIndex === 2) {
+            // 详细（预览）
+            try {
+              this.triggerEvent('preview', { podcast });
+            } catch (err) {
+              console.warn('触发预览事件失败:', err);
+            }
           }
         },
       });
