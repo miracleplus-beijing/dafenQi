@@ -143,6 +143,18 @@ Page({
 
         console.log('切换浏览模式:', currentMode, '->', newMode);
 
+        // 在切换前中断音频并隐藏 mini-player（最小改动）
+        try {
+            const audio = this.data.audioContext;
+            if (audio && typeof audio.stop === 'function') {
+                audio.stop();
+            }
+        } catch (_) {}
+        this.setData({
+            'globalPlayer.isPlaying': false,
+            'globalPlayer.isVisible': false,
+        });
+
         // 设置切换动画
         this.setModeTransition(currentMode, newMode);
 
