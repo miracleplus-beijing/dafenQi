@@ -17,6 +17,9 @@ App({
         // 双模式状态管理
         browseMode: 'swiper', // 'swiper' | 'waterfall'
 
+        // 当前激活的底部tab索引：0=漫游 1=分类 2=我的
+        activeTabIndex: 0,
+
         // 全局播放器状态
         globalPlayer: {
             isVisible: false,

@@ -198,65 +198,18 @@
     </view>
   </view>
 
-  <!-- 评论弹窗 -->
-  <view class="comment-popup {{showCommentPopup ? 'show' : ''}}" catchtouchmove="preventScroll">
-    <view class="popup-mask" bindtap="handleCloseComments"></view>
-    <view class="popup-content">
-      <view class="popup-header">
-        <text class="popup-title">评论</text>
-        <view class="popup-close" bindtap="handleCloseComments">
-          <t-icon name="close" size="48rpx" class="close-icon" />
-        </view>
-      </view>
-
-      <!-- 评论列表 -->
-      <scroll-view class="comment-list" scroll-y>
-        <view wx:for="{{commentList}}" wx:key="id" class="comment-item">
-          <image src="{{item.user_avatar}}" class="comment-avatar" />
-          <view class="comment-content">
-            <view class="comment-header">
-              <text class="comment-user">{{item.user_nickname}}</text>
-              <text class="comment-time">{{item.timestamp_formatted}}</text>
-            </view>
-            <text class="comment-text">{{item.content}}</text>
-            <view class="comment-actions">
-              <view class="comment-action-btn" bindtap="handleReplyComment" data-comment-id="{{item.id}}">
-                <text>回复</text>
-              </view>
-              <view class="comment-action-btn like-btn {{item.isLiked ? 'liked' : ''}}"
-                    bindtap="handleLikeComment"
-                    data-comment-id="{{item.id}}">
-                <t-icon name="{{item.isLiked ? 'heart-filled' : 'heart'}}"
-                        size="32rpx"
-                        color="{{item.isLiked ? '#ed8936' : '#718096'}}"
-                        class="like-icon" />
-                <text>{{item.like_count > 0 ? item.like_count : ''}}</text>
-              </view>
-            </view>
-          </view>
-        </view>
-
-        <!-- 空评论提示 -->
-        <view wx:if="{{commentList.length === 0}}" class="comment-empty">
-          <text>还没有评论，来抢沙发吧~</text>
-        </view>
-      </scroll-view>
-
-      <!-- 评论输入框 -->
-      <view class="comment-input-wrapper">
-        <input
-          class="comment-input"
-          placeholder="{{replyingToCommentId ? '回复评论...' : '发表评论...'}}"
-          value="{{commentInputText}}"
-          bindinput="handleCommentInput"
-          confirm-type="send"
-          bindconfirm="handleSendComment" />
-        <view class="send-btn {{commentInputText.length > 0 ? 'active' : ''}}" bindtap="handleSendComment">
-          <text>发送</text>
-        </view>
-      </view>
-    </view>
-  </view>
+  <!-- 评论弹窗组件 -->
+  <comment-popup
+    visible="{{showCommentPopup}}"
+    comment-list="{{commentList}}"
+    comment-input-text="{{commentInputText}}"
+    replying-to-comment-id="{{replyingToCommentId}}"
+    bind:close="handleCloseComments"
+    bind:input="handleCommentInput"
+    bind:send="handleSendComment"
+    bind:reply="handleReplyComment"
+    bind:like="handleLikeComment"
+  />
 
   <!-- 全局迷你播放器 -->
   <mini-player
@@ -269,8 +222,6 @@
     bind:playpause="handleGlobalPlayerPlayPause"
     bind:expand="handleGlobalPlayerExpand"
     bind:close="handleGlobalPlayerClose" />
-
-  
 
   <t-toast id="t-toast" />
 

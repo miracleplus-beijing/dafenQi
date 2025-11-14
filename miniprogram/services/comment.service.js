@@ -1,5 +1,6 @@
 // comment.service.js - 评论服务
 // 处理播客评论相关的数据操作
+const requestUtil = require('../utils/request.js');
 
 class CommentService {
   constructor() {
@@ -8,49 +9,29 @@ class CommentService {
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmZjYWZnbmh6amlhdXVrc3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0MjY4NjAsImV4cCI6MjA3MTAwMjg2MH0.uxO5eyw0Usyd59UKz-S7bTrmOnNPg9Ld9wJ6pDMIQUA';
   }
 
-  // 通用的Supabase请求方法
+  // 通用的Supabase请求方法（委托全局requestUtil）
   async supabaseRequest(endpoint, options = {}) {
-    const url = `${this.supabaseUrl}/rest/v1/${endpoint}`;
-    const headers = {
-      apikey: this.supabaseAnonKey,
-      Authorization: `Bearer ${this.supabaseAnonKey}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation',
-      ...options.headers,
-    };
-
+    const path = `/rest/v1/${endpoint}`;
+    const method = options.method || 'GET';
+    const needAuth = options.needAuth !== undefined ? options.needAuth : method !== 'GET';
     try {
-      const response = await new Promise((resolve, reject) => {
-        wx.request({
-          url,
-          method: options.method || 'GET',
-          header: headers,
-          data: options.data,
-          success: resolve,
-          fail: reject,
-        });
+      const data = await requestUtil.request({
+        url: path,
+        method,
+        data: options.data,
+        headers: {
+          Prefer: 'return=representation',
+          ...(options.headers || {}),
+        },
+        needAuth,
       });
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return {
-          success: true,
-          data: response.data,
-          statusCode: response.statusCode,
-        };
-      } else {
-        console.error('Supabase请求失败:', response);
-        return {
-          success: false,
-          error: response.data?.message || `请求失败 (${response.statusCode})`,
-          statusCode: response.statusCode,
-        };
-      }
+      return { success: true, data };
     } catch (error) {
-      console.error('网络请求失败:', error);
+      console.error('Supabase请求失败:', error);
       return {
         success: false,
-        error: error.errMsg || '网络请求失败',
-        statusCode: 0,
+        error: error.message || '请求失败',
+        statusCode: error.statusCode || 0,
       };
     }
   }
@@ -62,6 +43,10 @@ class CommentService {
 
       // 使用Supabase的关联查询获取评论及用户信息
       const query = `podcast_id=eq.${podcastId}&select=*,user:user_id(id,nickname,avatar_url)&order=created_at.desc`;
+
+      // const result = await requestUtil.get('/rest/v1/comments', {
+      //   podcast_id: `eq.${podcastId}`,
+      // });
 
       const result = await this.supabaseRequest(`comments?${query}`);
 

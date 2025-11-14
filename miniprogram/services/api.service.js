@@ -11,7 +11,7 @@ class ApiService {
     this.auth = authService;
     this.storage = storageService;
     this.request = requestUtil;
-    this.comment = commentService;
+    // this.comment = commentService;
     this.insight = insightService;
   }
 
@@ -566,7 +566,7 @@ class ApiService {
     },
 
     // 获取悬浮播放条显示的评论（置顶 > 高赞 > 随机）
-    getFloatingComment: async podcastId => {
+    getFloatingComment: async (podcastId) => {
       try {
         const result =
           await commentService.getPinnedOrPopularComment(podcastId);

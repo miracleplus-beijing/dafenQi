@@ -1,0 +1,48 @@
+<view class="comment-popup {{visible ? 'show' : ''}}" wx:if="{{visible}}" catchtouchmove="preventScroll">
+  <view class="popup-mask" bindtap="onClose"></view>
+  <view class="popup-content">
+    <view class="popup-header">
+      <text class="popup-title">评论</text>
+      <view class="popup-close" bindtap="onClose">
+        <t-icon name="close" size="48rpx" class="close-icon" />
+      </view>
+    </view>
+
+    <scroll-view class="comment-list" scroll-y>
+      <view wx:for="{{commentList}}" wx:key="id" class="comment-item">
+        <image src="{{item.user_avatar}}" class="comment-avatar" />
+        <view class="comment-content" data-id="{{item.id}}" bindtap="onReply">
+          <view class="comment-header">
+            <text class="comment-user">{{item.user_nickname}}</text>
+            <text class="comment-time">{{item.timestamp_formatted}}</text>
+          </view>
+          <text class="comment-text">{{item.content}}</text>
+          <view class="like-btn {{item.isLiked ? 'liked' : ''}}" data-id="{{item.id}}" bindtap="onLike">
+            <t-icon name="{{item.isLiked ? 'heart-filled' : 'heart'}}"
+                    size="32rpx"
+                    color="{{item.isLiked ? '#ed8936' : '#718096'}}"
+                    class="like-icon" />
+            <text style="font-size: 24rpx;line-height: 1.3;">{{item.like_count > 0 ? item.like_count : ''}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{!commentList || commentList.length === 0}}" class="comment-empty">
+        <text>还没有评论，来抢沙发吧~</text>
+      </view>
+    </scroll-view>
+
+    <view class="comment-input-wrapper">
+      <input
+        class="comment-input"
+        placeholder="{{replyingToCommentId ? '回复评论...' : '发表评论...'}}"
+        value="{{commentInputText}}"
+        bindinput="onInput"
+        confirm-type="send"
+        bindconfirm="onSend" />
+      <view class="send-btn {{commentInputText && commentInputText.length > 0 ? 'active' : ''}}" bindtap="onSend">
+        <text>发送</text>
+      </view>
+    </view>
+  </view>
+</view>

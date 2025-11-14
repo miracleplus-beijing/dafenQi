@@ -1200,25 +1200,7 @@ page {
     margin-top: var(--spacing-xs);
 }
 
-.comment-action-btn {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    color: var(--text-secondary);
-    font-size: var(--font-size-sm);
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--border-radius-sm);
-    transition: all 0.2s ease;
-}
 
-.comment-action-btn.liked {
-    color: var(--accent-color);
-}
-
-.like-icon {
-    width: 14px;
-    height: 14px;
-}
 
 .comment-empty {
     width: 100%;

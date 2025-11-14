@@ -29,8 +29,8 @@ Component({
 
   lifetimes: {
     attached() {
-      // 初次加载
-      this.loadWaterfallData(false);
+          this.loadWaterfallData(false);
+
     }
   },
 
@@ -247,8 +247,8 @@ Component({
       const { podcast } = e.detail || {};
       if (!podcast) return;
       this.showQuickPreview(podcast);
-    },
-    handleQuickPreviewPlayFull(e) {
+    },handleQuickPreviewPlayFull
+    (e) {
       const { podcast } = e.detail;
       // 将完整播放与卡片播放对齐：向上抛出 'play'，由页面统一处理音频与 mini-player
       if (podcast) {

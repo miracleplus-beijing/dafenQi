@@ -78,6 +78,8 @@ Page({
         // 双模式状态
         browseMode: 'swiper', // 'swiper' | 'waterfall'
 
+        justNavigatedViaTab: false,
+
         // 全局播放器状态
         globalPlayer: {
             isVisible: false,
@@ -129,8 +131,16 @@ Page({
     onTabItemTap: function (item) {
         console.log('点击Tab栏:', item)
         if (item.index === 0) {
-            // 点击漫游tab，切换模式
-            console.log('点击漫游tab，切换浏览模式');
+            const app = getApp();
+            const activeIndex = app.globalData && typeof app.globalData.activeTabIndex === 'number'
+                ? app.globalData.activeTabIndex
+                : null;
+            if (this.data.justNavigatedViaTab || activeIndex !== 0) {
+                console.log('刚通过切换进入本页，忽略本次tab点击的模式切换');
+                this.setData({ justNavigatedViaTab: false });
+                return;
+            }
+            console.log('已在漫游页，二次点击tab，切换浏览模式');
             this.switchBrowseMode();
         }
     },
@@ -492,6 +502,11 @@ Page({
     onShow: function () {
         console.log('漫游页面显示');
 
+        try {
+            const app = getApp();
+            app.globalData.activeTabIndex = 0;
+        } catch (_) {}
+
         // 页面进入动画
         this.enterAnimation();
 
@@ -499,6 +514,15 @@ Page({
         setTimeout(() => {
             this.checkGlobalPodcastState();
         }, 200);
+
+        this.setData({ justNavigatedViaTab: true });
+        if (this._justNavigatedTimer) {
+            clearTimeout(this._justNavigatedTimer);
+        }
+        this._justNavigatedTimer = setTimeout(() => {
+            this.setData({ justNavigatedViaTab: false });
+            this._justNavigatedTimer = null;
+        }, 600);
     },
 
     // 检查全局播客状态
@@ -617,6 +641,11 @@ Page({
         this.cleanupPreloadedAudio();
         audioPreloader.destroyAll();
 
+        if (this._justNavigatedTimer) {
+            clearTimeout(this._justNavigatedTimer);
+            this._justNavigatedTimer = null;
+        }
+        this.setData({ justNavigatedViaTab: false });
     },
 
     // 清理定时器和内存
@@ -1016,7 +1045,7 @@ Page({
 
     // 处理触摸开始
     handleTouchStart: function (e) {
-        console.log('用户开始触摸swiper');
+        // console.log('用户开始触摸swiper');
         const now = Date.now();
         this.setData({
             lastUserInteraction: now,
@@ -1026,7 +1055,6 @@ Page({
 
     // 处理触摸移动
     handleTouchMove: function (e) {
-        console.log('用户正在滑动swiper');
         this.setData({lastUserInteraction: Date.now()});
     },
 
@@ -1603,6 +1631,7 @@ Page({
 
     // ========== 评论相关方法 ==========
     async loadCommentsForCurrentPodcast(podcastId) {
+      console.log(apiService)
         try {
             const result = await apiService.comment.getList(podcastId);
             if (result.success) {
@@ -1801,7 +1830,7 @@ Page({
     },
 
     handleReplyComment(e) {
-        const commentId = e.currentTarget.dataset.commentId;
+        const commentId = (e && e.detail && e.detail.id) || (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.commentId);
         this.setData({
             replyingToCommentId: commentId,
         });
@@ -1809,7 +1838,7 @@ Page({
     },
 
     async handleLikeComment(e) {
-        const commentId = e.currentTarget.dataset.commentId;
+        const commentId = (e && e.detail && e.detail.id) || (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.commentId);
         const userId = this.getCurrentUserId();
 
         if (!userId) {
@@ -2282,13 +2311,9 @@ Page({
                 console.log('🚀 使用预加载音频进行自动播放');
                 this.hideCustomLoading();
 
-                // 停止当前音频
-                audioContext.stop();
-
-                // 销毁当前音频上下文，使用预加载的
-                if (audioContext && typeof audioContext.destroy === 'function') {
-                    audioContext.destroy();
-                }
+                // 停止并尝试销毁当前音频（加防护，避免底层对象已无效时报错）
+                try { audioContext && typeof audioContext.stop === 'function' && audioContext.stop(); } catch (_) {}
+                try { audioContext && typeof audioContext.destroy === 'function' && audioContext.destroy(); } catch (e) { console.warn('destroy 音频上下文失败，忽略:', e); }
 
                 // 使用预加载的音频上下文
                 const newAudioContext = preloadedAudio;
@@ -2302,8 +2327,8 @@ Page({
             } else {
                 console.log('📱 标准音频加载流程进行自动播放');
 
-                // 停止当前音频
-                audioContext.stop();
+                // 停止当前音频（加防护）
+                try { audioContext && typeof audioContext.stop === 'function' && audioContext.stop(); } catch (_) {}
 
                 // 设置新的音频源
                 audioContext.src = newSrc;

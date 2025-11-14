@@ -33,6 +33,10 @@ Page({
 
   onShow: async function () {
     console.log('onShow周期触发');
+    try {
+      const app = getApp();
+      app.globalData.activeTabIndex = 2;
+    } catch (_) {}
 
     await this.checkLoginStatus();
     // 页面进入动画
@@ -284,7 +288,7 @@ Page({
     console.log(currentUser);
     const isLoggedIn = await authService.checkLoginStatus();
 
-    console.log(isLoggedIn);
+    console.log("登录状态：" + isLoggedIn);
     if (!isLoggedIn) {
       console.log('请登录');
       return;

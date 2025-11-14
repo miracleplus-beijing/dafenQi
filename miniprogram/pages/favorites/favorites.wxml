@@ -39,7 +39,7 @@
       <view class="favorites-list" wx:else>
         <view wx:for="{{favoriteList}}" wx:key="id" class="favorite-item">
           <view class="item-cover">
-            <image src="{{item.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/picture/default-cover.png'}}"
+            <image src="{{item.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png'}}"
                    class="cover-image" mode="aspectFill"></image>
           </view>
 

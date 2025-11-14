@@ -16,7 +16,12 @@
 先 cd 到 miniprogram 目录下，执行 npm install，然后点击 微信开发者工具的上 tab 栏的工具 下拉点击构建npm。 即可完成项目初始化
 
 ## 开发规范
+### 样式规范
 字体单位统一使用 rpx，rpx（Responsive Pixel，响应式像素）是微信小程序中特有的一种长度单位，主要用于解决不同设备屏幕尺寸下的界面适配问题。
 其核心设计思想是：将所有设备的屏幕宽度统一规定为 750rpx，无论设备实际的物理宽度是多少，开发者只需按照 750rpx 作为基准进行布局，小程序会自动根据当前设备的屏幕宽度，将 rpx 单位转换为对应的物理像素（px），从而实现界面在不同设备上的自适应显示。 举个例子: 在iphone 6（宽度为375px）下 每1px为2rpx
 
+
+### 接口调用规范
 ** 所有页面不得调用除了 apiService 之外的 接口方法 **
+调用逻辑一般情况 遵循从高到低：从 页面js -> apiService -> xxxService -> requestUtil(request.js)
+** 若未来新增 Tab，只需在对应页 onShow 设置 activeTabIndex 以适配其它页面点击 browse tab 不跳转。 **

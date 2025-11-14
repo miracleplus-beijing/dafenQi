@@ -147,6 +147,10 @@ Page({
 
   onShow: function () {
     console.log('分类页面显示');
+    try {
+      const app = getApp();
+      app.globalData.activeTabIndex = 1;
+    } catch (_) {}
 
     // 页面进入动画
     this.enterAnimation();
