@@ -1,7 +1,6 @@
 // 漫游页面逻辑
 const app = getApp();
 const apiService = require('../../services/api.service.js');
-const audioPreloader = require('../../services/audio-preloader.service.js');
 const authService = require('../../services/auth.service.js');
 const {getImageUrl} = require('../../config/image-urls.js');
 
@@ -275,7 +274,7 @@ Page({
 
     // 智能降级的个性化推荐加载
     async loadPersonalizedRecommendations() {
-        const userInfo = authService.getCurrentUser();
+        const userInfo = authService?.getCurrentUser();
         this.setData({recommendationsLoading: true});
 
         // 智能降级逻辑：优先尝试个性化推荐
@@ -404,7 +403,7 @@ Page({
                 this.triggerAutoPlay();
             }, 500);
         }
-        const user = authService.getCurrentUser();
+        const user = authService?.getCurrentUser();
         // 记录推荐点击行为，用于优化推荐算法（使用防护代码）
         try {
             // 防护检查：确保方法存在
@@ -637,9 +636,6 @@ Page({
             this.data.audioContext.destroy();
         }
 
-        // 清理预加载资源
-        this.cleanupPreloadedAudio();
-        audioPreloader.destroyAll();
 
         if (this._justNavigatedTimer) {
             clearTimeout(this._justNavigatedTimer);
@@ -666,29 +662,6 @@ Page({
         console.log('页面定时器已清理');
     },
 
-    // 页面性能监控
-    onPagePerformance: function () {
-        // 简单的性能监控
-        const performance = wx.getPerformance ? wx.getPerformance() : null;
-        if (performance) {
-            console.log('页面性能数据:', {
-                navigationStart: performance.navigationStart,
-                loadEventEnd: performance.loadEventEnd,
-                loadTime: performance.loadEventEnd - performance.navigationStart,
-            });
-        }
-    },
-
-    // 获取当前用户ID
-    getCurrentUserId() {
-        try {
-            // 如果全局状态没有，尝试从本地存储获取
-            return authService.getCurrentUser().id;
-        } catch (error) {
-            console.info('无法获取 userId，返回 null:', error);
-            return null;
-        }
-    },
 
     // 根据频道名称获取对应的封面URL
     getPodcastCoverUrl: function (channelName, originalCoverUrl) {
@@ -717,7 +690,9 @@ Page({
 
     // 初始化音频上下文
     initAudioContext: function () {
-        const audioContext = wx.createInnerAudioContext();
+        const audioContext = wx.createInnerAudioContext({
+          useWebAudioImplement: true
+      });
         this.rebindAudioEvents(audioContext);
         this.setData({audioContext});
     },
@@ -768,12 +743,6 @@ Page({
                     totalTimeFormatted: this.formatTime(duration),
                 });
 
-                // 触发预加载检查（增强版：支持分块预加载）
-                audioPreloader.onProgressUpdate(
-                    progressRatio,
-                    this.data.currentIndex,
-                    currentTime
-                );
             }
         });
 
@@ -846,36 +815,19 @@ Page({
 
                         // 检查收藏状态
                         let isFavorited = false;
-                        try {
-                            // 首先检查全局状态
-                            const app = getApp();
-                            const favoriteList = app.globalData.favoriteList || [];
-                            isFavorited = favoriteList.some(fav => fav.id === podcast.id);
-
-                            // 如果用户已登录，也检查数据库状态（但不等待）
-                            const userId = this.getCurrentUserId();
-                            if (userId && !isFavorited) {
-                                const audioService = require('../../services/audio.service.js');
-                                audioService
-                                    .checkIsFavorited(userId, podcast.id)
-                                    .then(dbFavorited => {
-                                        if (dbFavorited && !isFavorited) {
-                                            // 如果数据库显示已收藏但本地没有，更新本地状态
-                                            console.log(
-                                                '发现数据库收藏状态不同步，更新本地状态:',
-                                                podcast.title
-                                            );
-                                            this.updatePodcastFavoriteState(podcast.id, true);
-                                        }
-                                    })
-                                    .catch(error => {
-                                        console.warn('检查数据库收藏状态失败:', error);
-                                    });
-                            }
-                        } catch (error) {
-                            console.warn('检查收藏状态失败:', error);
+                        // 如果用户已登录，也检查数据库状态（但不等待）
+                        const userId = authService?.getCurrentUser()?.id;
+                        if (userId && !isFavorited) {
+                          const audioService = require('../../services/audio.service.js');
+                          audioService.checkIsFavorited(userId, podcast.id)
+                            .then(dbFavorited => {
+                              this.updatePodcastFavoriteState(podcast.id, true);
+                            })
+                            .catch(error => {
+                                console.warn('检查数据库收藏状态失败:', error);
+                            });
                         }
-
+                        
                         return {
                             id: podcast.id,
                             title: podcast.title,
@@ -951,11 +903,7 @@ Page({
 
                     this.loadPlayProgress(0);
 
-                    // 初始化音频预加载服务
-                    audioPreloader.initialize(finalPodcastList, 0);
-                } else {
-                    // 更新预加载服务的播客列表
-                    audioPreloader.podcastList = finalPodcastList;
+                
                 }
             } else {
                 console.error('播客数据加载失败:', result);
@@ -1117,15 +1065,8 @@ Page({
             this.loadFloatingComment(currentPodcast.id);
         }
 
-        // 更新预加载服务的当前位置
-        audioPreloader.updateCurrentIndex(currentIndex);
-
         // 加载新播客的播放进度（延迟执行，确保状态更新完成）
-        setTimeout(() => {
             this.loadPlayProgress(currentIndex);
-        }, 100);
-
-        // 标题滚动现在使用纯CSS实现，无需JavaScript干预
 
         // 自动播放新播客（仅在启用自动播放时）
         if (this.data.autoPlayOnSwipe && podcastList[currentIndex]) {
@@ -1191,144 +1132,14 @@ Page({
             console.log('继续播放当前音频');
             this.hideCustomLoading();
 
-            // 如果有保存的播放进度且还未应用，先应用进度
-            if (this.savedProgress && this.savedProgress > 0) {
-                console.log('应用保存的播放进度:', this.savedProgress);
-                audioContext.seek(this.savedProgress);
-                this.savedProgress = 0;
-            }
 
             audioContext.play();
         }
 
-        // 触发音频预加载机制
-        this.triggerPreloading();
     },
 
-    // 切换音频源的处理函数
-    switchAudioSource: function (currentPodcast, newSrc) {
-        const {audioContext} = this.data;
 
-        // 检查是否有预加载的音频
-        const preloadedAudio = audioPreloader.getPreloadedAudio(newSrc);
 
-        if (preloadedAudio) {
-            console.log('🚀 使用预加载音频，快速切换');
-            this.usePreloadedAudio(preloadedAudio);
-        } else {
-            console.log('📱 标准音频加载流程');
-            this.loadNewAudio(audioContext, newSrc);
-        }
-    },
-
-    // 使用预加载音频
-    usePreloadedAudio: function (preloadedAudio) {
-        const {audioContext} = this.data;
-
-        this.hideCustomLoading();
-
-        // 停止当前音频
-        audioContext.stop();
-
-        // 销毁当前音频上下文，使用预加载的
-        if (audioContext && typeof audioContext.destroy === 'function') {
-            audioContext.destroy();
-        }
-
-        // 使用预加载的音频上下文
-        this.setData({audioContext: preloadedAudio});
-
-        // 重新绑定事件监听器
-        this.rebindAudioEvents(preloadedAudio);
-
-        // 如果有保存的播放进度，跳转到指定位置
-        if (this.savedProgress && this.savedProgress > 0) {
-            console.log('恢复预加载音频播放进度到:', this.savedProgress);
-            preloadedAudio.seek(this.savedProgress);
-            this.savedProgress = 0;
-        }
-
-        // 立即播放
-        preloadedAudio.play();
-    },
-
-    // 加载新音频
-    loadNewAudio: function (audioContext, newSrc) {
-        // 停止当前音频
-        audioContext.stop();
-
-        // 设置新的音频源
-        audioContext.src = newSrc;
-
-        // 重置播放状态
-        this.setData({
-            audioDuration: 0,
-            totalTimeFormatted: '0:00',
-        });
-
-        let loadingHandled = false;
-
-        // 添加音频加载超时处理 - 减少到6秒
-        const loadingTimeout = setTimeout(() => {
-            if (!loadingHandled) {
-                loadingHandled = true;
-                this.hideCustomLoading();
-                this.setData({isPlaying: false});
-
-                console.error('音频加载超时，尝试重新加载');
-                this.retryAudioLoading(audioContext, newSrc);
-            }
-        }, 6000);
-
-        // 监听首次canplay事件
-        const onCanplayOnce = () => {
-            if (loadingHandled) return;
-            loadingHandled = true;
-
-            clearTimeout(loadingTimeout);
-            this.hideCustomLoading();
-            audioContext.offCanplay(onCanplayOnce);
-
-            console.log('音频加载完成，可以播放');
-
-            // 如果有保存的播放进度，跳转到指定位置
-            if (this.savedProgress && this.savedProgress > 0) {
-                console.log('恢复播放进度到:', this.savedProgress);
-                audioContext.seek(this.savedProgress);
-                this.savedProgress = 0;
-            }
-        };
-
-        audioContext.onCanplay(onCanplayOnce);
-
-        // 开始播放
-        audioContext.play();
-    },
-
-    // 重试音频加载
-    retryAudioLoading: function (audioContext, audioUrl) {
-        console.log('重试加载音频:', audioUrl);
-
-        wx.showModal({
-            title: '加载失败',
-            content: '音频加载超时，是否重试？',
-            confirmText: '重试',
-            cancelText: '取消',
-            success: res => {
-                if (res.confirm) {
-                    // 重新创建音频上下文
-                    const newAudioContext = wx.createInnerAudioContext({
-                        useWebAudioImplement: false
-                    });
-                    this.setData({audioContext: newAudioContext});
-                    this.rebindAudioEvents(newAudioContext);
-
-                    // 重新开始加载
-                    this.loadNewAudio(newAudioContext, audioUrl);
-                }
-            },
-        });
-    },
 
     // ========== Slider 交互事件处理 ==========
 
@@ -1490,7 +1301,7 @@ Page({
         this.updateFavoriteStatus(
             currentPodcast.id,
             newIsFavorited,
-            this.getCurrentUserId()
+            authService?.getCurrentUser()?.id
         );
     },
 
@@ -1764,7 +1575,7 @@ Page({
             return;
         }
 
-        const userId = this.getCurrentUserId();
+        const userId = authService?.getCurrentUser()?.id;
         if (!userId) {
             wx.showToast({
                 title: '请先登录',
@@ -1839,7 +1650,7 @@ Page({
 
     async handleLikeComment(e) {
         const commentId = (e && e.detail && e.detail.id) || (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.commentId);
-        const userId = this.getCurrentUserId();
+        const userId = authService?.getCurrentUser()?.id;
 
         if (!userId) {
             wx.showToast({
@@ -2124,8 +1935,7 @@ Page({
 
         try {
             wx.setStorageSync(progressKey, {
-                position: audioPosition,
-                timestamp: Date.now(),
+                position: audioPosition
             });
         } catch (error) {
             console.error('保存播放进度失败:', error);
@@ -2141,70 +1951,38 @@ Page({
         const podcast = podcastList[index];
         const progressKey = `podcast_progress_${podcast.id}`;
 
-        try {
-            const progress = wx.getStorageSync(progressKey);
+        const progress = wx.getStorageSync(progressKey);
 
-            if (progress && progress.position > 0) {
-                // 获取当前播客的时长信息
-                const currentPodcast = podcastList[index];
-                const duration =
-                    currentPodcast?.duration || this.data.audioDuration || 0;
+        if (progress && progress.position > 0) {
+            // 获取当前播客的时长信息
+            const currentPodcast = podcastList[index];
+            const duration =
+                currentPodcast?.duration || this.data.audioDuration || 0;
 
-                // 只有在有有效时长时才计算进度百分比，否则保持为0
-                let progressPercentage = 0;
-                if (duration > 0) {
-                    progressPercentage = (progress.position / duration) * 100;
-                }
-
-                // 更新UI显示的播放进度，但不立即seek音频
-                this.setData({
-                    audioPosition: progress.position,
-                    currentProgress: progressPercentage,
-                    currentTimeFormatted: this.formatTime(progress.position),
-                    // 如果当前播客有duration信息，同时更新audioDuration
-                    ...(currentPodcast?.duration
-                        ? {audioDuration: currentPodcast.duration}
-                        : {}),
-                });
-
-                // 保存进度信息，供播放时使用
-                this.savedProgress = progress.position;
-
-                // 在自动播放场景下，跳过询问直接使用保存的进度
-                if (!this.data.autoPlayOnSwipe) {
-                    wx.showModal({
-                        title: '继续播放',
-                        content: `检测到上次播放进度，是否从 ${Math.floor(progress.position / 60)}:${Math.floor(
-                            progress.position % 60
-                        )
-                            .toString()
-                            .padStart(2, '0')} 继续播放？`,
-                        success: res => {
-                            if (!res.confirm) {
-                                // 用户选择从头开始播放，重置进度
-                                this.setData({
-                                    audioPosition: 0,
-                                    currentProgress: 0,
-                                    currentTimeFormatted: '0:00',
-                                });
-                                this.savedProgress = 0;
-                            }
-                        },
-                    });
-                }
-            } else {
-                // 没有保存的进度，确保完全重置状态
-                this.setData({
-                    audioPosition: 0,
-                    currentProgress: 0,
-                    currentTimeFormatted: '0:00',
-                });
-                this.savedProgress = 0;
-                console.log('没有保存的播放进度，重置为初始状态:', podcast.title);
+            // 只有在有有效时长时才计算进度百分比，否则保持为0
+            let progressPercentage = 0;
+            if (duration > 0) {
+                progressPercentage = (progress.position / duration) * 100;
             }
-        } catch (error) {
-            console.error('加载播放进度失败:', error);
-            this.savedProgress = 0;
+
+            // 更新UI显示的播放进度，但不立即seek音频
+            this.setData({
+                audioPosition: progress.position,
+                currentProgress: progressPercentage,
+                currentTimeFormatted: this.formatTime(progress.position),
+                // 如果当前播客有duration信息，同时更新audioDuration
+                ...(currentPodcast?.duration
+                    ? {audioDuration: currentPodcast.duration}
+                    : {}),
+            });
+        } else {
+            // 没有保存的进度，确保完全重置状态
+            this.setData({
+                audioPosition: 0,
+                currentProgress: 0,
+                currentTimeFormatted: '0:00',
+            });
+            console.log('没有保存的播放进度，重置为初始状态:', podcast.title);
         }
     },
 
@@ -2250,26 +2028,7 @@ Page({
     },
 
 
-    // 触发预加载机制
-    triggerPreloading() {
-        const {podcastList, currentIndex} = this.data;
 
-        if (podcastList.length > 0) {
-            console.log('🚀 触发音频预加载机制');
-            audioPreloader.initialize(podcastList, currentIndex);
-
-            // 获取预加载统计信息
-            const stats = audioPreloader.getStats();
-            console.log('预加载统计:', stats);
-        }
-    },
-
-    // 清理预加载资源
-    cleanupPreloadedAudio() {
-        console.log('🧹 清理预加载音频资源');
-        audioPreloader.cleanExpiredCache();
-        audioPreloader.cleanDistantPreloads(this.data.currentIndex);
-    },
 
     hideCustomLoading() {
         this.setData({
@@ -2292,8 +2051,7 @@ Page({
             return;
         }
 
-        console.log('🎵 开始自动播放:', currentPodcast.title);
-
+        console.log('开始自动播放:', currentPodcast.title);
 
         // 检查是否需要切换音频源
         const currentSrc = audioContext.src || '';
@@ -2304,27 +2062,8 @@ Page({
             console.log('设置新音频源进行自动播放');
 
             // 检查是否有预加载的音频
-            const audioPreloader = require('../../services/audio-preloader.service.js');
-            const preloadedAudio = audioPreloader.getPreloadedAudio(newSrc);
 
-            if (preloadedAudio) {
-                console.log('🚀 使用预加载音频进行自动播放');
-                this.hideCustomLoading();
-
-                // 停止并尝试销毁当前音频（加防护，避免底层对象已无效时报错）
-                try { audioContext && typeof audioContext.stop === 'function' && audioContext.stop(); } catch (_) {}
-                try { audioContext && typeof audioContext.destroy === 'function' && audioContext.destroy(); } catch (e) { console.warn('destroy 音频上下文失败，忽略:', e); }
-
-                // 使用预加载的音频上下文
-                const newAudioContext = preloadedAudio;
-                this.setData({audioContext: newAudioContext});
-
-                // 重新绑定事件监听器
-                this.rebindAudioEvents(newAudioContext);
-
-                // 立即播放
-                newAudioContext.play();
-            } else {
+          
                 console.log('📱 标准音频加载流程进行自动播放');
 
                 // 停止当前音频（加防护）
@@ -2365,15 +2104,12 @@ Page({
 
                 // 开始播放
                 audioContext.play();
-            }
+            
         } else {
             // 继续播放当前音频
             this.hideCustomLoading();
             audioContext.play();
         }
 
-
-        // 触发音频预加载机制
-        this.triggerPreloading();
     },
 });
