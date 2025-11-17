@@ -290,18 +290,29 @@ class AuthService {
       if (sessionResult.data) {
         const user = sessionResult.data.user;
         const avatarUrl = this.getAvatarDisplayUrl({
-          avatar_url: user.user_metadata?.avatar_url,
-        });
+          avatar_url: user?.user_metadata?.avatar_url || user?.avatar_url || null       
+         });
+        // const currentUser = {
+        //   id: user.id,
+        //   email: user.email,
+        //   nickName: user?.user_metadata.nickname || '微信用户', // 统一使用nickName
+        //   avatarUrl: avatarUrl, // 使用动态生成的头像URL
+        //   nickname: user?.user_metadata.nickname || '微信用户', // 保持兼容性
+        //   avatar_url: avatarUrl, // 原始avatar_url用于重新生成
+        //   wechat_openid: user?.user_metadata.wechat_openid,
+        //   display_name: user?.user_metadata.nickname || '微信用户',
+        //   has_user_info: !!(user?.user_metadata.nickname && avatarUrl),
+        // };
         const currentUser = {
           id: user.id,
-          email: user.email,
-          nickName: user?.user_metadata.nickname || '微信用户', // 统一使用nickName
+          email: user?.email,
+          nickName: user?.nickname || '微信用户', // 统一使用nickName
           avatarUrl: avatarUrl, // 使用动态生成的头像URL
-          nickname: user?.user_metadata.nickname || '微信用户', // 保持兼容性
+          nickname: user?.nickname || '微信用户', // 保持兼容性
           avatar_url: avatarUrl, // 原始avatar_url用于重新生成
-          wechat_openid: user?.user_metadata.wechat_openid,
-          display_name: user?.user_metadata.nickname || '微信用户',
-          has_user_info: !!(user?.user_metadata.nickname && avatarUrl),
+          wechat_openid: user?.wechat_openid,
+          display_name: user?.nickname || '微信用户',
+          has_user_info: !!(user?.nickname && avatarUrl),
         };
         return { data: currentUser, error: null };
       }
@@ -694,7 +705,6 @@ class AuthService {
   getCurrentUser() {
     // 优先从Supabase Auth获取
     const userResult = this.getUser();
-    //
     console.log('处理后的user:' + userResult);
     if (userResult.data) {
       const user = userResult.data;
