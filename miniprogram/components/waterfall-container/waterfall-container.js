@@ -13,6 +13,10 @@ Component({
     waterfallRefreshing: false,
     hasMoreWaterfallData: true,
 
+    // 分页控制
+    currentPage: 1,
+    pageSize: 20,
+
     // 搜索筛选
     searchKeyword: '',
     filterOptions: {
@@ -29,8 +33,9 @@ Component({
 
   lifetimes: {
     attached() {
-          this.loadWaterfallData(false);
-
+      // 初始化已加载播客ID集合（不放在data中避免序列化问题）
+      this.loadedPodcastIds = new Set();
+      this.loadWaterfallData(false);
     }
   },
 
@@ -56,7 +61,19 @@ Component({
       try {
         if (this.data.waterfallLoading) return;
 
+        // 如果没有更多数据，直接返回
+        if (loadMore && !this.data.hasMoreWaterfallData) {
+          return;
+        }
+
         if (!loadMore) {
+          // 重新加载：重置分页和已加载ID
+          this.setData({
+            currentPage: 1,
+            hasMoreWaterfallData: true
+          });
+          this.loadedPodcastIds.clear();
+
           if (!this.data.waterfallRefreshing) {
             this.setData({ loading: true, waterfallLoading: false });
           }
@@ -64,23 +81,47 @@ Component({
           this.setData({ waterfallLoading: true });
         }
 
-        const batchSize = loadMore ? 10 : 20;
-        const result = await this.fetchPodcastsFromDatabase(1, { limit: batchSize });
+        const batchSize = loadMore ? 10 : this.data.pageSize;
+        const pageToLoad = loadMore ? this.data.currentPage + 1 : this.data.currentPage;
+
+        const result = await this.fetchPodcastsFromDatabase(pageToLoad, { limit: batchSize });
 
         if (result.success && result.data.length > 0) {
-          const processedData = await this.processPodcastData(result.data);
-          const finalWaterfallList = loadMore
-            ? [...this.data.waterfallList, ...processedData]
-            : processedData;
+          // 过滤重复数据
+          const newPodcasts = result.data.filter(item => !this.loadedPodcastIds.has(item.id));
 
-          this.setData({
-            waterfallList: finalWaterfallList,
-            loading: this.data.waterfallRefreshing ? this.data.loading : false,
-            waterfallLoading: false,
-          });
+          if (newPodcasts.length > 0) {
+            const processedData = await this.processPodcastData(newPodcasts);
 
-          this.throttledRedistributeData(finalWaterfallList);
+            // 更新已加载ID集合
+            newPodcasts.forEach(item => this.loadedPodcastIds.add(item.id));
+
+            const finalWaterfallList = loadMore
+              ? [...this.data.waterfallList, ...processedData]
+              : processedData;
+
+            // 检查是否还有更多数据
+            const hasMoreData = result.data.length === batchSize && newPodcasts.length === result.data.length;
+
+            this.setData({
+              waterfallList: finalWaterfallList,
+              currentPage: pageToLoad,
+              hasMoreWaterfallData: hasMoreData,
+              loading: this.data.waterfallRefreshing ? this.data.loading : false,
+              waterfallLoading: false,
+            });
+
+            this.throttledRedistributeData(finalWaterfallList);
+          } else {
+            // 所有数据都是重复的，标记没有更多数据
+            this.setData({
+              hasMoreWaterfallData: false,
+              loading: this.data.waterfallRefreshing ? this.data.loading : false,
+              waterfallLoading: false,
+            });
+          }
         } else {
+          // 没有获取到数据，标记没有更多数据
           this.setData({
             loading: this.data.waterfallRefreshing ? this.data.loading : false,
             waterfallLoading: false,
@@ -150,22 +191,32 @@ Component({
     },
     handleWaterfallSearchClear() {
       this.setData({ searchKeyword: '', isSearchMode: false });
-      this.loadWaterfallData(false);
+      this.resetAndReload();
     },
     performWaterfallSearch(keyword) {
       if (!keyword || !keyword.trim()) return;
       this.setData({ isSearchMode: true, searchKeyword: keyword });
-      this.loadWaterfallData(false);
+      this.resetAndReload();
     },
     handleWaterfallFilterChange(e) {
       const { type, value } = e.detail;
       this.setData({ [`filterOptions.${type}`]: value });
-      this.loadWaterfallData(false);
+      this.resetAndReload();
     },
     handleWaterfallClearFilters() {
       this.setData({
         filterOptions: { category: '', timeRange: '', sortType: 'latest' },
       });
+      this.resetAndReload();
+    },
+
+    // 重置分页状态并重新加载
+    resetAndReload() {
+      this.setData({
+        currentPage: 1,
+        hasMoreWaterfallData: true
+      });
+      this.loadedPodcastIds.clear();
       this.loadWaterfallData(false);
     },
 
@@ -184,24 +235,43 @@ Component({
 
     async refreshWaterfallData() {
       try {
+        // 重置分页状态
+        this.setData({
+          currentPage: 1,
+          hasMoreWaterfallData: true
+        });
+        this.loadedPodcastIds.clear();
+
         let newWaterfallList = [];
-        const batchSize = 20;
+        const batchSize = this.data.pageSize;
         const result = await this.fetchPodcastsFromDatabase(1, { limit: batchSize });
+
         if (result.success && result.data.length > 0) {
           const processedData = await this.processPodcastData(result.data);
+
+          // 更新已加载ID集合
+          result.data.forEach(item => this.loadedPodcastIds.add(item.id));
+
           newWaterfallList = processedData;
+
           this.setData({
             waterfallList: newWaterfallList,
+            currentPage: 1,
             hasMoreWaterfallData: result.data.length === batchSize,
           });
+
           this.throttledRedistributeData(newWaterfallList);
+
           setTimeout(() => {
             this.setData({ waterfallRefreshing: false });
             wx.showToast({ title: '刷新成功', icon: 'success', duration: 1000 });
           }, 300);
         } else {
           setTimeout(() => {
-            this.setData({ waterfallRefreshing: false });
+            this.setData({
+              waterfallRefreshing: false,
+              hasMoreWaterfallData: false
+            });
             wx.showToast({ title: '暂无新内容', icon: 'none', duration: 1000 });
           }, 300);
         }
