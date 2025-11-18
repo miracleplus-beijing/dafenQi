@@ -157,6 +157,16 @@ class CommentService {
 
       if (result.success && result.data.length > 0) {
         console.log('评论发表成功');
+
+        // 同步增加评论量
+        try {
+          const apiService = require('./api.service.js');
+          await apiService.stats.incrementCommentCount(podcastId);
+          console.log(`播客 ${podcastId} 评论量已增加`);
+        } catch (error) {
+          console.warn('增加评论量失败，但不影响评论发表:', error);
+        }
+
         return {
           success: true,
           data: result.data[0],

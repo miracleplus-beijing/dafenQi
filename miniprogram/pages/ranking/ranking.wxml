@@ -30,7 +30,7 @@
           <view class="ranking-title">{{item.title}}</view>
           <view class="ranking-channel">{{item.channel}}</view>
         </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg"
                class="ranking-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
       </view>
     </view>
@@ -48,7 +48,7 @@
           <view class="ranking-title">{{item.title}}</view>
           <view class="ranking-channel">{{item.channel}}</view>
         </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg"
                class="ranking-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
       </view>
     </view>
@@ -66,7 +66,7 @@
           <view class="ranking-title">{{item.title}}</view>
           <view class="ranking-channel">{{item.channel}}</view>
         </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" 
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg"
                class="ranking-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
       </view>
     </view>

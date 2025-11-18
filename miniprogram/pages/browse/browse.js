@@ -2081,22 +2081,9 @@ Page({
                     totalTimeFormatted: '0:00',
                 });
 
-                // 添加音频加载超时处理
-                const loadingTimeout = setTimeout(() => {
-                    this.hideCustomLoading();
-                    this.setData({isPlaying: false});
-                    console.log('自动播放音频加载超时');
-                    // 自动播放失败时，给用户友好提示
-                    wx.showToast({
-                        title: '播放超时，请手动重试',
-                        icon: 'none',
-                        duration: 2000,
-                    });
-                }, 8000); // 8秒超时
 
                 // 监听首次canplay事件来隐藏loading
                 const onCanplayOnce = () => {
-                    clearTimeout(loadingTimeout);
                     this.hideCustomLoading();
                     audioContext.offCanplay(onCanplayOnce);
                 };

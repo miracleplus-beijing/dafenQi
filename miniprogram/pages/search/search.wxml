@@ -60,7 +60,7 @@
               <view wx:if="{{item.duration}}" class="podcast-duration">{{item.duration}}分钟</view>
             </view>
             <!-- 播放按钮 -->
-            <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/player-play-small.svg" 
+            <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/icons/player-play-small.svg"
                    class="podcast-play" alt="播放"></image>
           </view>
         </view>

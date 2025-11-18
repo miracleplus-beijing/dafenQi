@@ -6,6 +6,7 @@ const commentService = require('./comment.service.js');
 const insightService = require('./insight.service.js');
 const audioService = require('./audio.service.js');
 
+
 class ApiService {
   constructor() {
     this.auth = authService;
@@ -165,6 +166,14 @@ class ApiService {
           }
         );
 
+        // 同步减少收藏量
+        try {
+          await apiService.stats.decrementFavoriteCount(podcastId);
+          console.log(`播客 ${podcastId} 收藏量已减少`);
+        } catch (error) {
+          console.warn('减少收藏量失败，但不影响取消收藏操作:', error);
+        }
+
         return {
           success: true,
         };
@@ -198,6 +207,14 @@ class ApiService {
           play_duration: 0,
           played_at: new Date().toISOString(),
         });
+
+        // 同步增加播放量
+        try {
+          await apiService.stats.incrementPlayCount(podcastId);
+          console.log(`播客 ${podcastId} 播放量已增加`);
+        } catch (error) {
+          console.warn('增加播放量失败，但不影响历史记录添加:', error);
+        }
 
         return {
           success: true,
@@ -540,6 +557,141 @@ class ApiService {
         };
       } catch (error) {
         console.error('获取播客统计失败:', error);
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+    },
+
+    // 增加播客播放量
+    incrementPlayCount: async podcastId => {
+      try {
+        // 先获取当前播放量，然后增加
+        const result = await requestUtil.post(
+          `/rest/v1/rpc/increment_play_count`,
+          {
+            "podcast_id": podcastId
+          }
+        );
+          
+        console.log("博客浏览量自增成功，数量：" + result)
+
+          return {
+            success: true,
+            data: result
+          };
+
+      } catch (error) {
+        console.error('增加浏览量失败:', error);
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+    },
+
+    // 增加播客收藏量
+    incrementFavoriteCount: async podcastId => {
+      try {
+        // 先获取当前收藏量，然后增加
+        const currentData = await requestUtil.get(`/rest/v1/podcasts?id=eq.${podcastId}&select=favorite_count`);
+
+        if (currentData && currentData.length > 0) {
+          const currentCount = currentData[0].favorite_count || 0;
+          const newCount = currentCount + 1;
+
+          const result = await requestUtil.patch(`/rest/v1/podcasts?id=eq.${podcastId}`, {
+            favorite_count: newCount,
+            updated_at: new Date().toISOString()
+          }, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            }
+          });
+
+          return {
+            success: true,
+            data: result,
+          };
+        } else {
+          throw new Error('播客不存在');
+        }
+      } catch (error) {
+        console.error('增加收藏量失败:', error);
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+    },
+
+    // 减少播客收藏量
+    decrementFavoriteCount: async podcastId => {
+      try {
+        // 先获取当前收藏量，然后减少
+        const currentData = await requestUtil.get(`/rest/v1/podcasts?id=eq.${podcastId}&select=favorite_count`);
+
+        if (currentData && currentData.length > 0) {
+          const currentCount = currentData[0].favorite_count || 0;
+          const newCount = Math.max(currentCount - 1, 0); // 确保不会变成负数
+
+          const result = await requestUtil.patch(`/rest/v1/podcasts?id=eq.${podcastId}`, {
+            favorite_count: newCount,
+            updated_at: new Date().toISOString()
+          }, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            }
+          });
+
+          return {
+            success: true,
+            data: result,
+          };
+        } else {
+          throw new Error('播客不存在');
+        }
+      } catch (error) {
+        console.error('减少收藏量失败:', error);
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+    },
+
+    // 增加播客评论量
+    incrementCommentCount: async podcastId => {
+      try {
+        // 先获取当前评论量，然后增加
+        const currentData = await requestUtil.get(`/rest/v1/podcasts?id=eq.${podcastId}&select=comment_count`);
+
+        if (currentData && currentData.length > 0) {
+          const currentCount = currentData[0].comment_count || 0;
+          const newCount = currentCount + 1;
+
+          const result = await requestUtil.patch(`/rest/v1/podcasts?id=eq.${podcastId}`, {
+            comment_count: newCount,
+            updated_at: new Date().toISOString()
+          }, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            }
+          });
+
+          return {
+            success: true,
+            data: result,
+          };
+        } else {
+          throw new Error('播客不存在');
+        }
+      } catch (error) {
+        console.error('增加评论量失败:', error);
         return {
           success: false,
           error: error.message,

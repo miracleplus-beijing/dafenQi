@@ -55,7 +55,7 @@
     <view wx:if="{{!showUserInfoForm}}" class="agreement-section">
       <view class="agreement-checkbox" bindtap="toggleAgreement">
         <image 
-          src="{{isAgreed ? 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/login-agree-checked.svg' : 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/login-agree-unchecked.svg'}}" 
+          src="{{isAgreed ? 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/login-agree-checked.svg' : 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/login-agree-unchecked.svg'}}"
           class="checkbox-icon"
         ></image>
         <text class="agreement-text">登录即同意<text class="link-text" catchtap="showUserAgreement">《用户协议》</text>和<text class="link-text" catchtap="showPrivacyPolicy">《隐私政策》</text></text>

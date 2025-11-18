@@ -118,18 +118,6 @@ class AudioService {
     }
   }
 
-  /**
-   * 增加播放次数
-   * @param {string} podcastId - 播客ID
-   */
-  async incrementPlayCount(podcastId) {
-    try {
-      const url = `${this.supabaseUrl}/rest/v1/rpc/increment_play_count`;
-      await this.makeRequest(url, 'POST', { podcast_id: podcastId });
-    } catch (error) {
-      console.warn('更新播放次数失败:', error);
-    }
-  }
 
   /**
    * 添加到收藏
@@ -158,6 +146,15 @@ class AudioService {
 
       // 需要用户认证
       await this.makeRequest(url, 'POST', data, true);
+
+      // 同步增加收藏量
+      try {
+        const apiService = require('./api.service.js');
+        await apiService.stats.incrementFavoriteCount(podcastId);
+        console.log(`播客 ${podcastId} 收藏量已增加`);
+      } catch (error) {
+        console.warn('增加收藏量失败，但不影响收藏操作:', error);
+      }
 
       return { success: true };
     } catch (error) {
