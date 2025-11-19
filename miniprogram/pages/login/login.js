@@ -227,7 +227,7 @@ Page({
       });
 
       // 检查用户是否已经登录
-      const isLoggedIn = await authService.checkLoginStatus();
+      const isLoggedIn = authService.checkLoginStatus();
       const currentUser = authService.getCurrentUser();
 
       let loginResult = null;

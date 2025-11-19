@@ -147,14 +147,7 @@ class AudioService {
       // 需要用户认证
       await this.makeRequest(url, 'POST', data, true);
 
-      // 同步增加收藏量
-      try {
-        const apiService = require('./api.service.js');
-        await apiService.stats.incrementFavoriteCount(podcastId);
-        console.log(`播客 ${podcastId} 收藏量已增加`);
-      } catch (error) {
-        console.warn('增加收藏量失败，但不影响收藏操作:', error);
-      }
+      console.log('添加收藏成功, podcastId：', podcastId);
 
       return { success: true };
     } catch (error) {
@@ -169,21 +162,51 @@ class AudioService {
   }
 
   /**
+   * 删除收藏
+   * @param {string} userId - 用户ID
+   * @param {string} podcastId - 播客ID
+   * @returns {Promise<Object>} 操作结果
+   */
+  async removeFromFavorites(userId, podcastId) {
+      try {
+        // 检查用户是否已登录
+        if (!this.isUserLoggedIn()) {
+          return {
+            success: false,
+            error: '请先登录后再取消收藏',
+            errorType: 'auth_required',
+          };
+        }
+
+        const url = `${this.supabaseUrl}/rest/v1/user_favorites?user_id=eq.${userId}&podcast_id=eq.${podcastId}`;
+
+        // 需要用户认证
+        await this.makeRequest(url, 'DELETE', null, true);
+        console.log('取消收藏成功, podcastId：', podcastId);
+  
+        return { success: true };
+      } catch (error) {
+        console.error('删除收藏失败:', error);
+        return {
+          success: false,
+          error: error.message.includes('权限不足')
+            ? '请先登录后再取消收藏'
+            : error.message,
+        };
+      }
+  }
+  /**
    * 检查是否已收藏
    * @param {string} userId - 用户ID
    * @param {string} podcastId - 播客ID
    * @returns {Promise<boolean>} 是否已收藏
    */
   async checkIsFavorited(userId, podcastId) {
-    try {
-      const url = `${this.supabaseUrl}/rest/v1/user_favorites?user_id=eq.${userId}&podcast_id=eq.${podcastId}&select=id`;
-      const response = await this.makeRequest(url, 'GET');
+    const url = `${this.supabaseUrl}/rest/v1/user_favorites?user_id=eq.${userId}&podcast_id=eq.${podcastId}&select=id`;
+    const response = await this.makeRequest(url, 'GET');
 
-      return response.data && response.data.length > 0;
-    } catch (error) {
-      console.error('检查收藏状态失败:', error);
-      return false;
-    }
+    return response.data && response.data.length > 0;
+    
   }
 
   /**

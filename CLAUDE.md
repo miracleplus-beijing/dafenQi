@@ -415,7 +415,7 @@ When modifying services, follow these patterns:
 4. Update user info: `await authService.updateUserInfo(userInfo)`
 
 ### Working with User Profiles
-1. Get complete profile: `await profileService.getUserCompleteProfile(userId)`
+1. Get complete profile: `await profileService.getCurrentUserCompleteProfile(userId)`
 2. Update profile: `await profileService.updateUserProfile(userId, updateData)`
 3. Check completeness: `profileService.checkProfileCompleteness(user)`
 4. Upload avatar: Include `avatarFile` in updateData for automatic private storage handling

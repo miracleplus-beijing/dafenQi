@@ -92,7 +92,7 @@ App({
     async checkLoginStatus() {
         try {
             if (this.globalData.authService) {
-                const isLoggedIn = await this.globalData.authService.checkLoginStatus();
+                const isLoggedIn = this.globalData.authService.checkLoginStatus();
                 console.log('登录状态检查结果:', isLoggedIn);
             } else {
                 // 兼容旧版本检查

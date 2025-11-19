@@ -69,10 +69,6 @@ Page({
         loginTipMessage: '', // 登录提示消息
         isPersonalized: true, // 是否为个性化推荐
 
-        // 个性化推荐相关
-        personalizedRecommendations: [], // 个性化推荐列表
-        recommendationsLoading: false, // 推荐加载状态
-        recommendationMode: 'personalized', // 固定为个性化推荐模式
 
         // 双模式状态
         browseMode: 'swiper', // 'swiper' | 'waterfall'
@@ -108,9 +104,6 @@ Page({
 
         // 初始化音频上下文
         this.initAudioContext();
-
-        // 获取用户个性化推荐（带智能降级）
-        this.loadPersonalizedRecommendations();
 
         // 处理来自搜索页面的播客跳转
         if (options.podcastId) {
@@ -205,151 +198,6 @@ Page({
         });
     },
 
-    // 处理播客数据（优化版）
-    async processPodcastData(rawData) {
-        return new Promise(resolve => {
-            // 使用setTimeout模拟异步处理，避免阻塞主线程
-            setTimeout(() => {
-                const processedData = rawData.map(podcast => {
-                    const channelName = podcast.channels
-                        ? podcast.channels.name
-                        : podcast.channel_name || '奇绩前沿信号';
-
-                    return {
-                        id: podcast.id,
-                        title: podcast.title,
-                        description: podcast.description,
-                        audio_url: podcast.audio_url,
-                        cover_url: this.getPodcastCoverUrl(channelName, podcast.cover_url),
-                        channel_name: channelName,
-                        duration: podcast.duration || 0,
-                        play_count: podcast.play_count || 0,
-                        like_count: podcast.like_count || 0,
-                        favorite_count: podcast.favorite_count || 0,
-                        created_at: podcast.created_at,
-                        isFavorited: false,
-                    };
-                });
-                resolve(processedData);
-            }, 0);
-        });
-    },
-
-    // 节流版本的数据重新分配
-    throttledRedistributeData: function (waterfallList) {
-        // 简单的节流实现
-        if (this._redistributeTimer) {
-            clearTimeout(this._redistributeTimer);
-        }
-
-        this._redistributeTimer = setTimeout(() => {
-            this.redistributeWaterfallData(waterfallList);
-        }, 100);
-    },
-
-    // 重新分配瀑布流双列数据
-    redistributeWaterfallData(waterfallList) {
-        const leftColumn = [];
-        const rightColumn = [];
-
-        // 简单的交替分配算法
-        waterfallList.forEach((item, index) => {
-            if (index % 2 === 0) {
-                leftColumn.push(item);
-            } else {
-                rightColumn.push(item);
-            }
-        });
-
-        this.setData({
-            leftColumnList: leftColumn,
-            rightColumnList: rightColumn,
-        });
-
-        console.log('双列数据分配完成:', {
-            left: leftColumn.length,
-            right: rightColumn.length,
-        });
-    },
-
-    // 智能降级的个性化推荐加载
-    async loadPersonalizedRecommendations() {
-        const userInfo = authService?.getCurrentUser();
-        this.setData({recommendationsLoading: true});
-
-        // 智能降级逻辑：优先尝试个性化推荐
-        if (userInfo) {
-            console.log('个性化未实现');
-            // console.log('尝试加载个性化推荐');
-            // const result =
-            //   await apiService.recommendation.getPersonalizedRecommendations(
-            //     userInfo.id,
-            //     {
-            //       algorithm: 'hybrid',
-            //       count: 20,
-            //       includeReasons: true,
-            //     }
-            //   );
-
-            // if (result.success) {
-            //   this.setData({
-            //     personalizedRecommendations: result.data || [],
-            //     recommendationsLoading: false,
-            //     isPersonalized: true,
-            //   });
-            //   console.log('个性化推荐加载成功');
-            //   return;
-            // } else if (result.needLogin) {
-            //   console.log('个性化推荐需要登录，降级到热门推荐');
-            //   this.showLoginTip('登录后可获得个性化推荐');
-            // } else {
-            //   console.warn('个性化推荐加载失败，降级到热门推荐:', result.error);
-            // }
-        } else {
-            console.log('用户未登录，直接使用热门推荐');
-        }
-
-        // 降级到热门推荐
-        await this.loadPopularRecommendations();
-    },
-
-    // 热门推荐降级方案
-    async loadPopularRecommendations() {
-        try {
-            // console.log('加载热门推荐作为降级方案');
-            // console.log()
-            // const result =
-            //   await apiService.recommendation.getPopularRecommendations(20);
-
-            const result = {
-                success: false,
-            };
-            if (result.success) {
-                this.setData({
-                    personalizedRecommendations: result.data || [],
-                    recommendationsLoading: false,
-                    isPersonalized: false,
-                });
-                console.log('热门推荐加载成功');
-            } else {
-                console.warn('热门推荐加载失败，使用静态内容');
-                this.showStaticContent();
-            }
-        } catch (error) {
-            console.error('热门推荐加载异常，使用静态内容:', error);
-            this.showStaticContent();
-        }
-    },
-
-    // 最后的降级：显示静态内容
-    showStaticContent() {
-        this.setData({
-            personalizedRecommendations: [],
-            recommendationsLoading: false,
-            isPersonalized: false,
-        });
-        console.log('使用静态内容作为最后降级方案');
-    },
 
     // 显示友好的登录提示
     showLoginTip(message) {
@@ -369,57 +217,6 @@ Page({
         wx.navigateTo({
             url: '/pages/login/login',
         });
-    },
-
-    // 处理推荐点击
-    handleRecommendationClick: async function (e) {
-        const podcast = e.currentTarget.dataset.podcast;
-        console.log('点击推荐播客:', podcast.title);
-
-        // 跳转到对应的播客
-        const targetIndex = this.data.podcastList.findIndex(
-            item => item.id === podcast.id
-        );
-
-        if (targetIndex >= 0) {
-            // 播客在当前列表中，直接跳转
-            this.setData({currentIndex: targetIndex});
-        } else {
-            // 播客不在当前列表中，插入到当前位置
-            const currentList = [...this.data.podcastList];
-            const currentIndex = this.data.currentIndex;
-
-            // 在当前位置后插入推荐播客
-            currentList.splice(currentIndex + 1, 0, podcast);
-
-            this.setData({
-                podcastList: currentList,
-                currentIndex: currentIndex + 1,
-                loadedPodcastIds: [...this.data.loadedPodcastIds, podcast.id],
-            });
-
-            // 自动播放插入的播客
-            setTimeout(() => {
-                this.triggerAutoPlay();
-            }, 500);
-        }
-        const user = authService?.getCurrentUser();
-        // 记录推荐点击行为，用于优化推荐算法（使用防护代码）
-        try {
-            // 防护检查：确保方法存在
-
-            await apiService.recommendation.recordRecommendationClick(
-                user.id,
-                podcast.id,
-                null, // recommendationId
-                null, // position
-                podcast.algorithm || 'unknown'
-            );
-            console.log('推荐点击行为已记录:', podcast.id);
-        } catch (error) {
-            console.error('记录推荐点击失败:', error);
-            // 点击记录失败不影响主要功能
-        }
     },
 
     // 处理来自搜索页面的播客
@@ -501,10 +298,8 @@ Page({
     onShow: function () {
         console.log('漫游页面显示');
 
-        try {
-            const app = getApp();
-            app.globalData.activeTabIndex = 0;
-        } catch (_) {}
+        const app = getApp();
+        app.globalData.activeTabIndex = 0;
 
         // 页面进入动画
         this.enterAnimation();
@@ -821,7 +616,7 @@ Page({
                           const audioService = require('../../services/audio.service.js');
                           audioService.checkIsFavorited(userId, podcast.id)
                             .then(dbFavorited => {
-                              this.updatePodcastFavoriteState(podcast.id, true);
+                              this.updatePodcastFavoriteState(podcast.id, dbFavorited);
                             })
                             .catch(error => {
                                 console.warn('检查数据库收藏状态失败:', error);
@@ -1227,7 +1022,7 @@ Page({
     },
 
     // 处理收藏 - 要求用户先登录
-    handleFavorite() {
+    handleFavorite: async function () {
         const {currentIndex, podcastList} = this.data;
         const currentPodcast = podcastList[currentIndex];
 
@@ -1244,7 +1039,9 @@ Page({
         this.setData({showMorePopup: false});
 
         // 检查用户登录状态
+        
         const loginStatus = authService.checkLoginStatus();
+        console.log(loginStatus)
         if (!loginStatus) {
             // 未登录用户，引导登录
             wx.showModal({
@@ -1263,98 +1060,56 @@ Page({
             return;
         }
 
+
+        
+
         const newIsFavorited = !currentPodcast.isFavorited;
-
-        // 立即更新UI状态（乐观更新）
-        const updatedPodcastList = [...podcastList];
-        updatedPodcastList[currentIndex] = {
-            ...currentPodcast,
-            isFavorited: newIsFavorited,
-        };
-
-        this.setData({
-            podcastList: updatedPodcastList,
-        });
-
-        // 立即给用户轻提示反馈
-        wx.showToast({
-            title: newIsFavorited ? '已添加到收藏' : '已取消收藏',
-            icon: 'success',
-            duration: 1500,
-        });
-
-        // 同时更新全局状态
-        const app = getApp();
-        if (newIsFavorited) {
-            app.addToFavorites({
-                id: currentPodcast.id,
-                title: currentPodcast.title,
-                cover_url: currentPodcast.cover_url,
-                channel: currentPodcast.channel_name,
-                favoriteTime: Date.now(),
-            });
-        } else {
-            app.removeFromFavorites(currentPodcast.id);
-        }
 
         // 异步处理数据库操作
         this.updateFavoriteStatus(
             currentPodcast.id,
             newIsFavorited,
             authService?.getCurrentUser()?.id
-        );
+        ).then((res) => {
+          // 给用户轻提示反馈
+          wx.showToast({
+            title: newIsFavorited ? '已添加到收藏' : '已取消收藏',
+            icon: 'success',
+            duration: 1500,
+          });
+
+          
+
+          const updatedPodcastList = [...podcastList];
+          updatedPodcastList[currentIndex] = {
+              ...currentPodcast,
+              isFavorited: newIsFavorited,
+          };
+
+          this.setData({
+              podcastList: updatedPodcastList,
+          });
+        })
     },
 
     // 异步更新收藏状态到数据库（仅登录用户）
     async updateFavoriteStatus(podcastId, isFavorited, userId) {
         try {
-            const audioService = require('../../services/audio.service.js');
 
             // 执行数据库操作
             let result;
             if (isFavorited) {
-                result = await apiService.fa(userId, podcastId);
+                result = await apiService.user.addFavorite(userId, podcastId);
             } else {
-                result = await audioService.removeFromFavorites(userId, podcastId);
+                result = await apiService.user.removeFavorite(userId, podcastId);
             }
 
-            if (result.success) {
+            if (result) {
                 console.log('收藏状态同步到数据库成功:', {podcastId, isFavorited});
 
-                // 记录推荐转化行为（使用防护代码避免方法不存在错误）
-                if (isFavorited) {
-                    const currentPodcast = this.data.podcastList[this.data.currentIndex];
-                    if (currentPodcast) {
-                        try {
-                            // 防护检查：确保方法存在
-                            if (
-                                apiService &&
-                                apiService.recommendation &&
-                                typeof apiService.recommendation.recordUserConversion ===
-                                'function'
-                            ) {
-                                await apiService.recommendation.recordUserConversion(
-                                    userId,
-                                    podcastId,
-                                    'favorite',
-                                    null,
-                                    currentPodcast.algorithm || 'unknown'
-                                );
-                                console.log('收藏转化已记录:', podcastId);
-                            } else {
-                                console.warn('推荐服务未完全初始化，跳过转化记录');
-                            }
-                        } catch (error) {
-                            console.error('记录收藏转化失败:', error);
-                            // 转化记录失败不影响主要功能
-                        }
-                    }
-                }
             } else {
-                // 数据库操作失败，回滚UI状态并提示用户
-                console.error('数据库收藏操作失败:', result.error);
-                this.rollbackFavoriteState(podcastId);
-
+                
+                console.error('数据库收藏操作失败:', result?.error);
                 // 延迟提示用户
                 setTimeout(() => {
                     wx.showToast({
@@ -1372,7 +1127,7 @@ Page({
 
             setTimeout(() => {
                 wx.showToast({
-                    title: '网络异常，请重试',
+                    title: `${error}`,
                     icon: 'none',
                     duration: 2000,
                 });
@@ -1393,20 +1148,6 @@ Page({
             };
             this.setData({podcastList: updatedPodcastList});
 
-            // 同时回滚全局状态
-            const app = getApp();
-            const podcast = updatedPodcastList[index];
-            if (podcast.isFavorited) {
-                app.addToFavorites({
-                    id: podcast.id,
-                    title: podcast.title,
-                    cover_url: podcast.cover_url,
-                    channel: podcast.channel_name,
-                    favoriteTime: Date.now(),
-                });
-            } else {
-                app.removeFromFavorites(podcast.id);
-            }
         }
     },
 
@@ -1423,20 +1164,6 @@ Page({
             };
             this.setData({podcastList: updatedPodcastList});
 
-            // 同时更新全局状态
-            const app = getApp();
-            const podcast = updatedPodcastList[index];
-            if (isFavorited) {
-                app.addToFavorites({
-                    id: podcast.id,
-                    title: podcast.title,
-                    cover_url: podcast.cover_url,
-                    channel: podcast.channel_name,
-                    favoriteTime: Date.now(),
-                });
-            } else {
-                app.removeFromFavorites(podcast.id);
-            }
         }
     },
 
@@ -1527,7 +1254,7 @@ Page({
     },
 
     handleOpenComments() {
-        console.log('打开评论弹窗');
+        console.log('打开评论弹窗')
 
         // 先关闭更多操作弹窗
         this.setData({

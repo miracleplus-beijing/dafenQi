@@ -232,32 +232,13 @@ class AuthService {
   getSession() {
     try {
       const session = wx.getStorageSync('supabase_session');
-      const lastLoginTime = wx.getStorageSync('lastLoginTime');
 
       if (!session) {
         return { data: null, error: null };
       }
 
-      // 只检查基本的时间过期（7天），移除复杂的JWT验证
-      const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
-      const isTimeExpired =
-        !lastLoginTime || Date.now() - lastLoginTime >= SESSION_DURATION;
-
-      if (isTimeExpired) {
-        console.log('Session时间已过期，清理存储');
-        this.clearStorageSession();
-        return { data: null, error: null };
-      }
-
-      // 基本结构检查（简化）
-      if (!session.access_token || !session.user || !session.user.id) {
-        console.warn('Session结构不完整，清理存储');
-        this.clearStorageSession();
-        return { data: null, error: null };
-      }
-
-      console.log('获取session，sessession.user:', session.user);
-      return { data: session, error: null };
+      console.log('获取session，sessession:', session);
+      return session;
     } catch (error) {
       console.error('从本地存储恢复session失败:', error);
       this.clearStorageSession();
@@ -282,45 +263,34 @@ class AuthService {
    * 获取当前认证用户 (异步方法，遵循Supabase最佳实践)
    * @returns {Promise<Object>} 当前用户结果
    */
-  getUser() {
+  getCurrentUser() {
     try {
       // 从存储恢复会话和用户信息
       const sessionResult = this.getSession();
 
-      if (sessionResult.data) {
-        const user = sessionResult.data.user;
+        const user = sessionResult.user;
         const avatarUrl = this.getAvatarDisplayUrl({
           avatar_url: user?.user_metadata?.avatar_url || user?.avatar_url || null       
          });
-        // const currentUser = {
-        //   id: user.id,
-        //   email: user.email,
-        //   nickName: user?.user_metadata.nickname || '微信用户', // 统一使用nickName
-        //   avatarUrl: avatarUrl, // 使用动态生成的头像URL
-        //   nickname: user?.user_metadata.nickname || '微信用户', // 保持兼容性
-        //   avatar_url: avatarUrl, // 原始avatar_url用于重新生成
-        //   wechat_openid: user?.user_metadata.wechat_openid,
-        //   display_name: user?.user_metadata.nickname || '微信用户',
-        //   has_user_info: !!(user?.user_metadata.nickname && avatarUrl),
-        // };
+         const nickName = user?.user_metadata?.nickName || user?.nickName || '微信用户'
+         const wechat_openid = user?.user_metadata?.wechat_openid || user?.wechat_openid
         const currentUser = {
           id: user.id,
           email: user?.email,
-          nickName: user?.nickname || '微信用户', // 统一使用nickName
+          nickName: nickName , // 统一使用nickName
           avatarUrl: avatarUrl, // 使用动态生成的头像URL
-          nickname: user?.nickname || '微信用户', // 保持兼容性
+          nickname: nickName , // 保持兼容性
           avatar_url: avatarUrl, // 原始avatar_url用于重新生成
-          wechat_openid: user?.wechat_openid,
-          display_name: user?.nickname || '微信用户',
-          has_user_info: !!(user?.nickname && avatarUrl),
+          wechat_openid: wechat_openid,
+          display_name: nickName,
+          has_user_info: !!(nickName && avatarUrl),
         };
-        return { data: currentUser, error: null };
-      }
+        return currentUser;
 
-      return { data: null, error: null };
+      return null
     } catch (error) {
       console.error('获取用户信息时发生异常:', error);
-      return { data: { user: null }, error: error.message };
+      return { data: {  }, error: error.message };
     }
   }
 
@@ -333,12 +303,11 @@ class AuthService {
     console.log('要更新的用户信息：' + userInfo);
 
     try {
-      const userResult = this.getUser();
-      if (!userResult.data) {
+      const currentUser = this.getCurrentUser();
+      if (!currentUser) {
         return { success: false, error: '用户未登录' };
       }
 
-      const currentUser = userResult.data;
       console.log('更新用户信息:', userInfo);
       console.log('当前用户信息:', currentUser);
       if (!userInfo.nickName) {
@@ -394,7 +363,7 @@ class AuthService {
 
       // 获取当前session的token用于认证
       const currentSession = this.getSession();
-      if (!currentSession.data?.access_token) {
+      if (!currentSession?.access_token) {
         console.error('无法获取access_token进行Edge Function调用');
         return { success: false, error: '认证状态异常，请重新登录' };
       }
@@ -402,7 +371,7 @@ class AuthService {
       const authResult = await this.callWechatAuthFunctionWithAuth(
         'update_user_info',
         updateData.userInfo,
-        currentSession.data.access_token
+        currentSession.access_token
       );
 
       console.log('authResult: ' + authResult);
@@ -410,8 +379,8 @@ class AuthService {
         throw new Error(authResult.error || '更新失败');
       }
 
-      currentSession.data.user = authResult.user;
-      await this.setSession(currentSession.data);
+      currentSession.user = authResult.user;
+      await this.setSession(currentSession);
       console.log('用户信息更新成功:', authResult.user);
       return { success: true, user: authResult.user };
     } catch (error) {
@@ -428,7 +397,7 @@ class AuthService {
    * @param {string} userId - 用户ID
    * @returns {Promise<Object>} 用户资料
    */
-  async getUserProfile(userId) {
+  async getCurrentUserProfile(userId) {
     try {
       const response = await this.supabaseRequest({
         url: '/rest/v1/users',
@@ -623,7 +592,7 @@ class AuthService {
   async refreshSession() {
     try {
       const sessionResult = this.getSession();
-      if (!sessionResult.data?.refresh_token) {
+      if (!sessionResult?.refresh_token) {
         console.log('没有可用的refresh_token');
         return { success: false, error: 'No refresh token available' };
       }
@@ -636,7 +605,7 @@ class AuthService {
         method: 'POST',
         data: {
           code: 'refresh_session',
-          refresh_token: sessionResult.data.refresh_token,
+          refresh_token: sessionResult.refresh_token,
         },
         headers: {
           'Content-Type': 'application/json',
@@ -682,13 +651,11 @@ class AuthService {
    * 检查登录状态
    * @returns {Promise<boolean>} 是否已登录
    */
-  async checkLoginStatus() {
+   checkLoginStatus()  {
     try {
       // 检查Supabase Auth会话
       const sessionResult = this.getSession();
-      if (sessionResult?.data?.user) {
-        // this.setSession(sessionResult.data)
-
+      if (sessionResult?.user) {
         return true;
       }
     } catch (error) {
@@ -698,37 +665,7 @@ class AuthService {
     return false;
   }
 
-  /**
-   * 获取当前用户信息
-   * @returns {Promise<Object|null>} 用户信息
-   */
-  getCurrentUser() {
-    // 优先从Supabase Auth获取
-    const userResult = this.getUser();
-    console.log('处理后的user:' + userResult);
-    if (userResult.data) {
-      const user = userResult.data;
 
-      const avatarUrl = this.getAvatarDisplayUrl({
-        avatar_url: user?.avatar_url,
-      });
-
-      return {
-        id: user.id,
-        email: user.email,
-        nickName: user?.nickname || '微信用户', // 统一使用nickName
-        avatarUrl: avatarUrl, // 使用动态生成的头像URL
-        nickname: user?.nickname || '微信用户', // 保持兼容性
-        avatar_url: user?.avatar_url, // 原始avatar_url用于重新生成
-        wechat_openid: user?.wechat_openid,
-        display_name: user?.display_name || '微信用户',
-        has_user_info: !!(user?.nickname && user?.avatar_url),
-      };
-    } else {
-      console.log('未登录');
-      return null;
-    }
-  }
 
   /**
    * 检查用户权限

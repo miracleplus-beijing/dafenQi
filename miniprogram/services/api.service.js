@@ -142,47 +142,20 @@ class ApiService {
 
     // 添加收藏
     addFavorite: async (userId, podcastId) => {
-      await audioService.addToFavorites(userId, podcastId);
+      const result = await audioService.addToFavorites(userId, podcastId)
+      if (result?.success) {
+        return await apiService.stats.incrementFavoriteCount(podcastId);
+
+      }
+
+      
     },
 
     // 移除收藏
     removeFavorite: async (userId, podcastId) => {
-      try {
-        // 检查用户是否已登录
-        if (!this.isUserLoggedIn()) {
-          return {
-            success: false,
-            error: '请先登录后操作',
-            errorType: 'auth_required',
-          };
-        }
-        // 构建正确的DELETE URL，使用查询参数而不是data
-        await requestUtil.delete(
-          `/rest/v1/user_favorites?user_id=eq.${userId}&podcast_id=eq.${podcastId}`,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-
-        // 同步减少收藏量
-        try {
-          await apiService.stats.decrementFavoriteCount(podcastId);
-          console.log(`播客 ${podcastId} 收藏量已减少`);
-        } catch (error) {
-          console.warn('减少收藏量失败，但不影响取消收藏操作:', error);
-        }
-
-        return {
-          success: true,
-        };
-      } catch (error) {
-        console.error('移除收藏失败:', error);
-        return {
-          success: false,
-          error: error.message,
-        };
+      const result = await audioService.removeFromFavorites(userId, podcastId)
+      if (result?.success) {
+        return await apiService.stats.decrementFavoriteCount(podcastId);
       }
     },
 
@@ -594,30 +567,21 @@ class ApiService {
     // 增加播客收藏量
     incrementFavoriteCount: async podcastId => {
       try {
-        // 先获取当前收藏量，然后增加
-        const currentData = await requestUtil.get(`/rest/v1/podcasts?id=eq.${podcastId}&select=favorite_count`);
-
-        if (currentData && currentData.length > 0) {
-          const currentCount = currentData[0].favorite_count || 0;
-          const newCount = currentCount + 1;
-
-          const result = await requestUtil.patch(`/rest/v1/podcasts?id=eq.${podcastId}`, {
-            favorite_count: newCount,
-            updated_at: new Date().toISOString()
-          }, {
-            headers: {
-              'Content-Type': 'application/json',
-              'Prefer': 'return=minimal'
-            }
-          });
+        // 先获取当前播放量，然后增加
+        const result = await requestUtil.post(
+          `/rest/v1/rpc/increment_favorite_count`,
+          {
+            "podcast_id": podcastId
+          }
+        );
+          
+        console.log("博客收藏量增加成功，数量：" + result)
 
           return {
             success: true,
-            data: result,
+            data: result
           };
-        } else {
-          throw new Error('播客不存在');
-        }
+
       } catch (error) {
         console.error('增加收藏量失败:', error);
         return {

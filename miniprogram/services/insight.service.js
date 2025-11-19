@@ -357,7 +357,7 @@ class InsightService {
   }
 
   // 获取用户对指定insight的交互记录
-  async getUserInteractions(userId, insightId) {
+  async getCurrentUserInteractions(userId, insightId) {
     try {
       if (!userId || !insightId) {
         return {

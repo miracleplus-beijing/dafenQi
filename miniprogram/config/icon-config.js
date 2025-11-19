@@ -216,7 +216,7 @@ class IconConfig {
    * @param {string} userActionKey - 用户动作键名
    * @returns {string} TDesign 图标名称
    */
-  getUserIcon(userActionKey) {
+  getCurrentUserIcon(userActionKey) {
     return this.getIcon(userActionKey, 'user') || 'user';
   }
 

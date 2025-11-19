@@ -326,16 +326,16 @@ class StorageService {
     // 默认7天
     authService = require('./auth.service.js');
     try {
-      // 使用getUser()检查用户状态，遵循Supabase最佳实践
-      const userResult = authService.getUser();
+      // 使用getCurrentUser()检查用户状态，遵循Supabase最佳实践
+      const currentUser = authService.getCurrentUser();
 
-      if (!userResult.data) {
+      if (!currentUser) {
         throw new Error('用户未登录，无法生成签名URL');
       }
 
       // 获取token用于API认证
       const sessionResult = authService.getSession();
-      let userToken = sessionResult.data?.access_token;
+      let userToken = sessionResult?.access_token;
 
       // 验证token格式和有效性
       if (!userToken || typeof userToken !== 'string') {

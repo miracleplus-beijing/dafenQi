@@ -340,9 +340,10 @@ Component({
     async updateFavoriteStatus(podcastId, isFavorited, userId) {
       try {
         const audioService = require('../../services/audio.service.js');
+          const app = getApp();
         let result;
         if (isFavorited) {
-          result = await audioService.addToFavorites(userId, podcastId);
+          result = await app.addToFavorites(userId, podcastId);
         } else {
           result = await audioService.removeFromFavorites(userId, podcastId);
         }

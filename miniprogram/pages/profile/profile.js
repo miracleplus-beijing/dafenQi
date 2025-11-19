@@ -284,15 +284,15 @@ Page({
     this.resetSwipeState();
   },
   async checkLoginStatus() {
-    const currentUser = await authService.getCurrentUser();
-    console.log(currentUser);
-    const isLoggedIn = await authService.checkLoginStatus();
+    const isLoggedIn = authService.checkLoginStatus();
 
     console.log("登录状态：" + isLoggedIn);
     if (!isLoggedIn) {
       console.log('请登录');
       return;
     }
+    const currentUser = await authService.getCurrentUser();
+    console.log(currentUser);
 
     this.setData({
       isLoggedIn: isLoggedIn,

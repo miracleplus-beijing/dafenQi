@@ -35,7 +35,7 @@ Page({
   async initPage() {
     try {
       // 检查用户登录状态
-      const isLoggedIn = await authService.checkLoginStatus();
+      const isLoggedIn = authService.checkLoginStatus();
       if (!isLoggedIn) {
         this.handleNotLoggedIn();
         return;
