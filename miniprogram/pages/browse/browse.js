@@ -52,11 +52,9 @@ Page({
 
         // 评论相关状态
         commentList: [], // 评论列表
-        floatingComment: null, // 悬浮播放条显示的评论
         showCommentPopup: false, // 是否显示评论弹窗
         commentInputText: '', // 评论输入内容
         replyingToCommentId: null, // 正在回复的评论ID
-        floatingCommentTimer: null, // 评论轮换定时器
 
         // 更多操作弹窗相关状态
         showMorePopup: false, // 是否显示更多操作弹窗
@@ -249,10 +247,8 @@ Page({
 
             // 如果需要自动播放
             if (shouldAutoPlay) {
-                setTimeout(() => {
-                    console.log('开始自动播放搜索的播客');
-                    this.triggerAutoPlay();
-                }, 500);
+                console.log('开始自动播放搜索的播客');
+                this.triggerAutoPlay();
             }
         } else {
             // 播客不在列表中，需要单独获取并插入
@@ -284,10 +280,8 @@ Page({
 
                 // 如果需要自动播放
                 if (shouldAutoPlay) {
-                    setTimeout(() => {
-                        console.log('开始自动播放插入的播客');
-                        this.triggerAutoPlay();
-                    }, 500);
+                  console.log('开始自动播放插入的播客');
+                  this.triggerAutoPlay();
                 }
             } else {
                 throw new Error('获取播客详情失败');
@@ -346,9 +340,7 @@ Page({
                     currentIndex: targetIndex,
                 });
                 // 自动播放
-                setTimeout(() => {
-                    this.triggerAutoPlay();
-                }, 500);
+                this.triggerAutoPlay();
             } else {
                 // 播客不在当前列表中，将其插入到列表开头
                 console.log('播客不在当前列表中，插入到列表开头');
@@ -381,9 +373,7 @@ Page({
                     () => {
                         console.log('播客列表已更新，当前索引:', this.data.currentIndex);
                         // 自动播放新插入的播客
-                        setTimeout(() => {
-                            this.triggerAutoPlay();
-                        }, 500);
+                          this.triggerAutoPlay();
                     }
                 );
             }
@@ -445,12 +435,6 @@ Page({
         if (this._redistributeTimer) {
             clearTimeout(this._redistributeTimer);
             this._redistributeTimer = null;
-        }
-
-        // 清理评论轮换定时器
-        if (this.data.floatingCommentTimer) {
-            clearInterval(this.data.floatingCommentTimer);
-            this.setData({floatingCommentTimer: null});
         }
 
         // 清理其他定时器
@@ -569,6 +553,7 @@ Page({
 
         audioContext.onCanplay(() => {
             console.log('音频可以播放');
+            this.hideCustomLoading();
             const duration = audioContext.duration;
             if (duration > 0) {
                 this.setData({
@@ -855,10 +840,6 @@ Page({
             userGestureActive: false, // 重置手势状态
         });
 
-        // 加载新播客的评论
-        if (currentPodcast && currentPodcast.id) {
-            this.loadFloatingComment(currentPodcast.id);
-        }
 
         // 加载新播客的播放进度（延迟执行，确保状态更新完成）
             this.loadPlayProgress(currentIndex);
@@ -866,13 +847,13 @@ Page({
         // 自动播放新播客（仅在启用自动播放时）
         if (this.data.autoPlayOnSwipe && podcastList[currentIndex]) {
             console.log(
-                '🎵 触发自动播放 - 当前播客:',
+                '触发自动播放 - 当前播客:',
                 podcastList[currentIndex].title
             );
             // 短暂延迟确保UI状态更新完成
-            setTimeout(() => {
+ 
                 this.triggerAutoPlay();
-            }, 300);
+
         }
     },
 
@@ -1184,74 +1165,6 @@ Page({
         }
     },
 
-    async loadFloatingComment(podcastId) {
-        try {
-            const commentService = require('../../services/comment.service.js');
-
-            // 防御性检查
-            if (!commentService) {
-                console.warn('commentService 未初始化,使用默认评论');
-                this.setDefaultFloatingComment();
-                return;
-            }
-
-            if (typeof commentService.getPinnedOrPopularComment !== 'function') {
-                console.warn(
-                    'commentService.getPinnedOrPopularComment 方法不存在,使用默认评论'
-                );
-                this.setDefaultFloatingComment();
-                return;
-            }
-
-            const result = await commentService.getPinnedOrPopularComment(podcastId);
-            if (result.success && result.data) {
-                this.setData({
-                    floatingComment: result.data,
-                });
-                console.log('加载悬浮评论成功:', result.data.content);
-            } else {
-                this.setDefaultFloatingComment();
-            }
-        } catch (error) {
-            console.error('加载悬浮评论失败:', error);
-            this.setDefaultFloatingComment();
-        }
-    },
-
-    setDefaultFloatingComment() {
-        this.setData({
-            floatingComment: {
-                content: '惠人达己，守正出奇',
-                user_avatar:
-                    'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/default-avatar.png',
-                user_nickname: '系统',
-            },
-        });
-    },
-
-    startFloatingCommentRotation() {
-        // 清除现有定时器
-        if (this.data.floatingCommentTimer) {
-            clearInterval(this.data.floatingCommentTimer);
-        }
-
-        // 每5秒轮换一次评论
-        const timer = setInterval(() => {
-            const {podcastList, currentIndex} = this.data;
-            if (podcastList[currentIndex]) {
-                this.loadFloatingComment(podcastList[currentIndex].id);
-            }
-        }, 5000);
-
-        this.setData({floatingCommentTimer: timer});
-    },
-
-    stopFloatingCommentRotation() {
-        if (this.data.floatingCommentTimer) {
-            clearInterval(this.data.floatingCommentTimer);
-            this.setData({floatingCommentTimer: null});
-        }
-    },
 
     handleOpenComments() {
         console.log('打开评论弹窗')
@@ -1627,46 +1540,16 @@ Page({
         app.hideGlobalPlayer();
     },
 
-    // 瀑布流相关逻辑已迁移至 waterfall-container 组件
-
-    // 处理频道点击
-    handleChannelClick: function () {
-        console.log('跳转到频道页面');
-
-        wx.showToast({
-            title: '频道功能开发中',
-            icon: 'none',
-            duration: 1500,
-        });
-    },
-
-    // 播放下一个播客（仅在用户手动操作时调用）
-    playNext: function () {
-        // 完全禁用自动切换功能
-        console.log('playNext 被调用，但已禁用自动切换');
-        wx.showToast({
-            title: '请手动滑动切换',
-            icon: 'none',
-            duration: 1000,
-        });
-    },
 
     // 保存播放进度
     savePlayProgress: function () {
         const {currentIndex, podcastList, audioPosition} = this.data;
-
         if (!podcastList.length || currentIndex < 0) return;
-
         const podcast = podcastList[currentIndex];
         const progressKey = `podcast_progress_${podcast.id}`;
-
-        try {
-            wx.setStorageSync(progressKey, {
-                position: audioPosition
-            });
-        } catch (error) {
-            console.error('保存播放进度失败:', error);
-        }
+        wx.setStorageSync(progressKey, {
+            position: audioPosition
+        });
     },
 
     // 加载播放进度
@@ -1754,9 +1637,6 @@ Page({
         }
     },
 
-
-
-
     hideCustomLoading() {
         this.setData({
             audioLoadingVisible: false,
@@ -1766,19 +1646,12 @@ Page({
     // 触发自动播放（滑动后自动播放）
     triggerAutoPlay: function () {
         const {audioContext, podcastList, currentIndex} = this.data;
+        const currentPodcast = podcastList[currentIndex];
 
-        if (!audioContext || !podcastList.length || currentIndex < 0) {
+        if (!currentPodcast || !currentPodcast.audio_url || !audioContext || !podcastList.length || currentIndex < 0) {
             console.log('自动播放条件不满足');
             return;
         }
-
-        const currentPodcast = podcastList[currentIndex];
-        if (!currentPodcast || !currentPodcast.audio_url) {
-            console.log('当前播客数据无效，无法自动播放');
-            return;
-        }
-
-        console.log('开始自动播放:', currentPodcast.title);
 
         // 检查是否需要切换音频源
         const currentSrc = audioContext.src || '';
@@ -1788,36 +1661,25 @@ Page({
         if (isNewAudio) {
             console.log('设置新音频源进行自动播放');
 
-            // 检查是否有预加载的音频
+            // 停止当前音频（加防护）
+            try { audioContext && typeof audioContext.stop === 'function' && audioContext.stop(); } catch (_) {}
 
-          
-                console.log('📱 标准音频加载流程进行自动播放');
+            // 设置新的音频源
+            audioContext.src = newSrc;
 
-                // 停止当前音频（加防护）
-                try { audioContext && typeof audioContext.stop === 'function' && audioContext.stop(); } catch (_) {}
-
-                // 设置新的音频源
-                audioContext.src = newSrc;
-
-                // 重置播放状态
-                this.setData({
-                    audioPosition: 0,
-                    currentProgress: 0,
-                    audioDuration: 0,
-                    currentTimeFormatted: '0:00',
-                    totalTimeFormatted: '0:00',
-                });
+            // 重置播放状态
+            this.setData({
+                audioPosition: 0,
+                currentProgress: 0,
+                audioDuration: 0,
+                currentTimeFormatted: '0:00',
+                totalTimeFormatted: '0:00',
+            });
 
 
-                // 监听首次canplay事件来隐藏loading
-                const onCanplayOnce = () => {
-                    this.hideCustomLoading();
-                    audioContext.offCanplay(onCanplayOnce);
-                };
-                audioContext.onCanplay(onCanplayOnce);
 
-                // 开始播放
-                audioContext.play();
+            // 开始播放
+            audioContext.play();
             
         } else {
             // 继续播放当前音频

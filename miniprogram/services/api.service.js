@@ -594,30 +594,21 @@ class ApiService {
     // 减少播客收藏量
     decrementFavoriteCount: async podcastId => {
       try {
-        // 先获取当前收藏量，然后减少
-        const currentData = await requestUtil.get(`/rest/v1/podcasts?id=eq.${podcastId}&select=favorite_count`);
-
-        if (currentData && currentData.length > 0) {
-          const currentCount = currentData[0].favorite_count || 0;
-          const newCount = Math.max(currentCount - 1, 0); // 确保不会变成负数
-
-          const result = await requestUtil.patch(`/rest/v1/podcasts?id=eq.${podcastId}`, {
-            favorite_count: newCount,
-            updated_at: new Date().toISOString()
-          }, {
-            headers: {
-              'Content-Type': 'application/json',
-              'Prefer': 'return=minimal'
-            }
-          });
+        // 先获取当前播放量，然后增加
+        const result = await requestUtil.post(
+          `/rest/v1/rpc/decrement_favorite_count`,
+          {
+            "podcast_id": podcastId
+          }
+        );
+          
+        console.log("博客收藏量减少成功，数量：" + result)
 
           return {
             success: true,
-            data: result,
+            data: result
           };
-        } else {
-          throw new Error('播客不存在');
-        }
+
       } catch (error) {
         console.error('减少收藏量失败:', error);
         return {

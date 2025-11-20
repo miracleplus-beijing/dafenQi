@@ -29,12 +29,16 @@ Component({
     // 预览
     showQuickPreview: false,
     quickPreviewPodcast: null,
+    
   },
 
   lifetimes: {
+    created() {
+      this.loadedPodcastIds = new Set();
+      console.log("create 了 瀑布流")
+    },
     attached() {
       // 初始化已加载播客ID集合（不放在data中避免序列化问题）
-      this.loadedPodcastIds = new Set();
       this.loadWaterfallData(false);
     }
   },
