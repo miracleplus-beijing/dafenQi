@@ -21,8 +21,7 @@
               duration="300"
               easing-function="easeInOutCubic"
               bindchange="handleSwiperChange"
-              bindtouchstart="handleTouchStart"
-              bindtouchmove="handleTouchMove">
+              >
 
         <swiper-item wx:for="{{podcastList}}" wx:key="id" class="browse-container">
 

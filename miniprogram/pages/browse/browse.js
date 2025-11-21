@@ -30,12 +30,10 @@ Page({
         audioLoading: false, // 音频是否正在加载
 
         // 防止自动滑动的标志
-        lastUserInteraction: 0,
         isDraggingThumb: false,
 
         // 自动播放控制
         autoPlayOnSwipe: true, // 控制下滑后是否自动播放
-        userGestureActive: false, // 是否有用户手势正在进行
 
         // CDN图片URL (带本地降级)
         cdnImages: {
@@ -820,16 +818,8 @@ Page({
     handleTouchStart: function (e) {
         // console.log('用户开始触摸swiper');
         const now = Date.now();
-        this.setData({
-            lastUserInteraction: now,
-            userGestureActive: true,
-        });
     },
 
-    // 处理触摸移动
-    handleTouchMove: function (e) {
-        this.setData({ lastUserInteraction: Date.now() });
-    },
 
     // 处理Swiper切换
     handleSwiperChange: function (e) {
@@ -837,13 +827,6 @@ Page({
         const oldIndex = this.data.currentIndex;
         const now = Date.now();
         const { podcastList, hasMoreData } = this.data;
-
-        // 更严格的用户交互检查：必须是用户手势触发
-        const timeSinceLastInteraction = now - this.data.lastUserInteraction;
-        if (timeSinceLastInteraction > 1000 || !this.data.userGestureActive) {
-            console.log('BLOCKED: 非用户触发的滑动，已阻止');
-            return;
-        }
 
         // 如果索引没有变化，直接返回
         if (currentIndex === oldIndex) {
@@ -882,7 +865,6 @@ Page({
             currentTimeFormatted: '0:00',
             totalTimeFormatted:
                 podcastDuration > 0 ? this.formatTime(podcastDuration) : '0:00',
-            userGestureActive: false, // 重置手势状态
         });
 
 
@@ -938,7 +920,22 @@ Page({
 
     // 开始播放的统一处理函数
     startPlayback: function (podcast) {
-        const { audioContext } = this.data;
+        const { audioContext, playingPodcastId } = this.data;
+
+        console.log('准备播放:', podcast.title, '| 当前播放ID:', playingPodcastId, '| 新播客ID:', podcast.id);
+
+        // 【关键修复】无论如何，先停止当前播放，防止多个音频同时播放
+        if (audioContext) {
+            try {
+                // 强制停止当前音频
+                if (typeof audioContext.stop === 'function') {
+                    audioContext.stop();
+                    console.log('已停止之前的音频');
+                }
+            } catch (e) {
+                console.warn('停止音频失败:', e);
+            }
+        }
 
         // 设置正在播放的播客ID
         this.setData({
@@ -954,7 +951,7 @@ Page({
             console.log('需要切换音频源');
             this.switchAudioSource(podcast, newSrc);
         } else {
-            // 继续播放当前音频
+            // 继续播放当前音频（已经在上面停止了，现在重新播放）
             console.log('继续播放当前音频');
             this.hideCustomLoading();
             audioContext.play();
@@ -975,16 +972,7 @@ Page({
             isPlaying: true, // 预设为播放状态
         });
 
-        // 停止当前播放
-        try {
-            if (audioContext && typeof audioContext.stop === 'function') {
-                audioContext.stop();
-            }
-        } catch (e) {
-            console.warn('停止音频失败:', e);
-        }
-
-        // 设置新音频源（播放状态会通过音频事件自动更新到 podcast.playState）
+        // 设置新音频源并播放（startPlayback 已经停止了之前的音频）
         if (audioContext) {
             audioContext.src = newSrc;
             audioContext.play();
@@ -999,8 +987,7 @@ Page({
     handleSliderTouchStart: function (e) {
         console.log('Slider 拖拽开始');
         this.setData({
-            isDraggingThumb: true,
-            lastUserInteraction: Date.now(),
+            isDraggingThumb: true
         });
     },
 
@@ -1739,6 +1726,18 @@ Page({
             return;
         }
 
+        console.log('触发自动播放:', currentPodcast.title);
+
+        // 【关键修复】先停止当前播放，防止多个音频同时播放
+        try {
+            if (audioContext && typeof audioContext.stop === 'function') {
+                audioContext.stop();
+                console.log('自动播放：已停止之前的音频');
+            }
+        } catch (e) {
+            console.warn('停止音频失败:', e);
+        }
+
         // 设置正在播放的播客ID
         this.setData({
             playingPodcastId: currentPodcast.id
@@ -1751,19 +1750,12 @@ Page({
 
         if (isNewAudio) {
             console.log('设置新音频源进行自动播放');
-
-            // 停止当前音频（加防护）
-            try { audioContext && typeof audioContext.stop === 'function' && audioContext.stop(); } catch (_) { }
-
-            // 设置新的音频源并播放（播放状态会通过音频事件自动更新到 podcast.playState）
             audioContext.src = newSrc;
-            audioContext.play();
-
-        } else {
-            // 继续播放当前音频
-            this.hideCustomLoading();
-            audioContext.play();
         }
+
+        // 播放音频
+        this.hideCustomLoading();
+        audioContext.play();
 
     },
 });
