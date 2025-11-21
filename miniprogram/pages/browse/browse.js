@@ -2,7 +2,7 @@
 const app = getApp();
 const apiService = require('../../services/api.service.js');
 const authService = require('../../services/auth.service.js');
-const {getImageUrl} = require('../../config/image-urls.js');
+const { getImageUrl } = require('../../config/image-urls.js');
 
 Page({
     data: {
@@ -149,7 +149,7 @@ Page({
             if (audio && typeof audio.stop === 'function') {
                 audio.stop();
             }
-        } catch (_) {}
+        } catch (_) { }
         this.setData({
             'globalPlayer.isPlaying': false,
             'globalPlayer.isVisible': false,
@@ -206,7 +206,7 @@ Page({
 
         // 3秒后自动隐藏
         setTimeout(() => {
-            this.setData({showLoginTip: false});
+            this.setData({ showLoginTip: false });
         }, 3000);
     },
 
@@ -259,33 +259,33 @@ Page({
 
     // 获取并插入特定播客到列表
     async fetchAndInsertPodcast(podcastId, shouldAutoPlay = false) {
-            const apiService = require('../../services/api.service.js');
-            const result = await apiService.podcast.getDetail(podcastId);
+        const apiService = require('../../services/api.service.js');
+        const result = await apiService.podcast.getDetail(podcastId);
 
-            if (result.success && result.data) {
-                const podcast = result.data;
-                console.log('获取到播客详情:', podcast.title);
+        if (result.success && result.data) {
+            const podcast = result.data;
+            console.log('获取到播客详情:', podcast.title);
 
-                // 将播客插入到列表开头
-                const updatedList = [podcast, ...this.data.podcastList];
-                const updatedIds = [podcast.id, ...this.data.loadedPodcastIds];
+            // 将播客插入到列表开头
+            const updatedList = [podcast, ...this.data.podcastList];
+            const updatedIds = [podcast.id, ...this.data.loadedPodcastIds];
 
-                this.setData({
-                    podcastList: updatedList,
-                    loadedPodcastIds: updatedIds,
-                    currentIndex: 0, // 设置为第一个
-                    loading: false,
-                    audioLoadingVisible: false,
-                });
+            this.setData({
+                podcastList: updatedList,
+                loadedPodcastIds: updatedIds,
+                currentIndex: 0, // 设置为第一个
+                loading: false,
+                audioLoadingVisible: false,
+            });
 
-                // 如果需要自动播放
-                if (shouldAutoPlay) {
-                  console.log('开始自动播放插入的播客');
-                  this.triggerAutoPlay();
-                }
-            } else {
-                throw new Error('获取播客详情失败');
+            // 如果需要自动播放
+            if (shouldAutoPlay) {
+                console.log('开始自动播放插入的播客');
+                this.triggerAutoPlay();
             }
+        } else {
+            throw new Error('获取播客详情失败');
+        }
 
     },
 
@@ -373,7 +373,7 @@ Page({
                     () => {
                         console.log('播客列表已更新，当前索引:', this.data.currentIndex);
                         // 自动播放新插入的播客
-                          this.triggerAutoPlay();
+                        this.triggerAutoPlay();
                     }
                 );
             }
@@ -470,10 +470,10 @@ Page({
     // 初始化音频上下文
     initAudioContext: function () {
         const audioContext = wx.createInnerAudioContext({
-          useWebAudioImplement: true
-      });
+            useWebAudioImplement: true
+        });
         this.rebindAudioEvents(audioContext);
-        this.setData({audioContext});
+        this.setData({ audioContext });
     },
 
     // 重新绑定音频事件监听器
@@ -566,14 +566,14 @@ Page({
 
         audioContext.onWaiting(() => {
             console.log('音频加载中');
-            this.setData({audioLoading: true});
+            this.setData({ audioLoading: true });
         });
     },
 
     // 加载播客数据
     async loadPodcastData(loadMore = false) {
         try {
-            this.setData({loading: true});
+            this.setData({ loading: true });
 
             const page = loadMore ? this.data.currentPage + 1 : 1;
 
@@ -598,16 +598,16 @@ Page({
                         // 如果用户已登录，也检查数据库状态（但不等待）
                         const userId = authService?.getCurrentUser()?.id;
                         if (userId && !isFavorited) {
-                          const audioService = require('../../services/audio.service.js');
-                          audioService.checkIsFavorited(userId, podcast.id)
-                            .then(dbFavorited => {
-                              this.updatePodcastFavoriteState(podcast.id, dbFavorited);
-                            })
-                            .catch(error => {
-                                console.warn('检查数据库收藏状态失败:', error);
-                            });
+                            const audioService = require('../../services/audio.service.js');
+                            audioService.checkIsFavorited(userId, podcast.id)
+                                .then(dbFavorited => {
+                                    this.updatePodcastFavoriteState(podcast.id, dbFavorited);
+                                })
+                                .catch(error => {
+                                    console.warn('检查数据库收藏状态失败:', error);
+                                });
                         }
-                        
+
                         return {
                             id: podcast.id,
                             title: podcast.title,
@@ -683,7 +683,7 @@ Page({
 
                     this.loadPlayProgress(0);
 
-                
+
                 }
             } else {
                 console.error('播客数据加载失败:', result);
@@ -712,7 +712,7 @@ Page({
             }
         } catch (error) {
             console.error('加载播客数据失败:', error);
-            this.setData({loading: false});
+            this.setData({ loading: false });
             wx.showToast({
                 title: '加载失败: ' + error.message,
                 icon: 'none',
@@ -783,7 +783,7 @@ Page({
 
     // 处理触摸移动
     handleTouchMove: function (e) {
-        this.setData({lastUserInteraction: Date.now()});
+        this.setData({ lastUserInteraction: Date.now() });
     },
 
     // 处理Swiper切换
@@ -791,7 +791,7 @@ Page({
         const currentIndex = e.detail.current;
         const oldIndex = this.data.currentIndex;
         const now = Date.now();
-        const {podcastList, hasMoreData} = this.data;
+        const { podcastList, hasMoreData } = this.data;
 
         // 更严格的用户交互检查：必须是用户手势触发
         const timeSinceLastInteraction = now - this.data.lastUserInteraction;
@@ -842,7 +842,7 @@ Page({
 
 
         // 加载新播客的播放进度（延迟执行，确保状态更新完成）
-            this.loadPlayProgress(currentIndex);
+        this.loadPlayProgress(currentIndex);
 
         // 自动播放新播客（仅在启用自动播放时）
         if (this.data.autoPlayOnSwipe && podcastList[currentIndex]) {
@@ -851,15 +851,15 @@ Page({
                 podcastList[currentIndex].title
             );
             // 短暂延迟确保UI状态更新完成
- 
-                this.triggerAutoPlay();
+
+            this.triggerAutoPlay();
 
         }
     },
 
     // 处理播放/暂停
     handlePlayPause: function () {
-        const {audioContext, isPlaying, podcastList, currentIndex} = this.data;
+        const { audioContext, isPlaying, podcastList, currentIndex } = this.data;
 
         if (!audioContext || !podcastList.length) {
             console.error('音频上下文或播客列表为空');
@@ -893,7 +893,7 @@ Page({
 
     // 开始播放的统一处理函数
     startPlayback: function (currentPodcast) {
-        const {audioContext} = this.data;
+        const { audioContext } = this.data;
 
         // 检查是否需要切换音频源
         const currentSrc = audioContext.src || '';
@@ -914,6 +914,45 @@ Page({
 
     },
 
+    // 切换音频源并播放
+    switchAudioSource: function (currentPodcast, newSrc) {
+        const { audioContext } = this.data;
+
+        console.log('切换音频源:', currentPodcast.title);
+
+        // 显示加载动画
+        this.setData({
+            audioLoadingVisible: true,
+            audioLoadingText: '加载音频...',
+            isPlaying: true, // 预设为播放状态
+        });
+
+        // 停止当前播放
+        try {
+            if (audioContext && typeof audioContext.stop === 'function') {
+                audioContext.stop();
+            }
+        } catch (e) {
+            console.warn('停止音频失败:', e);
+        }
+
+        // 重置播放进度
+        this.setData({
+            currentProgress: 0,
+            audioPosition: 0,
+            currentTimeFormatted: '0:00',
+            // 保留 duration 如果已知，否则重置
+            audioDuration: currentPodcast.duration || 0,
+            totalTimeFormatted: currentPodcast.duration ? this.formatTime(currentPodcast.duration) : '0:00',
+        });
+
+        // 设置新音频源
+        if (audioContext) {
+            audioContext.src = newSrc;
+            audioContext.play();
+        }
+    },
+
 
 
 
@@ -930,7 +969,7 @@ Page({
 
     // Slider 拖拽结束（类似 Vue 的 @change）
     handleSliderChange: function (e) {
-        const {audioContext, audioDuration} = this.data;
+        const { audioContext, audioDuration } = this.data;
 
         if (!audioContext || !audioDuration) return;
 
@@ -955,7 +994,7 @@ Page({
         this.setData({
             isDraggingThumb: false,
         });
-        const {audioContext, audioDuration} = this.data;
+        const { audioContext, audioDuration } = this.data;
 
         if (!audioContext || !audioDuration) return;
 
@@ -966,7 +1005,7 @@ Page({
 
     // 处理后退15秒
     handleRewind: function () {
-        const {audioContext, audioPosition} = this.data;
+        const { audioContext, audioPosition } = this.data;
 
         if (!audioContext) return;
 
@@ -985,7 +1024,7 @@ Page({
 
     // 处理前进30秒
     handleFastForward: function () {
-        const {audioContext, audioPosition, audioDuration} = this.data;
+        const { audioContext, audioPosition, audioDuration } = this.data;
 
         if (!audioContext) return;
 
@@ -1004,7 +1043,7 @@ Page({
 
     // 处理收藏 - 要求用户先登录
     handleFavorite: async function () {
-        const {currentIndex, podcastList} = this.data;
+        const { currentIndex, podcastList } = this.data;
         const currentPodcast = podcastList[currentIndex];
 
         if (!currentPodcast) {
@@ -1017,10 +1056,10 @@ Page({
         }
 
         // 关闭更多操作弹窗
-        this.setData({showMorePopup: false});
+        this.setData({ showMorePopup: false });
 
         // 检查用户登录状态
-        
+
         const loginStatus = authService.checkLoginStatus();
         console.log(loginStatus)
         if (!loginStatus) {
@@ -1042,7 +1081,7 @@ Page({
         }
 
 
-        
+
 
         const newIsFavorited = !currentPodcast.isFavorited;
 
@@ -1052,24 +1091,24 @@ Page({
             newIsFavorited,
             authService?.getCurrentUser()?.id
         ).then((res) => {
-          // 给用户轻提示反馈
-          wx.showToast({
-            title: newIsFavorited ? '已添加到收藏' : '已取消收藏',
-            icon: 'success',
-            duration: 1500,
-          });
+            // 给用户轻提示反馈
+            wx.showToast({
+                title: newIsFavorited ? '已添加到收藏' : '已取消收藏',
+                icon: 'success',
+                duration: 1500,
+            });
 
-          
 
-          const updatedPodcastList = [...podcastList];
-          updatedPodcastList[currentIndex] = {
-              ...currentPodcast,
-              isFavorited: newIsFavorited,
-          };
 
-          this.setData({
-              podcastList: updatedPodcastList,
-          });
+            const updatedPodcastList = [...podcastList];
+            updatedPodcastList[currentIndex] = {
+                ...currentPodcast,
+                isFavorited: newIsFavorited,
+            };
+
+            this.setData({
+                podcastList: updatedPodcastList,
+            });
         })
     },
 
@@ -1086,10 +1125,10 @@ Page({
             }
 
             if (result) {
-                console.log('收藏状态同步到数据库成功:', {podcastId, isFavorited});
+                console.log('收藏状态同步到数据库成功:', { podcastId, isFavorited });
 
             } else {
-                
+
                 console.error('数据库收藏操作失败:', result?.error);
                 // 延迟提示用户
                 setTimeout(() => {
@@ -1118,7 +1157,7 @@ Page({
 
     // 回滚收藏状态（登录用户操作失败时使用）
     rollbackFavoriteState(podcastId) {
-        const {podcastList} = this.data;
+        const { podcastList } = this.data;
         const index = podcastList.findIndex(p => p.id === podcastId);
 
         if (index !== -1) {
@@ -1127,14 +1166,14 @@ Page({
                 ...updatedPodcastList[index],
                 isFavorited: !updatedPodcastList[index].isFavorited,
             };
-            this.setData({podcastList: updatedPodcastList});
+            this.setData({ podcastList: updatedPodcastList });
 
         }
     },
 
     // 更新单个播客的收藏状态（用于同步数据库状态）
     updatePodcastFavoriteState(podcastId, isFavorited) {
-        const {podcastList} = this.data;
+        const { podcastList } = this.data;
         const index = podcastList.findIndex(p => p.id === podcastId);
 
         if (index !== -1) {
@@ -1143,14 +1182,14 @@ Page({
                 ...updatedPodcastList[index],
                 isFavorited: isFavorited,
             };
-            this.setData({podcastList: updatedPodcastList});
+            this.setData({ podcastList: updatedPodcastList });
 
         }
     },
 
     // ========== 评论相关方法 ==========
     async loadCommentsForCurrentPodcast(podcastId) {
-      console.log(apiService)
+        console.log(apiService)
         try {
             const result = await apiService.comment.getList(podcastId);
             if (result.success) {
@@ -1161,7 +1200,7 @@ Page({
             }
         } catch (error) {
             console.error('加载评论失败:', error);
-            this.setData({commentList: []});
+            this.setData({ commentList: [] });
         }
     },
 
@@ -1176,7 +1215,7 @@ Page({
         });
 
         // 加载当前播客的评论
-        const {podcastList, currentIndex} = this.data;
+        const { podcastList, currentIndex } = this.data;
         if (podcastList[currentIndex]) {
             this.loadCommentsForCurrentPodcast(podcastList[currentIndex].id);
         }
@@ -1305,7 +1344,7 @@ Page({
             const result = await apiService.comment.like(userId, commentId);
             if (result.success) {
                 // 重新加载评论列表
-                const {podcastList, currentIndex} = this.data;
+                const { podcastList, currentIndex } = this.data;
                 if (podcastList[currentIndex]) {
                     this.loadCommentsForCurrentPodcast(podcastList[currentIndex].id);
                 }
@@ -1317,7 +1356,7 @@ Page({
 
     // ========== 播放速度相关方法 ==========
     handleSpeedChange() {
-        const {playbackSpeed, audioContext} = this.data;
+        const { playbackSpeed, audioContext } = this.data;
 
         // 循环切换播放速度: 1.0x -> 1.5x -> 2.0x -> 1.0x
         let newSpeed;
@@ -1329,7 +1368,7 @@ Page({
             newSpeed = 1.0;
         }
 
-        this.setData({playbackSpeed: newSpeed});
+        this.setData({ playbackSpeed: newSpeed });
 
         // 应用播放速度到音频上下文
         if (audioContext) {
@@ -1353,25 +1392,25 @@ Page({
     // 处理更多操作
     handleMore: function () {
         console.log('打开更多操作弹窗');
-        this.setData({showMorePopup: true});
+        this.setData({ showMorePopup: true });
     },
 
     // 关闭更多操作弹窗
     handleCloseMorePopup: function () {
         console.log('关闭更多操作弹窗');
-        this.setData({showMorePopup: false});
+        this.setData({ showMorePopup: false });
     },
 
     // 处理分享操作
     handleShare: function () {
         console.log('分享播客');
-        const {currentIndex, podcastList} = this.data;
+        const { currentIndex, podcastList } = this.data;
         const currentPodcast = podcastList[currentIndex];
 
         if (!currentPodcast) return;
 
         // 关闭弹窗
-        this.setData({showMorePopup: false});
+        this.setData({ showMorePopup: false });
 
         // 触发分享
         wx.showShareMenu({
@@ -1394,7 +1433,7 @@ Page({
     handleDownload: function () {
         console.log('下载播客');
         // 关闭弹窗
-        this.setData({showMorePopup: false});
+        this.setData({ showMorePopup: false });
 
         wx.showToast({
             title: '下载功能开发中',
@@ -1442,7 +1481,7 @@ Page({
                 'globalPlayer.isPlaying': true,
                 'globalPlayer.currentPodcast': podcast,
             });
-            
+
         } catch (err) {
             console.warn('handleWaterfallPlay 播放失败:', err);
             wx.showToast({ title: '播放失败', icon: 'none' });
@@ -1543,7 +1582,7 @@ Page({
 
     // 保存播放进度
     savePlayProgress: function () {
-        const {currentIndex, podcastList, audioPosition} = this.data;
+        const { currentIndex, podcastList, audioPosition } = this.data;
         if (!podcastList.length || currentIndex < 0) return;
         const podcast = podcastList[currentIndex];
         const progressKey = `podcast_progress_${podcast.id}`;
@@ -1554,7 +1593,7 @@ Page({
 
     // 加载播放进度
     loadPlayProgress: function (index) {
-        const {podcastList} = this.data;
+        const { podcastList } = this.data;
 
         if (!podcastList.length || index < 0 || index >= podcastList.length) return;
 
@@ -1582,7 +1621,7 @@ Page({
                 currentTimeFormatted: this.formatTime(progress.position),
                 // 如果当前播客有duration信息，同时更新audioDuration
                 ...(currentPodcast?.duration
-                    ? {audioDuration: currentPodcast.duration}
+                    ? { audioDuration: currentPodcast.duration }
                     : {}),
             });
         } else {
@@ -1598,7 +1637,7 @@ Page({
 
     // 分享功能
     onShareAppMessage: function () {
-        const {currentIndex, podcastList} = this.data;
+        const { currentIndex, podcastList } = this.data;
         const currentPodcast = podcastList[currentIndex] || {};
 
         return {
@@ -1611,7 +1650,7 @@ Page({
 
     // 分享到朋友圈
     onShareTimeline: function () {
-        const {currentIndex, podcastList} = this.data;
+        const { currentIndex, podcastList } = this.data;
         const currentPodcast = podcastList[currentIndex] || {};
 
         return {
@@ -1645,7 +1684,7 @@ Page({
 
     // 触发自动播放（滑动后自动播放）
     triggerAutoPlay: function () {
-        const {audioContext, podcastList, currentIndex} = this.data;
+        const { audioContext, podcastList, currentIndex } = this.data;
         const currentPodcast = podcastList[currentIndex];
 
         if (!currentPodcast || !currentPodcast.audio_url || !audioContext || !podcastList.length || currentIndex < 0) {
@@ -1662,7 +1701,7 @@ Page({
             console.log('设置新音频源进行自动播放');
 
             // 停止当前音频（加防护）
-            try { audioContext && typeof audioContext.stop === 'function' && audioContext.stop(); } catch (_) {}
+            try { audioContext && typeof audioContext.stop === 'function' && audioContext.stop(); } catch (_) { }
 
             // 设置新的音频源
             audioContext.src = newSrc;
@@ -1680,7 +1719,7 @@ Page({
 
             // 开始播放
             audioContext.play();
-            
+
         } else {
             // 继续播放当前音频
             this.hideCustomLoading();

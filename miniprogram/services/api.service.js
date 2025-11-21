@@ -62,7 +62,7 @@ class ApiService {
         }
 
         if (search) {
-          queryParams.title = `ilike.%${encodeURIComponent(search)}%`;
+          queryParams.title = `ilike.%${search}%`;
         }
 
         const result = await requestUtil.get('/rest/v1/podcasts', queryParams);
@@ -148,7 +148,7 @@ class ApiService {
 
       }
 
-      
+
     },
 
     // 移除收藏
@@ -547,13 +547,13 @@ class ApiService {
             "podcast_id": podcastId
           }
         );
-          
+
         console.log("博客浏览量自增成功，数量：" + result)
 
-          return {
-            success: true,
-            data: result
-          };
+        return {
+          success: true,
+          data: result
+        };
 
       } catch (error) {
         console.error('增加浏览量失败:', error);
@@ -574,13 +574,13 @@ class ApiService {
             "podcast_id": podcastId
           }
         );
-          
+
         console.log("博客收藏量增加成功，数量：" + result)
 
-          return {
-            success: true,
-            data: result
-          };
+        return {
+          success: true,
+          data: result
+        };
 
       } catch (error) {
         console.error('增加收藏量失败:', error);
@@ -601,13 +601,13 @@ class ApiService {
             "podcast_id": podcastId
           }
         );
-          
+
         console.log("博客收藏量减少成功，数量：" + result)
 
-          return {
-            success: true,
-            data: result
-          };
+        return {
+          success: true,
+          data: result
+        };
 
       } catch (error) {
         console.error('减少收藏量失败:', error);

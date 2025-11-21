@@ -29,12 +29,14 @@ Component({
     // 预览
     showQuickPreview: false,
     quickPreviewPodcast: null,
-    
+
   },
 
   lifetimes: {
     created() {
       this.loadedPodcastIds = new Set();
+      this.userFavoriteIds = new Set();
+      this.currentUserId = null;
       console.log("create 了 瀑布流")
     },
     attached() {
@@ -95,7 +97,7 @@ Component({
           const newPodcasts = result.data.filter(item => !this.loadedPodcastIds.has(item.id));
 
           if (newPodcasts.length > 0) {
-            const processedData = await this.processPodcastData(newPodcasts);
+            const processedData = await this.processPodcastData(newPodcasts, !loadMore);
 
             // 更新已加载ID集合
             newPodcasts.forEach(item => this.loadedPodcastIds.add(item.id));
@@ -142,7 +144,8 @@ Component({
     },
 
     // 数据处理
-    async processPodcastData(rawData) {
+    async processPodcastData(rawData, forceRefreshFavorites = false) {
+      await this.ensureUserFavorites(forceRefreshFavorites);
       return new Promise((resolve) => {
         setTimeout(() => {
           const processedData = rawData.map(podcast => {
@@ -161,7 +164,7 @@ Component({
               like_count: podcast.like_count || 0,
               favorite_count: podcast.favorite_count || 0,
               created_at: podcast.created_at,
-              isFavorited: false,
+              isFavorited: this.userFavoriteIds.has(podcast.id),
             };
           });
           resolve(processedData);
@@ -251,7 +254,7 @@ Component({
         const result = await this.fetchPodcastsFromDatabase(1, { limit: batchSize });
 
         if (result.success && result.data.length > 0) {
-          const processedData = await this.processPodcastData(result.data);
+          const processedData = await this.processPodcastData(result.data, true);
 
           // 更新已加载ID集合
           result.data.forEach(item => this.loadedPodcastIds.add(item.id));
@@ -296,9 +299,9 @@ Component({
     showQuickPreview(podcast) {
       this.setData({ showQuickPreview: true, quickPreviewPodcast: podcast });
     },
-    handleQuickPreviewTrialPlay(e) {},
-    handleQuickPreviewTrialPause(e) {},
-    handleQuickPreviewTrialStop(e) {},
+    handleQuickPreviewTrialPlay(e) { },
+    handleQuickPreviewTrialPause(e) { },
+    handleQuickPreviewTrialStop(e) { },
     handleQuickPreviewFavorite(e) {
       const { podcast, favorited } = e.detail;
       this.updateWaterfallItemFavoriteState(podcast.id, favorited);
@@ -321,8 +324,8 @@ Component({
       const { podcast } = e.detail || {};
       if (!podcast) return;
       this.showQuickPreview(podcast);
-    },handleQuickPreviewPlayFull
-    (e) {
+    }, handleQuickPreviewPlayFull
+      (e) {
       const { podcast } = e.detail;
       // 将完整播放与卡片播放对齐：向上抛出 'play'，由页面统一处理音频与 mini-player
       if (podcast) {
@@ -335,6 +338,10 @@ Component({
 
     // 收藏状态更新（本地+后端）
     updateWaterfallItemFavoriteState(podcastId, isFavorited) {
+      if (this.userFavoriteIds) {
+        if (isFavorited) this.userFavoriteIds.add(podcastId);
+        else this.userFavoriteIds.delete(podcastId);
+      }
       const { leftColumnList, rightColumnList } = this.data;
       const newLeft = leftColumnList.map(item => item.id === podcastId ? { ...item, isFavorited } : item);
       const newRight = rightColumnList.map(item => item.id === podcastId ? { ...item, isFavorited } : item);
@@ -344,7 +351,7 @@ Component({
     async updateFavoriteStatus(podcastId, isFavorited, userId) {
       try {
         const audioService = require('../../services/audio.service.js');
-          const app = getApp();
+        const app = getApp();
         let result;
         if (isFavorited) {
           result = await app.addToFavorites(userId, podcastId);
@@ -382,6 +389,7 @@ Component({
           limit,
           order_by: 'created_at',
           order_direction: 'desc',
+          search: this.data.searchKeyword || null,
         });
         if (result && result.success) {
           const data = (result.data || []).map(item => {
@@ -402,6 +410,36 @@ Component({
       } catch (error) {
         console.error('从数据库获取播客数据失败:', error);
         return { success: false, error: error.message || '网络请求失败', data: [] };
+      }
+    },
+
+    // 确保获取用户收藏列表
+    async ensureUserFavorites(force = false) {
+      const authService = require('../../services/auth.service.js');
+      const user = authService.getCurrentUser();
+
+      if (!user) {
+        this.userFavoriteIds = new Set();
+        this.currentUserId = null;
+        return;
+      }
+
+      if (!force && this.currentUserId === user.id) {
+        return;
+      }
+
+      try {
+        const apiService = require('../../services/api.service.js');
+        const res = await apiService.user.getFavorites(user.id);
+        if (res.success) {
+          this.userFavoriteIds = new Set(res.data.map(item => item.podcast_id));
+        } else {
+          this.userFavoriteIds = new Set();
+        }
+        this.currentUserId = user.id;
+      } catch (e) {
+        console.error('获取用户收藏失败', e);
+        this.userFavoriteIds = new Set();
       }
     },
   }

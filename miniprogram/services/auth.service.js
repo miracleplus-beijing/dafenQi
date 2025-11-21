@@ -272,7 +272,7 @@ class AuthService {
         const avatarUrl = this.getAvatarDisplayUrl({
           avatar_url: user?.user_metadata?.avatar_url || user?.avatar_url || null       
          });
-         const nickName = user?.user_metadata?.nickName || user?.nickName || '微信用户'
+         const nickName = user?.user_metadata?.nickname || user?.nickName || '微信用户'
          const wechat_openid = user?.user_metadata?.wechat_openid || user?.wechat_openid
         const currentUser = {
           id: user.id,
