@@ -131,7 +131,7 @@
   </view>
 
   <!-- 瀑布流模式（封装为容器组件） -->
-  <view wx:if="{{browseMode === 'waterfall'}}" class="waterfall-mode">
+  <view wx:hidden="{{browseMode === 'waterfall'}}" class="waterfall-mode">
     <waterfall-container bind:play="handleWaterfallPlay" />
   </view>
 
