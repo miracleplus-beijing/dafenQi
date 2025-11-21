@@ -396,12 +396,22 @@ Page({
 
     onHide: function () {
         console.log('漫游页面隐藏');
-        // 播放状态现在自动保存在每个 podcast.playState 中
+
+        // 页面隐藏时保存当前播放进度
+        const { playingPodcastId } = this.data;
+        if (playingPodcastId) {
+            this.savePlayProgress(playingPodcastId);
+        }
     },
 
     onUnload: function () {
         console.log('漫游页面卸载');
-        // 播放状态现在自动保存在每个 podcast.playState 中
+
+        // 页面卸载时保存当前播放进度
+        const { playingPodcastId } = this.data;
+        if (playingPodcastId) {
+            this.savePlayProgress(playingPodcastId);
+        }
 
         // 清理定时器
         this.cleanupTimers();
@@ -536,18 +546,32 @@ Page({
 
         audioContext.onPause(() => {
             console.log('音频事件：暂停播放');
+            const { playingPodcastId } = this.data;
+
             this.setData({
                 isPlaying: false,
                 audioLoading: false,
             });
+
+            // 暂停时保存播放进度
+            if (playingPodcastId) {
+                this.savePlayProgress(playingPodcastId);
+            }
         });
 
         audioContext.onStop(() => {
             console.log('音频事件：停止播放');
+            const { playingPodcastId } = this.data;
+
             this.setData({
                 isPlaying: false,
                 audioLoading: false,
             });
+
+            // 停止时保存播放进度
+            if (playingPodcastId) {
+                this.savePlayProgress(playingPodcastId);
+            }
         });
 
         audioContext.onTimeUpdate(() => {
@@ -566,6 +590,12 @@ Page({
                     currentTimeFormatted: this.formatTime(currentTime),
                     totalTimeFormatted: this.formatTime(duration),
                 });
+
+                // 定期保存播放进度（每10秒保存一次，避免过于频繁）
+                if (!this._lastSaveTime || (Date.now() - this._lastSaveTime) > 10000) {
+                    this.savePlayProgress(playingPodcastId);
+                    this._lastSaveTime = Date.now();
+                }
             }
         });
 
@@ -1614,58 +1644,98 @@ Page({
     },
 
 
-    // 保存播放进度
-    savePlayProgress: function () {
-        const { currentIndex, podcastList, audioPosition } = this.data;
-        if (!podcastList.length || currentIndex < 0) return;
-        const podcast = podcastList[currentIndex];
+    // 保存播放进度（适配新架构：基于 playState）
+    savePlayProgress: function (podcastId = null) {
+        const { podcastList, playingPodcastId } = this.data;
+
+        // 如果没有指定 podcastId，则保存当前正在播放的播客
+        const targetPodcastId = podcastId || playingPodcastId;
+
+        if (!targetPodcastId) {
+            console.log('savePlayProgress: 没有需要保存进度的播客');
+            return;
+        }
+
+        // 查找播客
+        const podcast = podcastList.find(p => p.id === targetPodcastId);
+
+        if (!podcast || !podcast.playState) {
+            console.warn('savePlayProgress: 未找到播客或播放状态:', targetPodcastId);
+            return;
+        }
+
+        // 只有播放位置大于0才保存（避免保存无意义的进度）
+        if (podcast.playState.position <= 0) {
+            console.log('savePlayProgress: 播放位置为0，跳过保存');
+            return;
+        }
+
         const progressKey = `podcast_progress_${podcast.id}`;
-        wx.setStorageSync(progressKey, {
-            position: audioPosition
-        });
+        const progressData = {
+            position: podcast.playState.position,
+            progress: podcast.playState.progress,
+            actualDuration: podcast.playState.actualDuration,
+            lastPlayTime: Date.now()
+        };
+
+        try {
+            wx.setStorageSync(progressKey, progressData);
+            console.log('savePlayProgress: 已保存播放进度 -', podcast.title,
+                `位置: ${this.formatTime(progressData.position)} / ${this.formatTime(progressData.actualDuration)}`);
+        } catch (error) {
+            console.error('savePlayProgress: 保存失败:', error);
+        }
     },
 
-    // 加载播放进度
+    // 加载播放进度（适配新架构：基于 playState）
     loadPlayProgress: function (index) {
         const { podcastList } = this.data;
 
-        if (!podcastList.length || index < 0 || index >= podcastList.length) return;
+        if (!podcastList.length || index < 0 || index >= podcastList.length) {
+            console.warn('loadPlayProgress: 无效的播客索引:', index);
+            return;
+        }
 
         const podcast = podcastList[index];
         const progressKey = `podcast_progress_${podcast.id}`;
 
-        const progress = wx.getStorageSync(progressKey);
+        try {
+            const progress = wx.getStorageSync(progressKey);
 
-        if (progress && progress.position > 0) {
-            // 获取当前播客的时长信息
-            const currentPodcast = podcastList[index];
-            const duration =
-                currentPodcast?.duration || this.data.audioDuration || 0;
+            if (progress && progress.position > 0) {
+                console.log('loadPlayProgress: 加载播放进度 -', podcast.title,
+                    `位置: ${this.formatTime(progress.position)}`);
 
-            // 只有在有有效时长时才计算进度百分比，否则保持为0
-            let progressPercentage = 0;
-            if (duration > 0) {
-                progressPercentage = (progress.position / duration) * 100;
+                // 计算进度百分比
+                const duration = progress.actualDuration || podcast.playState.actualDuration || podcast.duration || 0;
+                let progressPercentage = 0;
+                if (duration > 0) {
+                    progressPercentage = (progress.position / duration) * 100;
+                }
+
+                // 更新播客的播放状态
+                this.updatePodcastPlayState(podcast.id, {
+                    position: progress.position,
+                    progress: Math.min(100, Math.max(0, progressPercentage)),
+                    currentTimeFormatted: this.formatTime(progress.position),
+                    // 如果保存的进度中有 actualDuration，也一并更新
+                    ...(progress.actualDuration ? {
+                        actualDuration: progress.actualDuration,
+                        totalTimeFormatted: this.formatTime(progress.actualDuration)
+                    } : {}),
+                });
+
+                // 如果当前正在播放这个播客，需要 seek 到对应位置
+                const { audioContext, playingPodcastId, isPlaying } = this.data;
+                if (audioContext && playingPodcastId === podcast.id && isPlaying) {
+                    console.log('loadPlayProgress: seek 到保存的位置:', progress.position);
+                    audioContext.seek(progress.position);
+                }
+            } else {
+                console.log('loadPlayProgress: 没有保存的播放进度 -', podcast.title);
             }
-
-            // 更新UI显示的播放进度，但不立即seek音频
-            this.setData({
-                audioPosition: progress.position,
-                currentProgress: progressPercentage,
-                currentTimeFormatted: this.formatTime(progress.position),
-                // 如果当前播客有duration信息，同时更新audioDuration
-                ...(currentPodcast?.duration
-                    ? { audioDuration: currentPodcast.duration }
-                    : {}),
-            });
-        } else {
-            // 没有保存的进度，确保完全重置状态
-            this.setData({
-                audioPosition: 0,
-                currentProgress: 0,
-                currentTimeFormatted: '0:00',
-            });
-            console.log('没有保存的播放进度，重置为初始状态:', podcast.title);
+        } catch (error) {
+            console.error('loadPlayProgress: 加载失败:', error);
         }
     },
 
@@ -1743,6 +1813,13 @@ Page({
             playingPodcastId: currentPodcast.id
         });
 
+        // 检查是否有保存的播放进度
+        let startTime = 0;
+        if (currentPodcast.playState && currentPodcast.playState.position > 0) {
+            startTime = currentPodcast.playState.position;
+            console.log('自动播放：检测到历史进度，将从', startTime, '秒开始播放');
+        }
+
         // 检查是否需要切换音频源
         const currentSrc = audioContext.src || '';
         const newSrc = currentPodcast.audio_url;
@@ -1751,6 +1828,14 @@ Page({
         if (isNewAudio) {
             console.log('设置新音频源进行自动播放');
             audioContext.src = newSrc;
+        }
+
+        // 设置起始播放位置（必须在 play 之前设置）
+        // 注意：即使是同一个音频，stop() 后再 play() 也会重置，所以需要设置 startTime
+        if (startTime > 0) {
+            audioContext.startTime = startTime;
+        } else {
+            audioContext.startTime = 0;
         }
 
         // 播放音频
