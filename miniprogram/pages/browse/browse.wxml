@@ -72,13 +72,13 @@
             <!-- 进度控制 -->
             <view class="progress-section">
               <view class="time-info">
-                <text class="current-time">{{currentTimeFormatted}}</text>
-                <text class="total-time">{{totalTimeFormatted}}</text>
+                <text class="current-time">{{item.playState.currentTimeFormatted}}</text>
+                <text class="total-time">{{item.playState.totalTimeFormatted}}</text>
               </view>
 
               <view class="progress-container">
                 <t-slider
-                  value="{{currentProgress}}"
+                  value="{{item.playState.progress}}"
                   min="{{0}}"
                   max="{{100}}"
                   step="{{0.1}}"
@@ -108,7 +108,7 @@
               <!-- 播放/暂停按钮 -->
               <view class="play-btn" bindtap="handlePlayPause">
 
-                <t-icon wx:if="{{ isPlaying }}" size="80rpx" name="pause" class="play-icon"  data-name="pause" bind:click="onIconTap" />
+                <t-icon wx:if="{{ index === currentIndex && isPlaying }}" size="80rpx" name="pause" class="play-icon"  data-name="pause" bind:click="onIconTap" />
                 <t-icon wx:else name="play" size="80rpx" class="play-icon"  data-name="play" bind:click="onIconTap" />
 
               </view>

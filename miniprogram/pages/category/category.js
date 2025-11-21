@@ -653,7 +653,6 @@ Page({
 
   // 上拉加载更多
   onReachBottom: function () {
-    console.log('上拉加载更多');
 
     wx.showToast({
       title: '没有更多内容了',

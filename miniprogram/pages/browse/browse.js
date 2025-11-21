@@ -8,8 +8,7 @@ Page({
     data: {
         // 播放状态
         isPlaying: false,
-        currentProgress: 0,
-        maxProgress: 100,
+        playingPodcastId: null, // 正在播放的播客ID
 
         // 播客列表
         podcastList: [],
@@ -28,13 +27,7 @@ Page({
         // 音频相关
         audioContext: null,
         currentAudio: null,
-        audioPosition: 0, // 当前播放位置（秒）
-        audioDuration: 0, // 音频总时长（秒）
         audioLoading: false, // 音频是否正在加载
-
-        // 时间显示
-        currentTimeFormatted: '0:00',
-        totalTimeFormatted: '0:00',
 
         // 防止自动滑动的标志
         lastUserInteraction: 0,
@@ -266,6 +259,9 @@ Page({
             const podcast = result.data;
             console.log('获取到播客详情:', podcast.title);
 
+            // 初始化播客的播放状态
+            podcast.playState = this.initPodcastPlayState(podcast);
+
             // 将播客插入到列表开头
             const updatedList = [podcast, ...this.data.podcastList];
             const updatedIds = [podcast.id, ...this.data.loadedPodcastIds];
@@ -360,6 +356,9 @@ Page({
                     channel_name: channelName,
                 };
 
+                // 初始化播客的播放状态
+                formattedPodcast.playState = this.initPodcastPlayState(formattedPodcast);
+
                 console.log('格式化的播客数据:', formattedPodcast);
 
                 const finalList = [formattedPodcast, ...currentList];
@@ -399,16 +398,12 @@ Page({
 
     onHide: function () {
         console.log('漫游页面隐藏');
-
-        // 保存播放进度
-        this.savePlayProgress();
+        // 播放状态现在自动保存在每个 podcast.playState 中
     },
 
     onUnload: function () {
         console.log('漫游页面卸载');
-
-        // 保存播放进度
-        this.savePlayProgress();
+        // 播放状态现在自动保存在每个 podcast.playState 中
 
         // 清理定时器
         this.cleanupTimers();
@@ -467,6 +462,49 @@ Page({
         }
     },
 
+    // ========== 播客状态管理辅助方法 ==========
+
+    // 获取当前显示的播客
+    getCurrentPodcast: function () {
+        const { podcastList, currentIndex } = this.data;
+        return podcastList[currentIndex] || null;
+    },
+
+    // 获取正在播放的播客
+    getPlayingPodcast: function () {
+        const { podcastList, playingPodcastId } = this.data;
+        if (!playingPodcastId) return null;
+        return podcastList.find(p => p.id === playingPodcastId) || null;
+    },
+
+    // 初始化播客的播放状态
+    initPodcastPlayState: function (podcast) {
+        const duration = podcast.duration || 0;
+        return {
+            position: 0,                    // 当前播放位置（秒）
+            progress: 0,                    // 播放进度（0-100）
+            actualDuration: duration,       // 实际音频时长（音频加载后更新）
+            currentTimeFormatted: '0:00',
+            totalTimeFormatted: this.formatTime(duration),
+            lastPlayTime: null              // 最后播放时间
+        };
+    },
+
+    // 更新播客的播放状态
+    updatePodcastPlayState: function (podcastId, updates) {
+        const { podcastList } = this.data;
+        const index = podcastList.findIndex(p => p.id === podcastId);
+
+        if (index >= 0) {
+            const podcast = podcastList[index];
+            const updatedPlayState = { ...podcast.playState, ...updates };
+
+            this.setData({
+                [`podcastList[${index}].playState`]: updatedPlayState
+            });
+        }
+    },
+
     // 初始化音频上下文
     initAudioContext: function () {
         const audioContext = wx.createInnerAudioContext({
@@ -481,11 +519,21 @@ Page({
         // 音频事件监听
         audioContext.onPlay(() => {
             console.log('音频事件：开始播放');
+            const { playingPodcastId } = this.data;
+
             this.setData({
                 isPlaying: true,
                 audioLoading: false,
             });
-            app.setCurrentPodcast(this.data.podcastList[this.data.currentIndex]);
+
+            // 更新正在播放的播客的 lastPlayTime
+            if (playingPodcastId) {
+                this.updatePodcastPlayState(playingPodcastId, {
+                    lastPlayTime: Date.now()
+                });
+            }
+
+            app.setCurrentPodcast(this.getCurrentPodcast());
         });
 
         audioContext.onPause(() => {
@@ -500,8 +548,6 @@ Page({
             console.log('音频事件：停止播放');
             this.setData({
                 isPlaying: false,
-                currentProgress: 0,
-                audioPosition: 0,
                 audioLoading: false,
             });
         });
@@ -509,29 +555,37 @@ Page({
         audioContext.onTimeUpdate(() => {
             const currentTime = audioContext.currentTime || 0;
             const duration = audioContext.duration || 0;
+            const { playingPodcastId, isDraggingThumb } = this.data;
 
-            if (duration > 0 && !this.data.isDraggingThumb) {
+            if (duration > 0 && !isDraggingThumb && playingPodcastId) {
                 const progress = (currentTime / duration) * 100;
-                const progressRatio = currentTime / duration;
 
-                this.setData({
-                    currentProgress: Math.min(100, Math.max(0, progress)),
-                    audioPosition: currentTime,
-                    audioDuration: duration,
+                // 更新正在播放的播客的播放状态
+                this.updatePodcastPlayState(playingPodcastId, {
+                    position: currentTime,
+                    progress: Math.min(100, Math.max(0, progress)),
+                    actualDuration: duration,
                     currentTimeFormatted: this.formatTime(currentTime),
                     totalTimeFormatted: this.formatTime(duration),
                 });
-
             }
         });
 
         audioContext.onEnded(() => {
             console.log('音频播放结束');
+            const { playingPodcastId } = this.data;
+
             this.setData({
                 isPlaying: false,
-                currentProgress: 100,
                 audioLoading: false,
             });
+
+            // 更新播放进度为100%
+            if (playingPodcastId) {
+                this.updatePodcastPlayState(playingPodcastId, {
+                    progress: 100
+                });
+            }
         });
 
         audioContext.onError(res => {
@@ -555,13 +609,17 @@ Page({
             console.log('音频可以播放');
             this.hideCustomLoading();
             const duration = audioContext.duration;
-            if (duration > 0) {
-                this.setData({
-                    audioDuration: duration,
+            const { playingPodcastId } = this.data;
+
+            if (duration > 0 && playingPodcastId) {
+                // 更新实际音频时长
+                this.updatePodcastPlayState(playingPodcastId, {
+                    actualDuration: duration,
                     totalTimeFormatted: this.formatTime(duration),
-                    audioLoading: false,
                 });
             }
+
+            this.setData({ audioLoading: false });
         });
 
         audioContext.onWaiting(() => {
@@ -608,7 +666,7 @@ Page({
                                 });
                         }
 
-                        return {
+                        const podcastData = {
                             id: podcast.id,
                             title: podcast.title,
                             description: podcast.description,
@@ -627,6 +685,11 @@ Page({
                             isFavorited: isFavorited,
                             isThumbsUp: false,
                         };
+
+                        // 初始化播放状态
+                        podcastData.playState = this.initPodcastPlayState(podcastData);
+
+                        return podcastData;
                     })
                 );
 
@@ -656,9 +719,6 @@ Page({
                     ...(loadMore
                         ? {}
                         : {
-                            audioPosition: 0,
-                            currentProgress: 0,
-                            audioDuration: 0,
                             isPlaying: false,
                             currentIndex: 0,
                         }),
@@ -666,21 +726,6 @@ Page({
 
                 // 首次加载时，加载第一个播客的播放进度
                 if (!loadMore) {
-                    // 获取第一个播客的时长信息用于初始化
-                    const firstPodcast = finalPodcastList[0];
-                    const initialDuration = firstPodcast?.duration || 0;
-
-                    // 确保在加载进度前先重置所有播放状态
-                    this.setData({
-                        currentProgress: 0,
-                        audioPosition: 0,
-                        currentTimeFormatted: '0:00',
-                        totalTimeFormatted:
-                            initialDuration > 0 ? this.formatTime(initialDuration) : '0:00',
-                        audioDuration: initialDuration,
-                        isPlaying: false,
-                    });
-
                     this.loadPlayProgress(0);
 
 
@@ -859,10 +904,11 @@ Page({
 
     // 处理播放/暂停
     handlePlayPause: function () {
-        const { audioContext, isPlaying, podcastList, currentIndex } = this.data;
+        const { audioContext, isPlaying } = this.data;
+        const currentPodcast = this.getCurrentPodcast();
 
-        if (!audioContext || !podcastList.length) {
-            console.error('音频上下文或播客列表为空');
+        if (!audioContext) {
+            console.error('音频上下文为空');
             wx.showToast({
                 title: '播放器初始化失败',
                 icon: 'none',
@@ -870,7 +916,6 @@ Page({
             return;
         }
 
-        const currentPodcast = podcastList[currentIndex];
         if (!currentPodcast || !currentPodcast.audio_url) {
             console.error('当前播客数据无效');
             wx.showToast({
@@ -892,33 +937,36 @@ Page({
     },
 
     // 开始播放的统一处理函数
-    startPlayback: function (currentPodcast) {
+    startPlayback: function (podcast) {
         const { audioContext } = this.data;
+
+        // 设置正在播放的播客ID
+        this.setData({
+            playingPodcastId: podcast.id
+        });
 
         // 检查是否需要切换音频源
         const currentSrc = audioContext.src || '';
-        const newSrc = currentPodcast.audio_url;
+        const newSrc = podcast.audio_url;
         const isNewAudio = currentSrc !== newSrc;
 
         if (isNewAudio) {
             console.log('需要切换音频源');
-            this.switchAudioSource(currentPodcast, newSrc);
+            this.switchAudioSource(podcast, newSrc);
         } else {
             // 继续播放当前音频
             console.log('继续播放当前音频');
             this.hideCustomLoading();
-
-
             audioContext.play();
         }
 
     },
 
     // 切换音频源并播放
-    switchAudioSource: function (currentPodcast, newSrc) {
+    switchAudioSource: function (podcast, newSrc) {
         const { audioContext } = this.data;
 
-        console.log('切换音频源:', currentPodcast.title);
+        console.log('切换音频源:', podcast.title);
 
         // 显示加载动画
         this.setData({
@@ -936,23 +984,12 @@ Page({
             console.warn('停止音频失败:', e);
         }
 
-        // 重置播放进度
-        this.setData({
-            currentProgress: 0,
-            audioPosition: 0,
-            currentTimeFormatted: '0:00',
-            // 保留 duration 如果已知，否则重置
-            audioDuration: currentPodcast.duration || 0,
-            totalTimeFormatted: currentPodcast.duration ? this.formatTime(currentPodcast.duration) : '0:00',
-        });
-
-        // 设置新音频源
+        // 设置新音频源（播放状态会通过音频事件自动更新到 podcast.playState）
         if (audioContext) {
             audioContext.src = newSrc;
             audioContext.play();
         }
     },
-
 
 
 
@@ -969,19 +1006,19 @@ Page({
 
     // Slider 拖拽结束（类似 Vue 的 @change）
     handleSliderChange: function (e) {
-        const { audioContext, audioDuration } = this.data;
+        const { audioContext, playingPodcastId } = this.data;
+        const playingPodcast = this.getPlayingPodcast();
 
-        if (!audioContext || !audioDuration) return;
+        if (!audioContext || !playingPodcast) return;
 
         const percentage = e.detail.value;
-        const seekTime = (percentage / 100) * audioDuration;
+        const duration = playingPodcast.playState.actualDuration;
+        const seekTime = (percentage / 100) * duration;
 
-        // 拖拽结束时才真正seek音频
-        // audioContext.seek(seekTime);
-
-        this.setData({
-            currentProgress: percentage,
-            audioPosition: seekTime,
+        // 拖拽过程中更新UI (拖拽结束时才seek音频)
+        this.updatePodcastPlayState(playingPodcastId, {
+            progress: percentage,
+            position: seekTime,
             currentTimeFormatted: this.formatTime(seekTime),
         });
 
@@ -994,28 +1031,34 @@ Page({
         this.setData({
             isDraggingThumb: false,
         });
-        const { audioContext, audioDuration } = this.data;
+        const { audioContext } = this.data;
+        const playingPodcast = this.getPlayingPodcast();
 
-        if (!audioContext || !audioDuration) return;
+        if (!audioContext || !playingPodcast) return;
 
         const percentage = e.detail.value;
-        const seekTime = (percentage / 100) * audioDuration;
+        const duration = playingPodcast.playState.actualDuration;
+        const seekTime = (percentage / 100) * duration;
         audioContext.seek(seekTime);
     },
 
     // 处理后退15秒
     handleRewind: function () {
-        const { audioContext, audioPosition } = this.data;
+        const { audioContext, playingPodcastId } = this.data;
+        const playingPodcast = this.getPlayingPodcast();
 
-        if (!audioContext) return;
+        if (!audioContext || !playingPodcast) return;
 
-        const newPosition = Math.max(0, audioPosition - 15);
+        const currentPosition = playingPodcast.playState.position;
+        const duration = playingPodcast.playState.actualDuration;
+        const newPosition = Math.max(0, currentPosition - 15);
+
         audioContext.seek(newPosition);
 
         // 立即更新UI状态，即使在暂停状态下
-        this.setData({
-            audioPosition: newPosition,
-            currentProgress: (newPosition / this.data.audioDuration) * 100,
+        this.updatePodcastPlayState(playingPodcastId, {
+            position: newPosition,
+            progress: (newPosition / duration) * 100,
             currentTimeFormatted: this.formatTime(newPosition),
         });
 
@@ -1024,17 +1067,21 @@ Page({
 
     // 处理前进30秒
     handleFastForward: function () {
-        const { audioContext, audioPosition, audioDuration } = this.data;
+        const { audioContext, playingPodcastId } = this.data;
+        const playingPodcast = this.getPlayingPodcast();
 
-        if (!audioContext) return;
+        if (!audioContext || !playingPodcast) return;
 
-        const newPosition = Math.min(audioDuration, audioPosition + 30);
+        const currentPosition = playingPodcast.playState.position;
+        const duration = playingPodcast.playState.actualDuration;
+        const newPosition = Math.min(duration, currentPosition + 30);
+
         audioContext.seek(newPosition);
 
         // 立即更新UI状态，即使在暂停状态下
-        this.setData({
-            audioPosition: newPosition,
-            currentProgress: (newPosition / audioDuration) * 100,
+        this.updatePodcastPlayState(playingPodcastId, {
+            position: newPosition,
+            progress: (newPosition / duration) * 100,
             currentTimeFormatted: this.formatTime(newPosition),
         });
 
@@ -1684,13 +1731,18 @@ Page({
 
     // 触发自动播放（滑动后自动播放）
     triggerAutoPlay: function () {
-        const { audioContext, podcastList, currentIndex } = this.data;
-        const currentPodcast = podcastList[currentIndex];
+        const { audioContext } = this.data;
+        const currentPodcast = this.getCurrentPodcast();
 
-        if (!currentPodcast || !currentPodcast.audio_url || !audioContext || !podcastList.length || currentIndex < 0) {
+        if (!currentPodcast || !currentPodcast.audio_url || !audioContext) {
             console.log('自动播放条件不满足');
             return;
         }
+
+        // 设置正在播放的播客ID
+        this.setData({
+            playingPodcastId: currentPodcast.id
+        });
 
         // 检查是否需要切换音频源
         const currentSrc = audioContext.src || '';
@@ -1703,21 +1755,8 @@ Page({
             // 停止当前音频（加防护）
             try { audioContext && typeof audioContext.stop === 'function' && audioContext.stop(); } catch (_) { }
 
-            // 设置新的音频源
+            // 设置新的音频源并播放（播放状态会通过音频事件自动更新到 podcast.playState）
             audioContext.src = newSrc;
-
-            // 重置播放状态
-            this.setData({
-                audioPosition: 0,
-                currentProgress: 0,
-                audioDuration: 0,
-                currentTimeFormatted: '0:00',
-                totalTimeFormatted: '0:00',
-            });
-
-
-
-            // 开始播放
             audioContext.play();
 
         } else {
