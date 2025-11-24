@@ -102,7 +102,7 @@
 
               <!-- 后退15秒 -->
               <view class="control-btn" bindtap="handleRewind">
-                <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/backward-15s.svg" class="control-icon"></image>
+                <t-icon name="backward" size="60rpx" class="control-icon" />
               </view>
               <!-- 播放/暂停按钮 -->
               <view class="play-btn" bindtap="handlePlayPause">
@@ -112,9 +112,9 @@
 
               </view>
 
-              <!-- 前进30秒 -->
+              <!-- 前进15秒 -->
               <view class="control-btn" bindtap="handleFastForward">
-                <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/forward-30s.svg" class="control-icon" />
+                <t-icon name="forward" size="60rpx" class="control-icon" />
               </view>
 
               <!-- 更多操作 -->

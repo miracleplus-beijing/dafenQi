@@ -1082,7 +1082,7 @@ Page({
         console.log('后退15秒到:', newPosition);
     },
 
-    // 处理前进30秒
+    // 处理前进15秒
     handleFastForward: function () {
         const { audioContext, playingPodcastId } = this.data;
         const playingPodcast = this.getPlayingPodcast();
@@ -1091,7 +1091,7 @@ Page({
 
         const currentPosition = playingPodcast.playState.position;
         const duration = playingPodcast.playState.actualDuration;
-        const newPosition = Math.min(duration, currentPosition + 30);
+        const newPosition = Math.min(duration, currentPosition + 15);
 
         audioContext.seek(newPosition);
 
@@ -1102,7 +1102,7 @@ Page({
             currentTimeFormatted: this.formatTime(newPosition),
         });
 
-        console.log('前进30秒到:', newPosition);
+        console.log('前进15秒到:', newPosition);
     },
 
     // 处理收藏 - 要求用户先登录
@@ -1422,12 +1422,12 @@ Page({
     handleSpeedChange() {
         const { playbackSpeed, audioContext } = this.data;
 
-        // 循环切换播放速度: 1.0x -> 1.5x -> 2.0x -> 1.0x
+        // 循环切换播放速度: 1.0x -> 1.25x -> 1.5x -> 1.0x
         let newSpeed;
         if (playbackSpeed === 1.0) {
+            newSpeed = 1.25;
+        } else if (playbackSpeed === 1.25) {
             newSpeed = 1.5;
-        } else if (playbackSpeed === 1.5) {
-            newSpeed = 2.0;
         } else {
             newSpeed = 1.0;
         }
