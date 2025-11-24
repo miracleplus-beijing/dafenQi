@@ -1,5 +1,5 @@
 # ===========================================
-# 达芬Qi说 .gitignore 文件
+# 奇绩前沿信号 .gitignore 文件
 # ===========================================
 
 # ===============================
@@ -10,10 +10,6 @@
 .claude/
 .claude/*
 .claude/**/*
-
-# Supabase 数据库配置
-miniprogram/config/supabase.config.js
-**/supabase.config.js
 
 # 环境变量文件
 .env

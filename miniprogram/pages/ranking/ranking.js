@@ -398,7 +398,7 @@ Page({
   // 分享功能
   onShareAppMessage: function () {
     return {
-      title: `达芬Qi说 - 完整榜单`,
+      title: `奇绩前沿信号 - 完整榜单`,
       path: `/pages/ranking/ranking?defaultTab=${this.data.currentTab}`,
       imageUrl:
         'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/share-cover.jpg',

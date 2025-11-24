@@ -5,7 +5,7 @@
     "waterfall-container": "../../components/waterfall-container/waterfall-container",
     "comment-popup": "../../components/comment-popup/comment-popup"
   },
-  "navigationBarTitleText": "达芬Qi说",
+  "navigationBarTitleText": "奇绩前沿信号",
   "navigationBarTextStyle": "black",
   "backgroundTextStyle": "light",
   "enablePullDownRefresh": false,

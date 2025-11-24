@@ -664,7 +664,7 @@ Page({
   // 分享功能
   onShareAppMessage: function () {
     return {
-      title: '达芬Qi说 - 发现精彩的学术内容',
+      title: '奇绩前沿信号 - 发现精彩的学术内容',
       path: '/pages/category/category',
       imageUrl:
         'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/share-cover.jpg',

@@ -1,0 +1,111 @@
+<!-- 我的评论页面 -->
+<view class="my-comments-container">
+  <!-- Tab导航 -->
+  <view class="tab-header">
+    <view class="tab-item {{activeTab === 'comments' ? 'active' : ''}}"
+          bindtap="switchTab" data-tab="comments">
+      <text class="tab-text">我的评论</text>
+    </view>
+    <view class="tab-item {{activeTab === 'interactions' ? 'active' : ''}}"
+          bindtap="switchTab" data-tab="interactions">
+      <text class="tab-text">互动消息</text>
+    </view>
+  </view>
+
+  <!-- 登录提示 -->
+  <view class="login-prompt" wx:if="{{showLoginPrompt}}">
+    <view class="login-prompt-content">
+      <t-icon name="chat" class="login-prompt-icon" size="120rpx" />
+      <text class="login-prompt-title">请先登录</text>
+      <text class="login-prompt-desc">登录后可查看您的评论记录</text>
+      <button class="login-btn" bindtap="goToLogin">立即登录</button>
+    </view>
+  </view>
+
+  <!-- 我的评论内容 -->
+  <scroll-view 
+    wx:if="{{activeTab === 'comments' && !showLoginPrompt}}"
+    scroll-y 
+    class="comments-scroll"
+    enable-flex
+    enhanced="{{true}}"
+    show-scrollbar="{{false}}"
+  >
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{commentList.length === 0 && !loading}}">
+      <t-icon name="chat" class="empty-icon" size="120rpx" />
+      <text class="empty-text">暂无评论</text>
+      <text class="empty-desc">您发表的评论会显示在这里</text>
+    </view>
+
+    <!-- 加载状态 -->
+    <view class="loading-state" wx:if="{{loading}}">
+      <t-icon name="loading" class="loading-icon" size="60rpx" />
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <!-- 评论列表 -->
+    <view class="comment-list" wx:if="{{commentList.length > 0 && !loading}}">
+      <view 
+        wx:for="{{commentList}}" 
+        wx:key="id" 
+        class="comment-item"
+        bindtap="handleCommentTap"
+        data-podcast-id="{{item.podcast_id}}"
+        data-comment-id="{{item.id}}"
+      >
+        <!-- 博客封面 -->
+        <view class="comment-cover">
+          <t-image 
+            src="{{item.podcast_cover}}" 
+            mode="aspectFill"
+            class="cover-image"
+            lazy-load
+            error="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png"
+          />
+        </view>
+
+        <!-- 评论信息 -->
+        <view class="comment-info">
+          <!-- 博客标题 -->
+          <text class="podcast-title">{{item.podcast_title}}</text>
+          
+          <!-- 评论内容 -->
+          <view class="comment-content">
+            <text class="comment-text">{{item.content}}</text>
+          </view>
+
+          <!-- 元数据信息 -->
+          <view class="comment-meta">
+            <view class="meta-item">
+              <t-icon name="time" class="meta-icon" size="24rpx" />
+              <text class="meta-text">{{item.created_at_formatted}}</text>
+            </view>
+            <view class="meta-item" wx:if="{{item.audio_timestamp > 0}}">
+              <t-icon name="play-circle" class="meta-icon" size="24rpx" />
+              <text class="meta-text">{{item.timestamp_formatted}}</text>
+            </view>
+            <view class="meta-item" wx:if="{{item.like_count > 0}}">
+              <t-icon name="thumb-up" class="meta-icon" size="24rpx" />
+              <text class="meta-text">{{item.like_count}}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 右侧箭头 -->
+        <view class="comment-arrow">
+          <t-icon name="chevron-right" size="32rpx" color="#cccccc" />
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 互动消息内容 -->
+  <view class="interactions-content" wx:if="{{activeTab === 'interactions' && !showLoginPrompt}}">
+    <view class="empty-state">
+      <t-icon name="notification" class="empty-icon" size="120rpx" />
+      <text class="empty-text">暂无互动消息</text>
+      <text class="empty-desc">功能开发中，敬请期待</text>
+    </view>
+  </view>
+</view>

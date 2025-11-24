@@ -52,7 +52,7 @@
             <!-- 标题区域 -->
             <view class="title-section">
               <text class="main-title">{{item.title}}</text>
-              <text class="sub-title">{{item.channel_name || '达芬Qi说'}}</text>
+              <text class="sub-title">{{item.channel_name || '奇绩前沿信号'}}</text>
             </view>
 
             <!-- 内容摘要区域 (替代认知卡片) -->

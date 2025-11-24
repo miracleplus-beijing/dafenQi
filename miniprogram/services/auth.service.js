@@ -169,7 +169,7 @@ class AuthService {
           success: true,
           action: 'goto_login',
           user: user,
-          message: '欢迎使用达芬Qi说！请完善您的个人信息',
+          message: '欢迎使用奇绩前沿信号！请完善您的个人信息',
         };
       } else {
         // 老用户，直接跳转到profile
@@ -234,15 +234,31 @@ class AuthService {
       const session = wx.getStorageSync('supabase_session');
 
       if (!session) {
-        return { data: null, error: null };
+        console.log('本地没有存储session');
+        return null;
       }
 
-      console.log('获取session，sessession:', session);
+      // 验证session数据完整性
+      if (!session.access_token) {
+        console.warn('Session缺少access_token');
+        return null;
+      }
+
+      // 详细日志输出，帮助排查问题
+      console.log('获取session详情:', {
+        hasAccessToken: !!session.access_token,
+        hasRefreshToken: !!session.refresh_token,
+        refreshTokenLength: session.refresh_token ? session.refresh_token.length : 0,
+        refreshTokenPreview: session.refresh_token ? session.refresh_token.substring(0, 10) + '...' : 'N/A',
+        expiresAt: session.expires_at,
+        expiresIn: session.expires_in
+      });
+
       return session;
     } catch (error) {
       console.error('从本地存储恢复session失败:', error);
       this.clearStorageSession();
-      return { data: null, error: error.message };
+      return null;
     }
   }
 
@@ -266,31 +282,33 @@ class AuthService {
   getCurrentUser() {
     try {
       // 从存储恢复会话和用户信息
-      const sessionResult = this.getSession();
+      const session = this.getSession();
 
-        const user = sessionResult.user;
-        const avatarUrl = this.getAvatarDisplayUrl({
-          avatar_url: user?.user_metadata?.avatar_url || user?.avatar_url || null       
-         });
-         const nickName = user?.user_metadata?.nickname || user?.nickName || user?.nickname || '微信用户'
-         const wechat_openid = user?.user_metadata?.wechat_openid || user?.wechat_openid
-        const currentUser = {
-          id: user.id,
-          email: user?.email,
-          nickName: nickName , // 统一使用nickName
-          avatarUrl: avatarUrl, // 使用动态生成的头像URL
-          nickname: nickName , // 保持兼容性
-          avatar_url: avatarUrl, // 原始avatar_url用于重新生成
-          wechat_openid: wechat_openid,
-          display_name: nickName,
-          has_user_info: !!(nickName && avatarUrl),
-        };
-        return currentUser;
+      if (!session || !session.user) {
+        return null;
+      }
 
-      return null
+      const user = session.user;
+      const avatarUrl = this.getAvatarDisplayUrl({
+        avatar_url: user?.user_metadata?.avatar_url || user?.avatar_url || null
+      });
+      const nickName = user?.user_metadata?.nickname || user?.nickName || user?.nickname || '微信用户'
+      const wechat_openid = user?.user_metadata?.wechat_openid || user?.wechat_openid
+      const currentUser = {
+        id: user.id,
+        email: user?.email,
+        nickName: nickName, // 统一使用nickName
+        avatarUrl: avatarUrl, // 使用动态生成的头像URL
+        nickname: nickName, // 保持兼容性
+        avatar_url: avatarUrl, // 原始avatar_url用于重新生成
+        wechat_openid: wechat_openid,
+        display_name: nickName,
+        has_user_info: !!(nickName && avatarUrl),
+      };
+      return currentUser;
     } catch (error) {
       console.error('获取用户信息时发生异常:', error);
-      return { data: {  }, error: error.message };
+      return null;
     }
   }
 
@@ -591,13 +609,35 @@ class AuthService {
    */
   async refreshSession() {
     try {
-      const sessionResult = this.getSession();
-      if (!sessionResult?.refresh_token) {
-        console.log('没有可用的refresh_token');
+      const session = this.getSession();
+
+      // 详细的session验证
+      if (!session) {
+        console.error('刷新失败: 没有存储的session');
+        return { success: false, error: 'No session found' };
+      }
+
+      if (!session.refresh_token) {
+        console.error('刷新失败: session中没有refresh_token');
+        console.log('当前session结构:', Object.keys(session));
         return { success: false, error: 'No refresh token available' };
       }
 
-      console.log('尝试刷新session...');
+      // 验证refresh_token格式（Supabase的refresh_token通常比较长）
+      if (session.refresh_token.length < 20) {
+        console.error('刷新失败: refresh_token格式异常', {
+          length: session.refresh_token.length,
+          value: session.refresh_token
+        });
+        // 清理异常session
+        this.clearStorageSession();
+        return { success: false, error: 'Invalid refresh token format' };
+      }
+
+      console.log('开始刷新session...', {
+        refreshTokenLength: session.refresh_token.length,
+        refreshTokenPreview: session.refresh_token,
+      });
 
       // 调用Edge Function进行session刷新
       const response = await this.supabaseRequest({
@@ -605,20 +645,35 @@ class AuthService {
         method: 'POST',
         data: {
           code: 'refresh_session',
-          refresh_token: sessionResult.refresh_token,
+          refresh_token: session.refresh_token,
         },
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
+      console.log('Edge Function刷新响应:', {
+        success: response.success,
+        hasSession: !!response.session,
+        error: response.error
+      });
+
       if (response.success && response.session) {
-        console.log('Session刷新成功');
+        console.log('Session刷新成功，新session信息:', {
+          hasAccessToken: !!response.session.access_token,
+          hasRefreshToken: !!response.session.refresh_token,
+          expiresAt: response.session.expires_at
+        });
         await this.setSession(response.session);
 
         return { success: true, session: response.session };
       } else {
         console.warn('Session刷新失败:', response.error);
+        // 如果是refresh_token无效，清理本地session
+        if (response.error && response.error.includes('Refresh Token Not Found')) {
+          console.log('Refresh Token无效，清理本地session');
+          this.clearStorageSession();
+        }
         return { success: false, error: response.error || 'Refresh failed' };
       }
     } catch (error) {
@@ -651,11 +706,11 @@ class AuthService {
    * 检查登录状态
    * @returns {Promise<boolean>} 是否已登录
    */
-   checkLoginStatus()  {
+  checkLoginStatus() {
     try {
       // 检查Supabase Auth会话
-      const sessionResult = this.getSession();
-      if (sessionResult?.user) {
+      const session = this.getSession();
+      if (session?.user) {
         return true;
       }
     } catch (error) {

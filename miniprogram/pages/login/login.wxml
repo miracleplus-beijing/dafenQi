@@ -7,7 +7,7 @@
   <!-- Logo区域 -->
   <view class="logo-section">
     <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/logo.png" class="app-logo" mode="aspectFit"></image>
-    <text class="app-name">达芬Qi说</text>
+    <text class="app-name">奇绩前沿信号</text>
     <text class="app-slogan">听见学术的声音</text>
   </view>
 
@@ -65,6 +65,6 @@
   
   <!-- 底部装饰 -->
   <view class="bottom-decoration">
-    <text class="copyright">© 2024 达芬Qi说 版权所有</text>
+    <text class="copyright">© 2024 奇绩前沿信号 版权所有</text>
   </view>
 </view>

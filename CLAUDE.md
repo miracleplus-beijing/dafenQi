@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**达芬Qi说** is a WeChat miniprogram for audio podcast platform with Supabase backend integration. Built with native WeChat miniprogram framework (libVersion: 3.10.2), using glass-easel component framework, TDesign UI library (v1.10.1), and comprehensive service-oriented architecture.
+**奇绩前沿信号** is a WeChat miniprogram for audio podcast platform with Supabase backend integration. Built with native WeChat miniprogram framework (libVersion: 3.10.2), using glass-easel component framework, TDesign UI library (v1.10.1), and comprehensive service-oriented architecture.
 
 ## Architecture
 

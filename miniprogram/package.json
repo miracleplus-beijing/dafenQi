@@ -11,7 +11,7 @@
     "check-format": "prettier --check ."
   },
   "dependencies": {
-    "tdesign-miniprogram": "^1.10.1"
+    "tdesign-miniprogram": "^1.11.2"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.28.5",

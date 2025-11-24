@@ -38,7 +38,7 @@ const imageUrls = {
   'icons/feedback.svg': `${SUPABASE_BASE_URL}/icons/feedback.svg`,
 
   // 播放控制扩展
-  'icons/前进30秒.svg': `${SUPABASE_BASE_URL}/icons/forward-30s.svg`,
+  'icons/前进30秒.svg': `${SUPABASE_BASE_URL}/icons/backward-15s.svg`,
   'icons/后退15秒.svg': `${SUPABASE_BASE_URL}/icons/backward-15s.svg`,
   'icons/progress-bar.svg': `${SUPABASE_BASE_URL}/icons/progress-bar.svg`,
 

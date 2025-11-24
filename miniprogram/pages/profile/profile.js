@@ -36,7 +36,7 @@ Page({
     try {
       const app = getApp();
       app.globalData.activeTabIndex = 2;
-    } catch (_) {}
+    } catch (_) { }
 
     await this.checkLoginStatus();
     // 页面进入动画
@@ -113,11 +113,9 @@ Page({
         break;
 
       case 'comments':
-        console.log('我的评论 - 功能待开发');
-        wx.showToast({
-          title: '功能开发中，敬请期待',
-          icon: 'none',
-          duration: 1500,
+        console.log('跳转到我的评论');
+        wx.navigateTo({
+          url: '/pages/my-comments/my-comments',
         });
         break;
 
@@ -332,7 +330,7 @@ Page({
   onShareAppMessage: function () {
     const title = this.data.isLoggedIn
       ? `${this.data.userInfo.nickName}邀请你一起听播客`
-      : '达芬Qi说 - 发现精彩的学术内容';
+      : '奇绩前沿信号 - 发现精彩的学术内容';
 
     return {
       title: title,

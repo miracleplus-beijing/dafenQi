@@ -20,8 +20,8 @@ class AudioService {
    * @returns {boolean} 是否已登录
    */
   isUserLoggedIn() {
-    const token = this.authService.getSession().access_token;
-    return token !== null;
+    const session = this.authService.getSession();
+    return session?.access_token !== null && session?.access_token !== undefined;
   }
 
   /**
@@ -168,32 +168,32 @@ class AudioService {
    * @returns {Promise<Object>} 操作结果
    */
   async removeFromFavorites(userId, podcastId) {
-      try {
-        // 检查用户是否已登录
-        if (!this.isUserLoggedIn()) {
-          return {
-            success: false,
-            error: '请先登录后再取消收藏',
-            errorType: 'auth_required',
-          };
-        }
-
-        const url = `${this.supabaseUrl}/rest/v1/user_favorites?user_id=eq.${userId}&podcast_id=eq.${podcastId}`;
-
-        // 需要用户认证
-        await this.makeRequest(url, 'DELETE', null, true);
-        console.log('取消收藏成功, podcastId：', podcastId);
-  
-        return { success: true };
-      } catch (error) {
-        console.error('删除收藏失败:', error);
+    try {
+      // 检查用户是否已登录
+      if (!this.isUserLoggedIn()) {
         return {
           success: false,
-          error: error.message.includes('权限不足')
-            ? '请先登录后再取消收藏'
-            : error.message,
+          error: '请先登录后再取消收藏',
+          errorType: 'auth_required',
         };
       }
+
+      const url = `${this.supabaseUrl}/rest/v1/user_favorites?user_id=eq.${userId}&podcast_id=eq.${podcastId}`;
+
+      // 需要用户认证
+      await this.makeRequest(url, 'DELETE', null, true);
+      console.log('取消收藏成功, podcastId：', podcastId);
+
+      return { success: true };
+    } catch (error) {
+      console.error('删除收藏失败:', error);
+      return {
+        success: false,
+        error: error.message.includes('权限不足')
+          ? '请先登录后再取消收藏'
+          : error.message,
+      };
+    }
   }
   /**
    * 检查是否已收藏
@@ -206,7 +206,7 @@ class AudioService {
     const response = await this.makeRequest(url, 'GET');
 
     return response.data && response.data.length > 0;
-    
+
   }
 
   /**
@@ -281,7 +281,8 @@ class AudioService {
   makeRequest(url, method = 'GET', data = null, requireAuth = false) {
     return new Promise((resolve, reject) => {
       // 智能选择认证方式
-      const userToken = this.authService.getSession().access_token;
+      const session = this.authService.getSession();
+      const userToken = session?.access_token;
       let authorizationHeader;
 
       if (requireAuth && !userToken) {

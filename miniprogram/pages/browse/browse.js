@@ -1745,7 +1745,7 @@ Page({
         const currentPodcast = podcastList[currentIndex] || {};
 
         return {
-            title: currentPodcast.title || '达芬Qi说播客',
+            title: currentPodcast.title || '奇绩前沿信号播客',
             path: '/pages/browse/browse',
             imageUrl:
                 currentPodcast.cover_url || getImageUrl('icons/share-cover.jpg'),
@@ -1758,7 +1758,7 @@ Page({
         const currentPodcast = podcastList[currentIndex] || {};
 
         return {
-            title: '我在达芬Qi说听到了这个有趣的内容',
+            title: '我在奇绩前沿信号听到了这个有趣的内容',
             query: 'share=timeline',
             imageUrl:
                 currentPodcast.cover_url || getImageUrl('icons/share-cover.jpg'),

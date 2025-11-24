@@ -12,20 +12,21 @@
     "pages/ranking/ranking",
     "pages/privacy-policy/privacy-policy",
     "pages/service-agreement/service-agreement",
-    "pages/personal-info/personal-info"
+    "pages/personal-info/personal-info",
+    "pages/my-comments/my-comments"
   ],
   "permission": {
     "scope.userAvatar": {
-      "desc": "用于展示用户个人资料，便于其他用户识别"
+      "desc": "用于展示用户个人资料,便于其他用户识别"
     },
     "scope.userNickname": {
-      "desc": "用于获取用户昵称，完善个人资料信息"
+      "desc": "用于获取用户昵称,完善个人资料信息"
     }
   },
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#ffffff",
-    "navigationBarTitleText": "达芬Qi说",
+    "navigationBarTitleText": "奇绩前沿信号",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#ffffff"
   },
@@ -63,7 +64,6 @@
   "useExtendedLib": {
     "weui": true
   },
-  
   "usingComponents": {
     "t-button": "tdesign-miniprogram/button/button",
     "t-tag": "tdesign-miniprogram/tag/tag",
@@ -82,10 +82,10 @@
     "t-back-top": "tdesign-miniprogram/back-top/back-top",
     "t-tabs": "tdesign-miniprogram/tabs/tabs",
     "t-tab-panel": "tdesign-miniprogram/tab-panel/tab-panel",
-
     "mini-player": "components/mini-player/mini-player",
     "waterfall-header": "components/waterfall-header/waterfall-header",
     "waterfall-card": "components/waterfall-card/waterfall-card",
     "quick-preview": "components/quick-preview/quick-preview"
+    
   }
 }

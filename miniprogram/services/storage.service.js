@@ -334,8 +334,8 @@ class StorageService {
       }
 
       // 获取token用于API认证
-      const sessionResult = authService.getSession();
-      let userToken = sessionResult?.access_token;
+      const session = authService.getSession();
+      let userToken = session?.access_token;
 
       // 验证token格式和有效性
       if (!userToken || typeof userToken !== 'string') {

@@ -11,7 +11,7 @@
 
 /* 全页面 text 样式 */
 text {
-    text-shadow: 0 6rpx 8rpx rgba(0, 0, 0, 0.1);
+    text-shadow: 0 4rpx 6rpx rgba(0, 0, 0, 0.05);
     font-weight: 400;
     font-size: 34rpx;
 }

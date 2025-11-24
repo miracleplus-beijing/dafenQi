@@ -428,6 +428,52 @@ class CommentService {
     }
   }
 
+  // 获取用户的所有评论（包含播客信息）
+  async getUserComments(userId) {
+    try {
+      console.log('获取用户评论列表:', userId);
+
+      if (!userId) {
+        throw new Error('缺少用户ID参数');
+      }
+
+      // 使用Supabase的关联查询获取评论及播客信息(包含channels关联)
+      const query = `user_id=eq.${userId}&select=*,podcast:podcast_id(id,title,cover_url,duration,channels(name))&order=created_at.desc`;
+
+      const result = await this.supabaseRequest(`comments?${query}`);
+
+      if (result.success) {
+        const comments = result.data.map(comment => {
+          const podcast = comment.podcast || {};
+          const channels = podcast.channels || {};
+          return {
+            ...this.formatCommentData(comment),
+            // 添加播客信息
+            podcast_title: podcast.title || '未知博客',
+            podcast_cover: podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png',
+            podcast_channel: channels.name || '未知频道',
+            podcast_duration: podcast.duration || 0,
+          };
+        });
+
+        console.log(`成功获取用户${userId}的${comments.length}条评论`);
+        return {
+          success: true,
+          data: comments,
+        };
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('获取用户评论列表失败:', error);
+      return {
+        success: false,
+        error: error.message || '获取评论失败',
+        data: [],
+      };
+    }
+  }
+
   // 取消置顶评论
   async unpinComment(commentId) {
     try {
