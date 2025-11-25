@@ -96,9 +96,13 @@
 
                             <!-- 播放控制按钮 -->
                             <view class="playback-controls">
-                                <!-- 播放速度 -->
-                                <view class="control-btn" bindtap="handleSpeedChange">
-                                    <text class="speed-display">{{playbackSpeed}}×</text>
+                                <!-- 收藏按钮 -->
+                                <view class="control-btn" bindtap="handleFavorite">
+                                    <t-icon 
+                                        name="{{podcastList[currentIndex].isFavorited ? 'heart-filled' : 'heart'}}"
+                                        size="60rpx" 
+                                        color="{{podcastList[currentIndex].isFavorited ? '#ed8936' : '#718096'}}"
+                                        class="control-icon"/>
                                 </view>
 
                                 <!-- 后退15秒 -->
@@ -170,13 +174,10 @@
 
                 <!-- 操作选项列表 -->
                 <view class="more-actions-list">
-                    <!-- 收藏操作 -->
-                    <view class="more-action-item" bindtap="handleFavorite">
-                        <t-icon name="{{podcastList[currentIndex].isFavorited ? 'heart-filled' : 'heart'}}"
-                                size="48rpx"
-                                color="{{podcastList[currentIndex].isFavorited ? '#ed8936' : '#718096'}}"
-                                class="action-icon"/>
-                        <text class="action-text">{{podcastList[currentIndex].isFavorited ? '取消收藏' : '收藏'}}</text>
+                    <!-- 播放倍速 -->
+                    <view class="more-action-item" bindtap="handleSpeedChange">
+                        <t-icon name="time" size="48rpx" color="#718096" class="action-icon"/>
+                        <text class="action-text">倍速 {{playbackSpeed}}×</text>
                     </view>
 
                     <!-- 评论操作 -->

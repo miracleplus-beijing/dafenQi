@@ -585,9 +585,6 @@ page {
 }
 .control-icon {
     color: var(--font-color-primary);
-    width: 70%;
-    height: 70%;
-
 }
 
 
