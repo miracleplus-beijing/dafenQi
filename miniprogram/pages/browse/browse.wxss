@@ -1258,3 +1258,207 @@ page {
     color: var(--bg-primary);
     transform: scale(1.02);
 }
+
+/* ========== 阅读模式样式 ========== */
+
+/* 阅读模式遮罩层 */
+.reading-mode-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
+    z-index: 9999;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.reading-mode-overlay.active {
+    transform: translateY(0);
+}
+
+/* 顶部操作栏 */
+.reading-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10rpx);
+    border-bottom: 1rpx solid var(--secondary-color);
+    height: 100rpx;
+    box-sizing: border-box;
+}
+
+.reading-close-btn,
+.reading-share-btn {
+    width: 72rpx;
+    height: 72rpx;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.reading-close-btn:active,
+.reading-share-btn:active {
+    background: var(--secondary-dark);
+    transform: scale(0.9);
+}
+
+/* 内容滚动区域 */
+.reading-content-scroll {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.reading-content-wrapper {
+    padding: var(--spacing-xl) var(--spacing-lg);
+    max-width: 750rpx;
+    margin: 0 auto;
+}
+
+.reading-title {
+    font-size: 48rpx;
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    line-height: 1.4;
+    margin-bottom: var(--spacing-xl);
+    display: block;
+}
+
+.reading-text {
+    font-size: 32rpx;
+    color: var(--text-primary);
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    display: block;
+    letter-spacing: 0.5rpx;
+}
+
+/* 简化播放控制栏 */
+.reading-playback-bar {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20rpx);
+    border-top: 1rpx solid var(--secondary-color);
+    padding: var(--spacing-md) var(--spacing-lg);
+    box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.08);
+}
+
+/* 播客信息 */
+.reading-podcast-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.reading-mini-cover {
+    width: 88rpx;
+    height: 88rpx;
+    border-radius: var(--border-radius-md);
+    flex-shrink: 0;
+}
+
+.reading-podcast-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4rpx;
+}
+
+.reading-podcast-title {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.reading-podcast-channel {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 进度条容器 */
+.reading-progress-container {
+    margin-bottom: var(--spacing-md);
+}
+
+.reading-slider {
+    width: 100%;
+    height: 20px;
+}
+
+/* 播放控制按钮 */
+.reading-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-xl);
+}
+
+.reading-control-btn {
+    width: 88rpx;
+    height: 88rpx;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.reading-control-btn:active {
+    background: var(--secondary-dark);
+    transform: scale(0.9);
+}
+
+.reading-play-btn {
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-dark) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8rpx 24rpx rgba(237, 137, 54, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reading-play-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 4rpx 12rpx rgba(237, 137, 54, 0.2);
+}
+
+/* 阅读模式动画 */
+@keyframes readingFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20rpx);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.reading-mode-overlay.active .reading-content-wrapper {
+    animation: readingFadeIn 0.5s ease 0.2s backwards;
+}
+
+.reading-mode-overlay.active .reading-playback-bar {
+    animation: readingFadeIn 0.4s ease 0.3s backwards;
+}

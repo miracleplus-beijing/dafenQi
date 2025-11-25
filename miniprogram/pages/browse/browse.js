@@ -74,6 +74,10 @@ Page({
 
         // 安全区域
         safeAreaBottom: 0,
+
+        // 阅读模式状态
+        isReadingMode: false, // 是否处于阅读模式
+        readingModeExpanded: false, // 阅读模式动画状态
     },
 
     onLoad: function (options) {
@@ -1831,6 +1835,201 @@ Page({
         }
 
         // 设置起始播放位置（必须在 play 之前设置）
+        // 隐藏全局播放器
+        this.setData({
+            'globalPlayer.isVisible': false,
+        });
+        app.hideGlobalPlayer();
+    },
+
+
+    // 保存播放进度（适配新架构：基于 playState）
+    savePlayProgress: function (podcastId = null) {
+        const { podcastList, playingPodcastId } = this.data;
+
+        // 如果没有指定 podcastId，则保存当前正在播放的播客
+        const targetPodcastId = podcastId || playingPodcastId;
+
+        if (!targetPodcastId) {
+            console.log('savePlayProgress: 没有需要保存进度的播客');
+            return;
+        }
+
+        // 查找播客
+        const podcast = podcastList.find(p => p.id === targetPodcastId);
+
+        if (!podcast || !podcast.playState) {
+            console.warn('savePlayProgress: 未找到播客或播放状态:', targetPodcastId);
+            return;
+        }
+
+        // 只有播放位置大于0才保存（避免保存无意义的进度）
+        if (podcast.playState.position <= 0) {
+            console.log('savePlayProgress: 播放位置为0，跳过保存');
+            return;
+        }
+
+        const progressKey = `podcast_progress_${podcast.id}`;
+        const progressData = {
+            position: podcast.playState.position,
+            progress: podcast.playState.progress,
+            actualDuration: podcast.playState.actualDuration,
+            lastPlayTime: Date.now()
+        };
+
+        try {
+            wx.setStorageSync(progressKey, progressData);
+            console.log('savePlayProgress: 已保存播放进度 -', podcast.title,
+                `位置: ${this.formatTime(progressData.position)} / ${this.formatTime(progressData.actualDuration)}`);
+        } catch (error) {
+            console.error('savePlayProgress: 保存失败:', error);
+        }
+    },
+
+    // 加载播放进度（适配新架构：基于 playState）
+    loadPlayProgress: function (index) {
+        const { podcastList } = this.data;
+
+        if (!podcastList.length || index < 0 || index >= podcastList.length) {
+            console.warn('loadPlayProgress: 无效的播客索引:', index);
+            return;
+        }
+
+        const podcast = podcastList[index];
+        const progressKey = `podcast_progress_${podcast.id}`;
+
+        try {
+            const progress = wx.getStorageSync(progressKey);
+
+            if (progress && progress.position > 0) {
+                console.log('loadPlayProgress: 加载播放进度 -', podcast.title,
+                    `位置: ${this.formatTime(progress.position)}`);
+
+                // 计算进度百分比
+                const duration = progress.actualDuration || podcast.playState.actualDuration || podcast.duration || 0;
+                let progressPercentage = 0;
+                if (duration > 0) {
+                    progressPercentage = (progress.position / duration) * 100;
+                }
+
+                // 更新播客的播放状态
+                this.updatePodcastPlayState(podcast.id, {
+                    position: progress.position,
+                    progress: Math.min(100, Math.max(0, progressPercentage)),
+                    currentTimeFormatted: this.formatTime(progress.position),
+                    // 如果保存的进度中有 actualDuration，也一并更新
+                    ...(progress.actualDuration ? {
+                        actualDuration: progress.actualDuration,
+                        totalTimeFormatted: this.formatTime(progress.actualDuration)
+                    } : {}),
+                });
+
+                // 如果当前正在播放这个播客，需要 seek 到对应位置
+                const { audioContext, playingPodcastId, isPlaying } = this.data;
+                if (audioContext && playingPodcastId === podcast.id && isPlaying) {
+                    console.log('loadPlayProgress: seek 到保存的位置:', progress.position);
+                    audioContext.seek(progress.position);
+                }
+            } else {
+                console.log('loadPlayProgress: 没有保存的播放进度 -', podcast.title);
+            }
+        } catch (error) {
+            console.error('loadPlayProgress: 加载失败:', error);
+        }
+    },
+
+    // 分享功能
+    onShareAppMessage: function () {
+        const { currentIndex, podcastList } = this.data;
+        const currentPodcast = podcastList[currentIndex] || {};
+
+        return {
+            title: currentPodcast.title || '奇绩前沿信号播客',
+            path: '/pages/browse/browse',
+            imageUrl:
+                currentPodcast.cover_url || getImageUrl('icons/share-cover.jpg'),
+        };
+    },
+
+    // 分享到朋友圈
+    onShareTimeline: function () {
+        const { currentIndex, podcastList } = this.data;
+        const currentPodcast = podcastList[currentIndex] || {};
+
+        return {
+            title: '我在奇绩前沿信号听到了这个有趣的内容',
+            query: 'share=timeline',
+            imageUrl:
+                currentPodcast.cover_url || getImageUrl('icons/share-cover.jpg'),
+        };
+    },
+
+    // 格式化时间显示 (秒转为 mm:ss 或 h:mm:ss)
+    formatTime: function (seconds) {
+        if (!seconds || isNaN(seconds)) return '0:00';
+
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+
+        if (hours > 0) {
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        } else {
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+    },
+
+    hideCustomLoading() {
+        this.setData({
+            audioLoadingVisible: false,
+        });
+    },
+
+    // 触发自动播放（滑动后自动播放）
+    triggerAutoPlay: function () {
+        const { audioContext } = this.data;
+        const currentPodcast = this.getCurrentPodcast();
+
+        if (!currentPodcast || !currentPodcast.audio_url || !audioContext) {
+            console.log('自动播放条件不满足');
+            return;
+        }
+
+        console.log('触发自动播放:', currentPodcast.title);
+
+        // 【关键修复】先停止当前播放，防止多个音频同时播放
+        try {
+            if (audioContext && typeof audioContext.stop === 'function') {
+                audioContext.stop();
+                console.log('自动播放：已停止之前的音频');
+            }
+        } catch (e) {
+            console.warn('停止音频失败:', e);
+        }
+
+        // 设置正在播放的播客ID
+        this.setData({
+            playingPodcastId: currentPodcast.id
+        });
+
+        // 检查是否有保存的播放进度
+        let startTime = 0;
+        if (currentPodcast.playState && currentPodcast.playState.position > 0) {
+            startTime = currentPodcast.playState.position;
+            console.log('自动播放：检测到历史进度，将从', startTime, '秒开始播放');
+        }
+
+        // 检查是否需要切换音频源
+        const currentSrc = audioContext.src || '';
+        const newSrc = currentPodcast.audio_url;
+        const isNewAudio = currentSrc !== newSrc;
+
+        if (isNewAudio) {
+            console.log('设置新音频源进行自动播放');
+            audioContext.src = newSrc;
+        }
+
+        // 设置起始播放位置（必须在 play 之前设置）
         // 注意：即使是同一个音频，stop() 后再 play() 也会重置，所以需要设置 startTime
         if (startTime > 0) {
             audioContext.startTime = startTime;
@@ -1841,6 +2040,46 @@ Page({
         // 播放音频
         this.hideCustomLoading();
         audioContext.play();
+    },
 
+    // ========== 阅读模式相关方法 ==========
+
+    // 进入阅读模式
+    handleEnterReadingMode: function () {
+        console.log('进入阅读模式');
+
+        // 先设置isReadingMode为true，使遮罩层显示
+        this.setData({
+            isReadingMode: true
+        });
+
+        // 延迟触发动画，确保DOM已渲染
+        setTimeout(() => {
+            this.setData({
+                readingModeExpanded: true
+            });
+        }, 50);
+    },
+
+    // 退出阅读模式
+    handleExitReadingMode: function () {
+        console.log('退出阅读模式');
+
+        // 先触发退出动画
+        this.setData({
+            readingModeExpanded: false
+        });
+
+        // 等待动画结束后再隐藏遮罩层
+        setTimeout(() => {
+            this.setData({
+                isReadingMode: false
+            });
+        }, 300); // 与CSS动画时长一致
+    },
+
+    // 防止滚动穿透
+    preventScroll: function () {
+        return false;
     },
 });
