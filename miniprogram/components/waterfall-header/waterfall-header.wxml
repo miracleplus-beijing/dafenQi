@@ -18,30 +18,36 @@
       <!-- 分类tab -->
       <view class="filter-tab {{currentActiveTab === 'category' ? 'active' : ''}} {{filterOptions.category ? 'has-selection' : ''}}"
             bindtap="toggleFilterTab" data-tab="category">
-        <text class="tab-title">分类</text>
-        <text wx:if="{{filterOptions.category}}" class="tab-selection">{{getCategoryLabel(filterOptions.category)}}</text>
+        <view>
+          <text class="tab-title">分类</text>
+          <text wx:if="{{filterOptions.category}}" class="tab-selection">{{getCategoryLabel(filterOptions.category)}}</text>
+        </view>
         <t-icon name="{{currentActiveTab === 'category' ? 'chevron-up' : 'chevron-down'}}" size="28rpx" class="tab-arrow" />
       </view>
 
       <!-- 时间tab -->
       <view class="filter-tab {{currentActiveTab === 'time' ? 'active' : ''}} {{filterOptions.timeRange ? 'has-selection' : ''}}"
             bindtap="toggleFilterTab" data-tab="time">
-        <text class="tab-title">时间</text>
-        <text wx:if="{{filterOptions.timeRange}}" class="tab-selection">{{getTimeLabel(filterOptions.timeRange)}}</text>
+        <view>
+          <text class="tab-title">时间</text>
+          <text wx:if="{{filterOptions.timeRange}}" class="tab-selection">{{getTimeLabel(filterOptions.timeRange)}}</text>
+        </view>
         <t-icon name="{{currentActiveTab === 'time' ? 'chevron-up' : 'chevron-down'}}" size="28rpx" class="tab-arrow" />
       </view>
 
       <!-- 排序tab -->
       <view class="filter-tab {{currentActiveTab === 'sort' ? 'active' : ''}} {{filterOptions.sortType !== 'latest' ? 'has-selection' : ''}}"
             bindtap="toggleFilterTab" data-tab="sort">
-        <text class="tab-title">排序</text>
-        <text wx:if="{{filterOptions.sortType !== 'latest'}}" class="tab-selection">{{getSortLabel(filterOptions.sortType)}}</text>
+        <view>
+          <text class="tab-title">排序</text>
+          <text wx:if="{{filterOptions.sortType !== 'latest'}}" class="tab-selection">{{getSortLabel(filterOptions.sortType)}}</text>
+        </view>
         <t-icon name="{{currentActiveTab === 'sort' ? 'chevron-up' : 'chevron-down'}}" size="28rpx" class="tab-arrow" />
       </view>
 
       <!-- 清除筛选按钮 -->
       <view wx:if="{{hasActiveFilters}}" class="clear-btn" bindtap="clearFilters">
-        <t-icon name="refresh" size="28rpx" />
+        <t-icon name="refresh" size="32rpx" color="#ed8936" />
       </view>
     </view>
 

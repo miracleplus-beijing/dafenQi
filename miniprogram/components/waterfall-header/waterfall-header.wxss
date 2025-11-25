@@ -1,106 +1,148 @@
-/* 瀑布流头部组件样式 */
+/* 瀑布流头部组件样式 - 现代化设计 */
+
+/* ========== 整体容器 ========== */
 .waterfall-header {
-  background: var(--bg-primary);
-  box-shadow: var(--shadow-sm);
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  box-shadow: 0 2px 16rpx rgba(0, 0, 0, 0.06);
   z-index: 100;
   position: relative;
+  border-bottom: 1rpx solid rgba(237, 137, 54, 0.08);
 }
 
-/* 搜索区域 */
+/* ========== 搜索区域 ========== */
 .search-section {
   padding: var(--spacing-md) var(--spacing-lg);
-  background: var(--bg-primary);
+  background: transparent;
 }
 
 .search-input {
   width: 100%;
-  border-radius: var(--border-radius-lg);
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
 }
 
-/* 筛选区域 */
+/* ========== 筛选区域 ========== */
 .filter-section {
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--secondary-dark);
+  background: transparent;
   position: relative;
+  padding-bottom: var(--spacing-sm);
 }
 
-/* 主筛选tab栏 */
+/* ========== 主筛选Tab栏 ========== */
 .main-filter-tabs {
   display: flex;
   align-items: center;
-  padding: var(--spacing-md) var(--spacing-lg);
-  gap: var(--spacing-md);
+  padding: 0 var(--spacing-lg) var(--spacing-md);
+  gap: 16rpx;
 }
 
-/* 筛选tab */
+/* ========== 筛选Tab ========== */
 .filter-tab {
   flex: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--bg-primary);
-  border: 1px solid var(--secondary-color);
-  border-radius: var(--border-radius-sm);
-  transition: all 0.2s ease;
+  justify-content: center;
+  gap: 8rpx;
+  padding: 20rpx 24rpx;
+  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+  border: 2rpx solid transparent;
+  border-radius: 24rpx;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-height: 72rpx;
   box-sizing: border-box;
+  position: relative;
+  overflow: visible;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.filter-tab::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, rgba(237, 137, 54, 0) 0%, rgba(237, 137, 54, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .filter-tab:active {
-  transform: scale(0.98);
+  transform: scale(0.96);
 }
 
-/* Tab激活状态 */
+/* Tab激活状态 - 使用渐变和玻璃拟态 */
 .filter-tab.active {
-  background: var(--accent-color);
-  border-color: var(--accent-color);
+  background: linear-gradient(135deg, #ed8936 0%, #dd7726 100%);
+  border-color: transparent;
   color: #ffffff;
+  box-shadow: 0 8rpx 24rpx rgba(237, 137, 54, 0.35), 0 2rpx 8rpx rgba(237, 137, 54, 0.2);
+  transform: translateY(-2rpx);
+}
+
+.filter-tab.active::before {
+  opacity: 0;
 }
 
 .filter-tab.active .tab-title,
 .filter-tab.active .tab-selection {
   color: #ffffff;
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
 }
 
 .filter-tab.active .tab-arrow {
   color: #ffffff;
+  filter: drop-shadow(0 1rpx 2rpx rgba(0, 0, 0, 0.1));
 }
 
-/* Tab有选择状态（未激活时显示选中内容） */
+/* Tab有选择状态 - 醒目的标记 */
 .filter-tab.has-selection:not(.active) {
-  background: rgba(237, 137, 54, 0.1);
-  border-color: var(--accent-color);
+  background: linear-gradient(135deg, rgba(237, 137, 54, 0.12) 0%, rgba(237, 137, 54, 0.08) 100%);
+  border-color: rgba(237, 137, 54, 0.3);
+  box-shadow: 0 4rpx 12rpx rgba(237, 137, 54, 0.15);
+}
+
+.filter-tab.has-selection:not(.active)::before {
+  opacity: 1;
 }
 
 .filter-tab.has-selection:not(.active) .tab-title {
   color: var(--accent-color);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Tab内容布局 */
+.filter-tab view {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
 }
 
 /* Tab标题 */
 .tab-title {
-  font-size: var(--font-size-md);
+  font-size: 28rpx;
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
   white-space: nowrap;
+  letter-spacing: 0.5rpx;
 }
 
 /* Tab选中内容显示 */
 .tab-selection {
-  font-size: var(--font-size-sm);
+  font-size: 24rpx;
   color: var(--accent-color);
-  margin-left: var(--spacing-xs);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 60rpx;
+  max-width: 80rpx;
+  font-weight: var(--font-weight-semibold);
 }
 
 /* Tab箭头 */
 .tab-arrow {
   color: var(--text-tertiary);
-  transition: transform 0.2s ease;
-  margin-left: var(--spacing-xs);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
 
@@ -108,43 +150,58 @@
   transform: rotate(180deg);
 }
 
-/* 清除按钮 */
+/* ========== 清除按钮 ========== */
 .clear-btn {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: var(--border-radius-sm);
-  background: var(--bg-primary);
-  border: 1px solid var(--secondary-color);
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+  border: 2rpx solid rgba(237, 137, 54, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2rpx 8rpx rgba(237, 137, 54, 0.1);
+  flex-shrink: 0;
 }
 
 .clear-btn:active {
-  background: var(--secondary-color);
-  transform: scale(0.95);
+  background: linear-gradient(135deg, #ed8936 0%, #dd7726 100%);
+  transform: scale(0.9) rotate(180deg);
+  box-shadow: 0 4rpx 12rpx rgba(237, 137, 54, 0.25);
 }
 
-/* 下拉选项面板 */
+.clear-btn:active t-icon {
+  color: #ffffff !important;
+}
+
+/* ========== 下拉选项面板 ========== */
 .dropdown-panel {
   position: absolute;
   top: 100%;
-  left: 0;
-  right: 0;
-  background: var(--bg-primary);
-  border: 1px solid var(--secondary-color);
-  border-top: none;
-  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
-  box-shadow: var(--shadow-lg);
+  left: var(--spacing-lg);
+  right: var(--spacing-lg);
+  margin-top: 8rpx;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
+  border: 1rpx solid rgba(237, 137, 54, 0.15);
+  border-radius: 24rpx;
+  box-shadow: 
+    0 12rpx 40rpx rgba(0, 0, 0, 0.12),
+    0 4rpx 16rpx rgba(237, 137, 54, 0.08);
   z-index: 200;
-  max-height: 600rpx;
-  overflow-y: auto;
+  max-height: 680rpx;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* 选项组 */
 .option-group {
-  padding: var(--spacing-sm) 0;
+  padding: 16rpx 0;
+  overflow-y: auto;
+  flex: 1;
 }
 
 /* 选项项 */
@@ -152,86 +209,170 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-md) var(--spacing-lg);
-  transition: background-color 0.2s ease;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+  padding: 28rpx 32rpx;
+  margin: 0 16rpx;
+  border-radius: 16rpx;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-.option-item:last-child {
-  border-bottom: none;
+.option-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6rpx;
+  height: 0;
+  background: linear-gradient(180deg, #ed8936 0%, #dd7726 100%);
+  border-radius: 0 3rpx 3rpx 0;
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .option-item:active {
-  background: var(--bg-secondary);
+  background: rgba(237, 137, 54, 0.06);
+  transform: scale(0.98);
 }
 
 /* 已选择的选项 */
 .option-item.selected {
-  background: rgba(237, 137, 54, 0.1);
+  background: linear-gradient(90deg, rgba(237, 137, 54, 0.15) 0%, rgba(237, 137, 54, 0.08) 100%);
+}
+
+.option-item.selected::before {
+  height: 60%;
 }
 
 .option-item.selected .option-label {
   color: var(--accent-color);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semibold);
 }
 
 /* 选项标签 */
 .option-label {
-  font-size: var(--font-size-md);
+  font-size: 30rpx;
   color: var(--text-primary);
   flex: 1;
+  letter-spacing: 0.5rpx;
 }
 
-/* 下拉面板遮罩 */
+/* 选中图标动画 */
+.option-item.selected t-icon {
+  animation: checkBounce 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes checkBounce {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ========== 下拉面板遮罩 ========== */
 .dropdown-mask {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: transparent;
+  background: rgba(0, 0, 0, 0.3);
   z-index: 150;
+  animation: maskFadeIn 0.2s ease-out;
 }
 
-/* 响应式设计 */
-@media (max-width: 375px) {
-  .main-filter-tabs {
-    padding: var(--spacing-sm) var(--spacing-md);
-    gap: var(--spacing-sm);
-  }
-
-  .filter-tab {
-    padding: 10rpx 12rpx;
-    min-height: 64rpx;
-  }
-
-  .tab-title {
-    font-size: var(--font-size-sm);
-  }
-
-  .tab-selection {
-    font-size: var(--font-size-xs);
-    max-width: 40rpx;
-  }
-
-  .clear-btn {
-    width: 56rpx;
-    height: 56rpx;
-  }
-}
-
-/* 动画效果 */
-.dropdown-panel {
-  animation: slideDown 0.2s ease-out;
-}
-
-@keyframes slideDown {
+@keyframes maskFadeIn {
   from {
     opacity: 0;
-    transform: translateY(-20rpx);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+  }
+}
+
+/* ========== 响应式设计 ========== */
+@media (max-width: 375px) {
+  .main-filter-tabs {
+    padding: 0 var(--spacing-md) var(--spacing-sm);
+    gap: 12rpx;
+  }
+
+  .filter-tab {
+    padding: 16rpx 20rpx;
+    min-height: 64rpx;
+    border-radius: 20rpx;
+  }
+
+  .tab-title {
+    font-size: 26rpx;
+  }
+
+  .tab-selection {
+    font-size: 22rpx;
+    max-width: 60rpx;
+  }
+
+  .clear-btn {
+    width: 64rpx;
+    height: 64rpx;
+    border-radius: 20rpx;
+  }
+
+  .dropdown-panel {
+    margin-top: 6rpx;
+    border-radius: 20rpx;
+  }
+
+  .option-item {
+    padding: 24rpx 28rpx;
+    margin: 0 12rpx;
+  }
+}
+
+/* ========== 下拉面板动画 ========== */
+.dropdown-panel {
+  animation: slideDownBounce 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes slideDownBounce {
+  0% {
+    opacity: 0;
+    transform: translateY(-30rpx) scale(0.95);
+  }
+  50% {
+    transform: translateY(5rpx) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ========== 选项列表渐入动画 ========== */
+.option-item {
+  animation: optionFadeIn 0.3s ease-out backwards;
+}
+
+.option-item:nth-child(1) { animation-delay: 0.05s; }
+.option-item:nth-child(2) { animation-delay: 0.1s; }
+.option-item:nth-child(3) { animation-delay: 0.15s; }
+.option-item:nth-child(4) { animation-delay: 0.2s; }
+.option-item:nth-child(5) { animation-delay: 0.25s; }
+
+@keyframes optionFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
