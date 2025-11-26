@@ -573,11 +573,6 @@ page {
 }
 
 
-.play-btn:active::before {
-  width: 100px;
-  height: 100px;
-}
-
 
 .play-icon {
     color: var(--font-color-primary);
@@ -1420,24 +1415,23 @@ page {
 
 .reading-control-btn:active {
     background: var(--secondary-dark);
-    transform: scale(0.9);
+    transform: scale(0.99);
 }
 
 .reading-play-btn {
     width: 120rpx;
     height: 120rpx;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-dark) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8rpx 24rpx rgba(237, 137, 54, 0.3);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4rpx 12rpx rgba(237, 137, 54, 0.1);
 }
 
 .reading-play-btn:active {
-    transform: scale(0.95);
-    box-shadow: 0 4rpx 12rpx rgba(237, 137, 54, 0.2);
+    transform: scale(0.99);
+    box-shadow: var(--shadow-lg);
+
 }
 
 /* 阅读模式动画 */

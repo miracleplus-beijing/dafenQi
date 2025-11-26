@@ -282,14 +282,14 @@
                 <view class="reading-play-btn" bindtap="handlePlayPause">
                     <t-icon
                             wx:if="{{isPlaying}}"
-                            name="pause"
-                            size="56rpx"
-                            color="#ffffff"/>
+                            size="80rpx"
+                            class="control-icon"
+                            name="pause"/>
                     <t-icon
                             wx:else
-                            name="play"
-                            size="56rpx"
-                            color="#ffffff"/>
+                            size="80rpx"
+                            class="control-icon"
+                            name="play"/>
                 </view>
 
                 <view class="reading-control-btn" bindtap="handleFastForward">
