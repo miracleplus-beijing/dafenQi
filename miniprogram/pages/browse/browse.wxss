@@ -68,6 +68,20 @@ page {
     /* 动画参数 */
     --animation-duration: 0.3s;
     --animation-timing: cubic-bezier(0.25, 0.1, 0.25, 1);
+    /* 移除固定的 padding-top: 54rpx; 和 padding-bottom: 60rpx; */
+  /* 改为使用安全区域变量，并加上适当的额外间距(如 20rpx)作为缓冲 */
+  
+  /* 适配顶部状态栏：安全区域顶部距离 + 额外间距 */
+  padding-top: calc(env(safe-area-inset-top) + 24rpx);
+  
+  /* 适配底部黑条/导航区：安全区域底部距离 + 额外间距 */
+  padding-bottom: calc(env(safe-area-inset-bottom) + 24rpx);
+  
+  background-color: #f6f6f6;
+  
+  /* 确保盒模型计算包含 padding，防止总高度超出视口导致意外的滚动条(虽然 app.wxss 已全局设置，此处强调) */
+  box-sizing: border-box; 
+  min-height: 100vh; /* 保证页面至少占满一屏 */
 }
 
 .browse-page {
@@ -109,21 +123,28 @@ page {
     background: var(--bg-primary);
 }
 
-.browse-container {
-    width: 100%;
-    background: var(--bg-primary);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    user-select: none;
-    padding: var(--spacing-lg) 0;
-    height: 100vh;
-    box-sizing: border-box;
-
-    /* 页面切换动画 */
-    animation: slideInUp 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+.browse-container {width: 100%;
+  /* 强制限制高度为视口高度 */
+  height: 100vh; 
+  background: var(--bg-primary);
+  position: relative;
+  
+  /* 启用弹性布局 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* 改为 space-between 让内容和底部控制栏撑开布局 */
+  justify-content: space-between; 
+  
+  user-select: none;
+  box-sizing: border-box;
+  
+  /* 关键：使用 safe-area-inset-bottom 防止底部被遮挡，同时保留顶部间距 */
+  padding-top: calc(var(--spacing-lg) + env(safe-area-inset-top));
+  padding-bottom: calc(var(--spacing-lg) + env(safe-area-inset-bottom));
+  
+  /* 页面切换动画保持不变 */
+  animation: slideInUp 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 @keyframes slideInUp {
@@ -138,39 +159,56 @@ page {
 }
 
 /* === 内容展示区域 === */
-.content-display {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 50rpx;
-    justify-content: center;
-    max-width: 800rpx;
-    margin: 0 auto;
+.content-display {width: 100%;
+  /* 关键：占据剩余空间 */
+  flex: 1; 
+  /* 关键：允许内容压缩，防止溢出 */
+  min-height: 0; 
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* 内容垂直居中 */
+  justify-content: center; 
+  
+  /* 使用 vh 或百分比作为间距，而不是固定的 rpx */
+  gap: 3vh; 
+  
+  max-width: 800rpx;
+  margin: 0 auto;
 }
 
 /* === 播客封面组件 === */
 .podcast-cover {
-    border: 1px solid rgba(226, 232, 240, 0.6);
-    overflow: hidden;
-    position: relative;
-    margin: 0 50rpx;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 24rpx;
-    width: 400rpx;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  overflow: hidden;
+  position: relative;
+  /* 取消固定 margin，由父容器 gap 控制 */
+  margin: 0; 
+  
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  /* 关键：动态大小设置 */
+  /* 1. 宽度最大为 400rpx (保持手机端大小) */
+  /* 2. 同时限制高度不超过屏幕高度的 35% (适配平板/横屏) */
+  width: min(400rpx, 35vh); 
+  height: min(400rpx, 35vh); /* 保持正方形 */
+  
   background-color: #f0f4f8;
-  border: none;
   border-radius: 20rpx;
+  
+  /* 防止被压缩变形 */
+  flex-shrink: 0;
 }
 
 .cover-image-container {
-    position: relative;
-    width: 400rpx;
-    height: 400rpx;
-    border-radius: 16rpx;
-    overflow: hidden;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 16rpx;
+  overflow: hidden;
 }
 
 .cover-image {
@@ -445,15 +483,20 @@ page {
 }
 
 /* === 播放控制区域 === */
-.playback-section {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    max-width: 800rpx;
-    margin-top: 30rpx;
-    gap: 50rpx;
-    justify-content: space-between;
+.playback-section {width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 800rpx;
+  
+  /* 减少顶部外边距，主要依靠 flex space-between */
+  margin-top: 10rpx; 
+  gap: 20rpx; /* 稍微减小内部间距 */
+  justify-content: flex-end;
+  
+  /* 关键：禁止被压缩，保证底部功能区完整 */
+  flex-shrink: 0; 
+  padding-bottom: 20rpx;
 }
 
 /* === 进度控制组件 === */
@@ -673,13 +716,6 @@ page {
     }
 }
 
-@media (min-width: 768px) {
-    .browse-container {
-        max-width: 480px;
-        margin: 0 auto;
-        padding: var(--spacing-md) 0;
-    }
-}
 
 /* === 通用样式 === */
 .loading-icon {
