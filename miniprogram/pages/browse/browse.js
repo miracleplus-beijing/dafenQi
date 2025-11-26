@@ -520,7 +520,8 @@ Page({
     // 初始化音频上下文
     initAudioContext: function () {
         const audioContext = wx.createInnerAudioContext({
-            useWebAudioImplement: true
+            useWebAudioImplement: true,
+            obeyMuteSwitch: false  // iOS设备即使在静音模式下也能播放
         });
         this.rebindAudioEvents(audioContext);
         this.setData({ audioContext });

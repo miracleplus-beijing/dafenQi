@@ -1,0 +1,102 @@
+<!--
+此文件为开发者工具生成，生成时间: 2025/11/26下午4:17:10
+使用方法：
+在 D:\dev\work\dafenQi\miniprogram\pages\browse\browse.wxml 引入模板
+
+```
+<import src="browse.skeleton.wxml"/>
+<template is="skeleton" wx:if="{{loading}}" />
+```
+
+在 D:\dev\work\dafenQi\miniprogram\pages\browse\browse.wxss 中引入样式
+```
+@import "./browse.skeleton.wxss";
+```
+
+更多详细信息可以参考文档：https://developers.weixin.qq.com/miniprogram/dev/devtools/skeleton.html
+-->
+<template name="skeleton">
+  <view class="sk-container">
+    <view>
+      <view class="browse-page">
+        <view class="swiper-mode">
+          <view>
+            <swiper circular="true" class="browse-swiper" current="0" duration="300" easing-function="easeInOutCubic" interval="999999" vertical="true" autoplay="false">
+              <swiper-item class="browse-container" style="position: absolute; width: 100%; height: 100%; transform: translate(0px, 0%) translateZ(0px);">
+                <view class="content-display">
+                  <view class="podcast-cover">
+                    <view class="cover-image-container">
+                      <image class="cover-image sk-image" mode="aspectFill"></image>
+                      <view class="pause-overlay">
+                        <view class="t-icon icon--t-icon pause-icon " style="true"></view>
+                      </view>
+                    </view>
+                  </view>
+                  <view class="title-section">
+                    <text class="main-title sk-transparent sk-text-8-3333-552 sk-text" style="background-position-x: 50%;">北卡罗来纳大学提出SketchVerify框架：通过草图验证引导的规划机制实现物理感知视频生成的突破性进展</text>
+                    <text class="sub-title sk-transparent sk-text-16-6667-69 sk-text" style="background-position-x: 50%;">论文前沿日报</text>
+                  </view>
+                  <view class="content-summary">
+                    <view class="summary-label">
+                      <text class="sk-transparent sk-text-14-2857-272 sk-text">内容摘要</text>
+                      <view class="t-icon icon--t-icon summary-icon " style="true"></view>
+                    </view>
+                    <text class="summary-text sk-transparent sk-text-18-7500-553 sk-text">Recent video generation approaches increasingly rely on planning intermediate control signals such as object trajectories to improve temporal coherence and motion fidelity. However, these methods mostly employ single-shot plans that are typically limited to simple motions, or iterative refinement which requires multiple calls to the video generator, incuring high computational cost. To overcome these limitations, we propose SketchVerify, a training-free, sketch-verification-based planning framework that improves motion planning quality with more dynamically coherent trajectories (i.e., physically plausible and instruction-consistent motions) prior to full video generation by introducing a test-time sampling and verification loop. Given a prompt and a reference image, our method predicts multiple candidate motion plans and ranks them using a vision-language verifier that jointly evaluates semantic alignment with the instruction and physical plausibility. To efficiently score candidate motion plans, we render each trajectory as a lightweight video sketch by compositing objects over a static background, which bypasses the need for expensive, repeated diffusion-based synthesis while achieving comparable performance. We iteratively refine the motion plan until a satisfactory one is identified, which is then passed to the trajectory-conditioned generator for final synthesis. Experiments on WorldModelBench and PhyWorldBench demonstrate that our method significantly improves motion quality, physical realism, and long-term consistency compared to competitive baselines while being substantially more efficient. Our ablation study further shows that scaling up the number of trajectory candidates consistently enhances overall performance.</text>
+                  </view>
+                </view>
+                <view class="playback-section">
+                  <view class="progress-section">
+                    <view class="time-info">
+                      <text class="current-time sk-transparent sk-text-0-0000-943 sk-text">0:00</text>
+                      <text class="total-time sk-transparent sk-text-0-0000-19 sk-text">0:00</text>
+                    </view>
+                    <view class="progress-container">
+                      <view class="custom-slider " style="true">
+                        <view id="d43fd22e--sliderLine">
+                          <view style="width: 0px">
+                            <view class="t-slider__dot slider--t-slider__dot " id="d43fd22e--singleDot">
+                              <view class="t-slider__dot-slider slider--t-slider__dot-slider"></view>
+                            </view>
+                          </view>
+                        </view>
+                      </view>
+                    </view>
+                  </view>
+                  <view class="playback-controls">
+                    <view class="control-btn">
+                      <view class="t-icon icon--t-icon control-icon " style="true"></view>
+                    </view>
+                    <view class="control-btn">
+                      <view class="t-icon icon--t-icon control-icon " style="true"></view>
+                    </view>
+                    <view class="play-btn">
+                      <view class="t-icon icon--t-icon play-icon " style="true"></view>
+                    </view>
+                    <view class="control-btn">
+                      <view class="t-icon icon--t-icon control-icon " style="true"></view>
+                    </view>
+                    <view class="control-btn">
+                      <text class="more-icon sk-transparent sk-text-14-2857-918 sk-text">⋯</text>
+                    </view>
+                  </view>
+                </view>
+              </swiper-item>
+              <swiper-item class="browse-container" style="position: absolute; width: 100%; height: 100%; transform: translate(0px, 100%) translateZ(0px);"></swiper-item>
+              <swiper-item class="browse-container" style="position: absolute; width: 100%; height: 100%; transform: translate(0px, 200%) translateZ(0px);"></swiper-item>
+              <swiper-item class="browse-container" style="position: absolute; width: 100%; height: 100%; transform: translate(0px, 300%) translateZ(0px);"></swiper-item>
+              <swiper-item class="browse-container" style="position: absolute; width: 100%; height: 100%; transform: translate(0px, 400%) translateZ(0px);"></swiper-item>
+              <swiper-item class="browse-container" style="position: absolute; width: 100%; height: 100%; transform: translate(0px, 500%) translateZ(0px);"></swiper-item>
+              <swiper-item class="browse-container" style="position: absolute; width: 100%; height: 100%; transform: translate(0px, 600%) translateZ(0px);"></swiper-item>
+              <swiper-item class="browse-container" style="position: absolute; width: 100%; height: 100%; transform: translate(0px, 700%) translateZ(0px);"></swiper-item>
+              <swiper-item class="browse-container" style="position: absolute; width: 100%; height: 100%; transform: translate(0px, 800%) translateZ(0px);"></swiper-item>
+              <swiper-item class="browse-container" style="position: absolute; width: 100%; height: 100%; transform: translate(0px, 900%) translateZ(0px);"></swiper-item>
+            </swiper>
+          </view>
+        </view>
+        <view class="more-popup">
+          <view class="popup-mask"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
