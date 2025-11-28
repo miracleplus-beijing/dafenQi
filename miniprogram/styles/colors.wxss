@@ -1,0 +1,112 @@
+/**
+ * 全局颜色变量配置
+ * 作用:统一管理应用颜色,避免硬编码
+ * 使用:在 app.wxss 中引入此文件
+ */
+
+page {
+  /* ========== 基础色板 ========== */
+  
+  /* 品牌主色 - 蓝色系 */
+  --color-primary: #0884FF;
+  --color-primary-light: #3A9DFF;
+  --color-primary-dark: #0666CC;
+  --color-primary-pale: #E6F4FF;
+  
+  /* 中性色 - 文字 */
+  --color-text-primary: #1a1a1a;      /* 主要文字 */
+  --color-text-secondary: #666666;    /* 次要文字 */
+  --color-text-tertiary: #999999;     /* 辅助文字 */
+  --color-text-disabled: #cccccc;     /* 禁用文字 */
+  
+  /* 中性色 - 背景 */
+  --color-bg-primary: #ffffff;        /* 主背景 */
+  --color-bg-secondary: #f5f5f5;      /* 次级背景 */
+  --color-bg-tertiary: #f0f0f0;       /* 三级背景 */
+  --color-bg-blue-light: #f0f9ff;     /* 浅蓝背景 */
+  --color-bg-blue-lighter: #e0f2fe;   /* 更浅蓝背景 */
+  
+  /* 边框和分割线 */
+  --color-border-light: rgba(0, 0, 0, 0.06);
+  --color-border-normal: rgba(0, 0, 0, 0.1);
+  --color-border-dark: rgba(0, 0, 0, 0.2);
+  
+  /* ========== 功能色 ========== */
+  
+  /* 成功 - 绿色 */
+  --color-success: #10b981;
+  --color-success-light: #34d399;
+  --color-success-pale: #d1fae5;
+  
+  /* 警告 - 黄色 */
+  --color-warning: #f59e0b;
+  --color-warning-light: #fbbf24;
+  --color-warning-pale: #fef3c7;
+  
+  /* 危险 - 红色 */
+  --color-danger: #ff3b30;
+  --color-danger-light: #ff6259;
+  --color-danger-pale: #fee2e2;
+  
+  /* 信息 - 蓝色 */
+  --color-info: #3b82f6;
+  --color-info-light: #60a5fa;
+  --color-info-pale: #dbeafe;
+  
+  /* ========== 渐变色 ========== */
+  
+  /* 主渐变 - 蓝白渐变 (用于按钮和图标背景) */
+  --gradient-primary-start: #0884FF;
+  --gradient-primary-end: #ffffff;
+  --gradient-primary: linear-gradient(135deg, var(--gradient-primary-start) 0%, var(--gradient-primary-end) 100%);
+  
+  /* 蓝色渐变 - 深蓝到浅蓝 */
+  --gradient-blue-start: #0666CC;
+  --gradient-blue-end: #3A9DFF;
+  --gradient-blue: linear-gradient(135deg, var(--gradient-blue-start) 0%, var(--gradient-blue-end) 100%);
+  
+  /* 背景渐变 - 浅蓝到白色 */
+  --gradient-bg-blue-start: #f0f9ff;
+  --gradient-bg-blue-end: #ffffff;
+  --gradient-bg-blue: linear-gradient(180deg, var(--gradient-bg-blue-start) 0%, var(--gradient-bg-blue-end) 100%);
+  
+  /* 用户区背景渐变 - 浅蓝渐变 */
+  --gradient-bg-user-start: #f0f9ff;
+  --gradient-bg-user-end: #e0f2fe;
+  --gradient-bg-user: linear-gradient(180deg, var(--gradient-bg-user-start) 0%, var(--gradient-bg-user-end) 100%);
+  
+  /* Hover 渐变效果 - 浅蓝色 */
+  --gradient-hover: linear-gradient(90deg, rgba(8, 132, 255, 0.05) 0%, transparent 100%);
+  
+  /* ========== 阴影系统 ========== */
+  
+  /* 小阴影 - 用于小卡片、按钮 */
+  --shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  
+  /* 中阴影 - 用于普通卡片 */
+  --shadow-md: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+  
+  /* 大阴影 - 用于弹窗、重要卡片 */
+  --shadow-lg: 0 8rpx 24rpx rgba(0, 0, 0, 0.12);
+  
+  /* 按钮阴影 - 品牌蓝色 */
+  --shadow-btn-primary: 0 6rpx 20rpx rgba(8, 132, 255, 0.3);
+  --shadow-btn-primary-hover: 0 12rpx 32rpx rgba(8, 132, 255, 0.4);
+  
+  /* ========== 圆角系统 ========== */
+  
+  --radius-sm: 8rpx;      /* 小圆角 - 标签、徽章 */
+  --radius-md: 16rpx;     /* 中圆角 - 按钮 */
+  --radius-lg: 24rpx;     /* 大圆角 - 卡片 */
+  --radius-xl: 40rpx;     /* 超大圆角 - 胶囊按钮 */
+  --radius-2xl: 60rpx;    /* 圆形背景 */
+  --radius-full: 50%;     /* 完整圆形 - 头像 */
+  
+  /* ========== 动画缓动 ========== */
+  
+  --ease-out: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0.0, 0.6, 1);
+  --transition-fast: 0.2s;
+  --transition-normal: 0.3s;
+  --transition-slow: 0.5s;
+}

@@ -2,14 +2,14 @@
   "usingComponents": {
     "t-cell": "tdesign-miniprogram/cell/cell",
     "t-avatar": "tdesign-miniprogram/avatar/avatar",
-    "t-image": "tdesign-miniprogram/image/image"
+    "t-image": "tdesign-miniprogram/image/image",
+    "t-button": "tdesign-miniprogram/button/button"
   },
   "navigationBarTitleText": "奇绩前沿信号",
   "navigationBarTextStyle": "white",
   "backgroundTextStyle": "light",
   "enablePullDownRefresh": true,
   "onReachBottomDistance": 50,
-  
   "navigationBarBackgroundColor": "#f0f9ff",
   "backgroundColor": "#f0f9ff"
 }

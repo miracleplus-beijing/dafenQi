@@ -1,18 +1,13 @@
 <!-- 我的页面 -->
 <view class="profile-container">
   <!-- 用户区域 -->
-  <view class="user-section">
-    <view wx:if="{{!isLoggedIn}}" class="login-prompt" bindtap="handleLogin">
-      登录/注册>
-    </view>
-    <view wx:else class="user-info">
+  <view class="user-section" wx:if="{{isLoggedIn}}">
+    <view class="user-info">
       <text class="user-name section-title" bindtap="changeUserName">{{userInfo.nickName || '用户'}}</text>
       <text class="user-id">ID: {{userInfo.id || '未设置'}}</text>
     </view>
 
-
-
-    <view class="avatar-container" wx:if="{{isLoggedIn}}">
+    <view class="avatar-container">
       <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
         <image src="{{userInfo.avatarUrl || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/user.svg'}}" mode="aspectFill" />
       </button>
@@ -51,17 +46,44 @@
   </view>
   </view>
 
-  <!-- 未登录提示 -->
-  <view class="login-tips" wx:if="{{!isLoggedIn}}">
-    <view class="tips-content">
-      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/user.svg" class="tips-icon"></image>
-      <text class="tips-text">登录后享受更多功能</text>
-      <view class="tips-list">
-        <text class="tip-item">• 同步收藏和历史记录</text>
-        <text class="tip-item">• 个性化推荐内容</text>
-        <text class="tip-item">• 跨设备数据同步</text>
+  <!-- 未登录状态 - 精美登录卡片 -->
+  <view class="login-container" wx:if="{{!isLoggedIn}}">
+    <view class="login-card">
+      <!-- 图标区域 -->
+      <view class="login-icon-wrapper">
+        <view class="login-icon-bg">
+          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/user.svg" class="login-icon"></image>
+        </view>
       </view>
-      <t-button theme="primary" block bindtap="handleLogin">立即登录</t-button>
+      
+      <!-- 标题文案 -->
+      <text class="login-title">登录解锁更多功能</text>
+      
+      <!-- 价值点列表 -->
+      <view class="login-benefits">
+        <view class="benefit-item">
+          <text class="benefit-icon">✓</text>
+          <text class="benefit-text">同步收藏和历史记录</text>
+        </view>
+        <view class="benefit-item">
+          <text class="benefit-icon">✓</text>
+          <text class="benefit-text">个性化推荐内容</text>
+        </view>
+        <view class="benefit-item">
+          <text class="benefit-icon">✓</text>
+          <text class="benefit-text">跨设备数据同步</text>
+        </view>
+      </view>
+      
+      <!-- CTA按钮 -->
+      <t-button 
+        theme="primary" 
+        size="large" 
+        block 
+        class="login-btn"
+        bindtap="handleLogin">
+        立即登录
+      </t-button>
     </view>
   </view>
 
