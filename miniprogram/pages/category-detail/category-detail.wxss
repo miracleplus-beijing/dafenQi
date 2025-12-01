@@ -159,7 +159,8 @@ page {
 .category-card {
   border-radius: 12px;
   padding: 24px;
-  color: #ffffff;
+  color: #0b0d0d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .card-content {
@@ -175,13 +176,15 @@ page {
 
 .category-code {
   font-size: 12px;
-  opacity: 0.8;
+  opacity: 0.7;
+  color: #575d6c;
 }
 
 .podcast-count {
   font-size: 14px;
   margin-top: 8px;
-  opacity: 0.9;
+  opacity: 0.75;
+  color: #575d6c;
 }
 
 /* 播客列表 */
@@ -325,7 +328,7 @@ page {
   color: #8a8f99;
 }
 
-/* 分享按钮 */
+/* 分享按钉 */
 .share-btn {
   position: fixed;
   bottom: 24px;
@@ -334,11 +337,12 @@ page {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  width: 56px;
-  height: 56px;
+  padding: 10px 16px;
+  min-width: 56px;
+  height: 44px;
   background: linear-gradient(135deg, #0884ff 0%, #5c9ffe 100%);
   border: none;
-  border-radius: 28px;
+  border-radius: 22px;
   box-shadow: 0 4px 12px rgba(8, 132, 255, 0.3);
   color: #ffffff;
   font-size: 12px;
