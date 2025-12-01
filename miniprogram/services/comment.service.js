@@ -1,5 +1,8 @@
 // comment.service.js - 评论服务
 // 处理播客评论相关的数据操作
+const dateUtils = require('../utils/dateUtils.js');
+
+
 const requestUtil = require('../utils/request.js');
 
 class CommentService {
@@ -355,8 +358,8 @@ class CommentService {
         parent_id: rawComment.parent_id,
         content: rawComment.content || '',
         audio_timestamp: rawComment.audio_timestamp || 0,
-        timestamp_formatted: this.formatTimestamp(
-          rawComment.audio_timestamp || 0
+        timestamp_formatted: dateUtils.formatSmartTime(
+          rawComment.created_at || 0
         ),
         like_count: rawComment.like_count || 0,
         is_pinned: rawComment.is_pinned || false,
@@ -386,20 +389,7 @@ class CommentService {
     }
   }
 
-  // 格式化音频时间戳（秒 → MM:SS 或 H:MM:SS）
-  formatTimestamp(seconds) {
-    if (!seconds || isNaN(seconds) || seconds < 0) return '0:00';
-
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    } else {
-      return `${minutes}:${secs.toString().padStart(2, '0')}`;
-    }
-  }
+ 
 
   // 置顶评论（管理员功能）
   async pinComment(commentId) {

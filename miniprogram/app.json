@@ -2,6 +2,7 @@
   "pages": [
     "pages/browse/browse",
     "pages/category/category",
+    "pages/category-detail/category-detail",
     "pages/profile/profile",
     "pages/search/search",
     "pages/login/login",
@@ -85,7 +86,7 @@
     "mini-player": "components/mini-player/mini-player",
     "waterfall-header": "components/waterfall-header/waterfall-header",
     "waterfall-card": "components/waterfall-card/waterfall-card",
-    "quick-preview": "components/quick-preview/quick-preview"
-    
+    "quick-preview": "components/quick-preview/quick-preview",
+    "waterfall-container": "components/waterfall-container/waterfall-container"
   }
 }

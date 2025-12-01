@@ -1,0 +1,377 @@
+/* 分类详情页面样式 */
+page {
+  background-color: #f0f9ff;
+}
+
+.category-detail-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f0f9ff;
+  overflow: hidden;
+}
+
+/* 头部导航栏 */
+.header {
+  position: relative;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e7ff;
+  z-index: 100;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  height: 56px;
+}
+
+.back-btn,
+.sort-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f5f7fa;
+  transition: all 0.3s ease;
+}
+
+.back-btn:active,
+.sort-btn:active {
+  background-color: #e0e7ff;
+  transform: scale(0.95);
+}
+
+.header-title {
+  flex: 1;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #0b0d0d;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 排序菜单 */
+.sort-menu {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0);
+  z-index: 99;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.sort-menu.show {
+  background-color: rgba(0, 0, 0, 0.3);
+  visibility: visible;
+}
+
+.sort-menu-content {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 200px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  margin: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  transform: scaleY(0);
+  transform-origin: top right;
+  transition: all 0.3s ease;
+}
+
+.sort-menu.show .sort-menu-content {
+  transform: scaleY(1);
+}
+
+.sort-menu-title {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0b0d0d;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.sort-options {
+  padding: 4px 0;
+}
+
+.sort-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  color: #575d6c;
+  transition: all 0.2s ease;
+}
+
+.sort-option:active {
+  background-color: #f5f7fa;
+}
+
+.sort-option.active {
+  color: #0884ff;
+  font-weight: 600;
+}
+
+.option-label {
+  font-size: 14px;
+}
+
+.option-check {
+  display: flex;
+  align-items: center;
+  color: #0884ff;
+}
+
+/* 内容区域 */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: #f0f9ff;
+}
+
+/* 分类信息卡片 */
+.category-info {
+  padding: 16px;
+}
+
+.category-card {
+  border-radius: 12px;
+  padding: 24px;
+  color: #ffffff;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-name {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.category-code {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.podcast-count {
+  font-size: 14px;
+  margin-top: 8px;
+  opacity: 0.9;
+}
+
+/* 播客列表 */
+.podcasts-list {
+  padding: 0 16px 80px 16px;
+}
+
+.podcast-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+}
+
+.podcast-item:active {
+  background-color: #f5f7fa;
+  transform: scale(0.98);
+}
+
+.podcast-cover {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.duration-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.podcast-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.podcast-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0b0d0d;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.podcast-channel {
+  font-size: 12px;
+  color: #8a8f99;
+}
+
+.podcast-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: #8a8f99;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.date {
+  font-size: 11px;
+}
+
+.podcast-action {
+  display: flex;
+  align-items: center;
+  color: #bcc1cc;
+  flex-shrink: 0;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  gap: 12px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #c0c4cc;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: #0b0d0d;
+}
+
+.empty-hint {
+  font-size: 12px;
+  color: #8a8f99;
+}
+
+/* 加载更多提示 */
+.loading-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  gap: 8px;
+}
+
+.no-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-size: 12px;
+  color: #8a8f99;
+}
+
+/* 分享按钮 */
+.share-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #0884ff 0%, #5c9ffe 100%);
+  border: none;
+  border-radius: 28px;
+  box-shadow: 0 4px 12px rgba(8, 132, 255, 0.3);
+  color: #ffffff;
+  font-size: 12px;
+  transition: all 0.3s ease;
+  z-index: 50;
+}
+
+.share-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 8px rgba(8, 132, 255, 0.2);
+}
+
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .category-card {
+    padding: 16px;
+  }
+
+  .category-name {
+    font-size: 20px;
+  }
+
+  .podcast-item {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .podcast-cover {
+    width: 70px;
+    height: 70px;
+  }
+
+  .podcast-title {
+    font-size: 13px;
+  }
+}

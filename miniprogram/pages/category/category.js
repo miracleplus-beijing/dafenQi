@@ -411,11 +411,22 @@ Page({
       type: 'light',
     });
 
-    // TODO: 跳转到分类详情页或筛选内容
-    wx.showToast({
-      title: `进入${category.displayName}分类`,
-      icon: 'none',
-      duration: 1500,
+    // 跳转到分类详情页
+    wx.navigateTo({
+      url: `/pages/category-detail/category-detail?id=${category.id}&name=${encodeURIComponent(
+        category.displayName
+      )}`,
+      success: () => {
+        console.log('成功跳转到分类详情页');
+      },
+      fail: error => {
+        console.error('跳转分类详情页失败:', error);
+        wx.showToast({
+          title: '页面跳转失败',
+          icon: 'none',
+          duration: 1500,
+        });
+      },
     });
   },
 

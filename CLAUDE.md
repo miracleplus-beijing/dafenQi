@@ -95,7 +95,7 @@ The app uses 12 specialized services following a service-oriented architecture:
 
 ### Content & Data Services
 - **`api.service.js`** - Centralized API facade for all Supabase operations
-- **`category.service.js`** - Academic field and category management
+- **`category.service.js`** - Academic field and category management (使用 supabaseService 客户端库)
 - **`comment.service.js`** - User comments and social interactions
 - **`insight.service.js`** - AI-generated content insights and cognitive extraction
 
@@ -250,17 +250,155 @@ const { apiService } = require('../../services/api.service.js')
   - Recent additions: insights system, academic fields, institutions
 
 ### Request Pattern
-Services use direct HTTP requests via `wx.request()` with apikey/Bearer authentication:
+
+**重要：请使用 @supabase.service.js 而不是 REST API**
+
+所有数据库操作应该使用 Supabase 官方客户端库：
+
 ```javascript
-// Example from auth.service.js:475
+// ✅ 推荐做法 - 使用 supabase.service.js
+const { supabaseService } = require('../../services/supabase.service.js')
+
+// 查询数据
+const result = await supabaseService.select('podcasts', {
+    columns: 'id,title,cover_url',
+    filters: { status: 'published' },
+    orderBy: { column: 'created_at', ascending: false },
+    limit: 20
+})
+
+// 插入数据
+const insertResult = await supabaseService.insert('comments', {
+    podcast_id: podcastId,
+    user_id: userId,
+    content: 'User comment',
+    created_at: new Date().toISOString()
+})
+
+// 更新数据
+const updateResult = await supabaseService.update('users', 
+    { nickname: 'New Name' },
+    { id: userId }
+)
+
+// 删除数据
+const deleteResult = await supabaseService.delete('comments',
+    { id: commentId }
+)
+```
+
+**不推荐：直接使用 REST API**
+
+```javascript
+// ❌ 不推荐 - 避免直接调用 REST API
 wx.request({
-  url: `${this.supabaseUrl}/rest/v1/users?wechat_openid=eq.${openId}`,
-  method: 'GET',
-  header: {
-    'apikey': this.supabaseAnonKey,
-    'Authorization': `Bearer ${this.supabaseAnonKey}`,
-    'Content-Type': 'application/json'
-  }
+    url: 'https://gxvfcafgnhzjiauukssj.supabase.co/rest/v1/podcasts',
+    method: 'GET',
+    header: { 'apikey': '...' },
+    ...
+})
+```
+
+### Supabase Service API 文档
+
+supabaseService 提供以下主要方法：
+
+| 方法 | 说明 | 用途 |
+|------|------|------|
+| `select()` | 查询表数据 | SELECT 操作 |
+| `insert()` | 插入数据 | INSERT 操作 |
+| `update()` | 更新数据 | UPDATE 操作 |
+| `delete()` | 删除数据 | DELETE 操作 |
+| `table()` | 获取表引用 | 直接访问 Supabase 表 |
+| `storage()` | 获取存储引用 | 文件存储操作 |
+| `auth()` | 获取认证对象 | 认证相关操作 |
+| `getSession()` | 获取当前会话 | 用户会话管理 |
+| `getUser()` | 获取当前用户 | 用户信息获取 |
+
+### 使用示例
+
+#### 示例 1：获取播客列表
+
+```javascript
+const result = await supabaseService.select('podcasts', {
+    columns: 'id,title,cover_url,duration,channels(name)',
+    filters: { status: 'published' },
+    orderBy: { column: 'created_at', ascending: false },
+    limit: 20,
+    offset: 0
+})
+
+if (result.success) {
+    console.log('播客列表:', result.data)
+} else {
+    console.error('查询失败:', result.error)
+}
+```
+
+#### 示例 2：发表评论
+
+```javascript
+const result = await supabaseService.insert('comments', {
+    podcast_id: 'podcast-123',
+    user_id: 'user-456',
+    content: 'Great episode!',
+    audio_timestamp: 120,
+    created_at: new Date().toISOString()
+})
+
+if (result.success) {
+    console.log('评论已发表:', result.data[0])
+} else {
+    console.error('发表评论失败:', result.error)
+}
+```
+
+#### 示例 3：更新用户信息
+
+```javascript
+const result = await supabaseService.update('users',
+    {
+        nickname: 'New Name',
+        avatar_url: 'https://...',
+        updated_at: new Date().toISOString()
+    },
+    { id: userId }
+)
+
+if (result.success) {
+    console.log('用户信息已更新')
+} else {
+    console.error('更新失败:', result.error)
+}
+```
+
+### 认证和授权
+
+所有 Supabase 操作都会：
+1. **自动使用 WeChat 小程序存储** - Session 会自动保存到 wx.getStorageSync
+2. **自动刷新 Token** - 当 Token 即将过期时自动刷新
+3. **遵守 Row Level Security** - 数据库的 RLS 策略会自动生效
+4. **智能认证选择** - 根据操作类型自动选择合适的认证方式
+
+### 迁移旧代码
+
+如果还有使用 REST API 的旧代码，应该逐步迁移：
+
+**旧方式（request.js）：**
+```javascript
+const result = await requestUtil.get('/rest/v1/podcasts', {
+    select: 'id,title',
+    order: 'created_at.desc',
+    limit: 20
+})
+```
+
+**新方式（supabase.service.js）：**
+```javascript
+const result = await supabaseService.select('podcasts', {
+    columns: 'id,title',
+    orderBy: { column: 'created_at', ascending: false },
+    limit: 20
 })
 ```
 

@@ -1,0 +1,139 @@
+<!-- 分类详情页面 -->
+<view class="category-detail-container">
+  <!-- 头部导航栏 -->
+  <view class="header">
+    <view class="header-content">
+      <view class="back-btn" bindtap="goBack">
+        <t-icon name="{{icons.back}}" />
+      </view>
+      <view class="header-title">{{ categoryName }}</view>
+      <view class="header-actions">
+        <view class="sort-btn" bindtap="toggleSortMenu">
+          <t-icon name="{{icons.filter}}" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 排序菜单 -->
+    <view
+      class="sort-menu {{ showSortMenu ? 'show' : '' }}"
+      catchtap="closeSortMenu"
+    >
+      <view class="sort-menu-content" catchtap="stopPropagation">
+        <view class="sort-menu-title">排序方式</view>
+        <view class="sort-options">
+          <view
+            wx:for="{{sortByOptions}}"
+            wx:key="value"
+            class="sort-option {{ sortBy === item.value ? 'active' : '' }}"
+            bindtap="onSortChange"
+            data-value="{{item.value}}"
+          >
+            <view class="option-label">{{ item.label }}</view>
+            <view
+              wx:if="{{sortBy === item.value}}"
+              class="option-check"
+            >
+              <t-icon name="check" />
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <t-loading size="large" text="加载中..." />
+  </view>
+
+  <!-- 内容区域 -->
+  <view wx:else class="content">
+    <!-- 分类信息 -->
+    <view class="category-info">
+      <view
+        class="category-card"
+        style="background: linear-gradient(135deg, {{category && category.color && category.color[0] ? category.color[0] : '#e0f2fe'}} 0%, {{category && category.color && category.color[1] ? category.color[1] : '#0ea5e9'}} 100%)"
+      >
+        <view class="card-content">
+          <view class="category-name">{{ category.displayName }}</view>
+          <view class="category-code">{{ category.name }}</view>
+          <view class="podcast-count">共 {{ podcasts.length }} 期播客</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 播客列表为空 -->
+    <view wx:if="{{podcasts.length === 0}}" class="empty-state">
+      <view class="empty-icon">
+        <t-icon name="play" />
+      </view>
+      <view class="empty-text">该分类暂无播客内容</view>
+      <view class="empty-hint">请稍后再来查看</view>
+    </view>
+
+    <!-- 播客列表 -->
+    <view wx:else class="podcasts-list">
+      <view
+        wx:for="{{podcasts}}"
+        wx:key="id"
+        class="podcast-item"
+        bindtap="playPodcast"
+        data-item="{{item}}"
+      >
+        <view class="podcast-cover">
+          <image
+            src="{{item.cover_url}}"
+            mode="aspectFill"
+            class="cover-image"
+          />
+          <view class="duration-badge">{{item.duration || 0}} min</view>
+        </view>
+
+        <view class="podcast-info">
+          <view class="podcast-title">{{ item.title }}</view>
+          <view class="podcast-channel">
+            {{ item.channels && item.channels.name ? item.channels.name : (item.channel && item.channel.name ? item.channel.name : '未知频道') }}
+          </view>
+          <view class="podcast-meta">
+            <view class="meta-item">
+              <t-icon name="play-circle" size="14px" />
+              <text>{{ item.play_count || 0 }}</text>
+            </view>
+            <view class="meta-item">
+              <t-icon name="favorite" size="14px" />
+              <text>{{ item.favorite_count || 0 }}</text>
+            </view>
+            <view class="meta-item">
+              <text class="date">{{ item.created_at && item.created_at.indexOf ? item.created_at.split('T')[0] : '未知日期' }}</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="podcast-action">
+          <t-icon name="chevron-right" size="18px" />
+        </view>
+      </view>
+
+      <!-- 加载更多提示 -->
+      <view wx:if="{{loadingMore}}" class="loading-more">
+        <t-loading size="small" text="加载更多..." />
+      </view>
+
+      <!-- 没有更多数据提示 -->
+      <view wx:if="{{!hasMoreData && podcasts.length > 0}}" class="no-more">
+        <text>已加载全部内容</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分享入口 -->
+  <button
+    class="share-btn"
+    wx:if="{{!loading && podcasts.length > 0}}"
+    open-type="share"
+  >
+    <t-icon name="share" size="18px" />
+    <text>分享</text>
+  </button>
+</view>

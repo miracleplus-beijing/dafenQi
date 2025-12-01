@@ -1,11 +1,12 @@
 /**
  * 分类页面服务层
  * 处理排行榜数据、学术分类、精选推荐等业务逻辑
+ * 使用 Supabase 客户端库而不是 REST API
  */
 
-const requestUtil = require('../utils/request.js');
+const supabaseService = require('./supabase.service.js');
 const iOSGradientDesign = require('../config/ios-gradient-design.js');
-
+console.log("supabaseClient: ", supabaseService)
 class CategoryService {
   constructor() {
     // 获取iOS风格渐变配色方案
@@ -94,7 +95,7 @@ class CategoryService {
 
       switch (type) {
         case 'hot':
-          orderBy = 'play_count.desc,created_at.desc';
+          orderBy = 'play_count.desc';
           description = '最热榜 - 按播放量排序';
           break;
         case 'new':
@@ -102,7 +103,7 @@ class CategoryService {
           description = '最新榜 - 按发布时间排序';
           break;
         case 'review':
-          orderBy = 'favorite_count.desc,like_count.desc';
+          orderBy = 'favorite_count.desc';
           description = '综述榜 - 按收藏和点赞排序';
           break;
         default:
@@ -111,16 +112,20 @@ class CategoryService {
 
       console.log(`加载${description}`);
 
-      const result = await requestUtil.get('/rest/v1/podcasts', {
-        select:
-          'id,title,description,cover_url,duration,play_count,like_count,favorite_count,created_at,channels(id,name)',
-        status: 'eq.published',
+      // 使用 Supabase 客户端库查询
+      const result = await supabaseService.select('podcasts', {
+        columns: 'id,title,description,cover_url,duration,play_count,like_count,favorite_count,created_at,channels(id,name)',
+        filters: { status: 'published' },
         order: orderBy,
-        limit: limit,
+        limit: limit
       });
 
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
       // 数据处理和排序优化
-      const processedData = await this.processRankingData(result, type);
+      const processedData = await this.processRankingData(result.data || [], type);
 
       // 缓存数据
       this.setCachedData('rankings', cacheKey, processedData);
@@ -197,18 +202,22 @@ class CategoryService {
     try {
       console.log('加载精选推荐内容...');
 
-      // 获取编辑推荐
-      const result = await requestUtil.get(
-        `/rest/v1/editorial_recommendations`,
-        {
-          select:
-            'id,recommendation_text,podcasts(id,title,description,cover_url,duration,channels(name))',
-          order: 'created_at.desc',
-          limit: limit,
-        }
-      );
+      // 使用 Supabase 客户端库查询编辑推荐
+      const result = await supabaseService.select('editorial_recommendations', {
+        columns: 'id,recommendation_text,podcasts(id,title,description,cover_url,duration,channels(name))',
+        order: 'created_at.desc',
+        limit: limit
+      });
 
-      const processedData = result.map(item => ({
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      if (!Array.isArray(result.data)) {
+        throw new Error('查询结果不是数组');
+      }
+
+      const processedData = result.data.map(item => ({
         id: item.id,
         recommendationText: item.recommendation_text,
         podcast: item.podcasts,
@@ -243,11 +252,16 @@ class CategoryService {
   /**
    * 根据分类ID获取播客
    * @param {string} categoryId - 分类ID
-   * @param {number} limit - 返回数量限制
+   * @param {Object} options - 选项对象
+   * @param {number} options.page - 页码（默认1）
+   * @param {number} options.limit - 每页数量限制（默认20）
+   * @param {string} options.sortBy - 排序字段（默认created_at）
    * @returns {Promise<Object>} 分类播客数据
    */
-  async getPodcastsByCategory(categoryId, limit = 20) {
+  async getPodcastsByCategory(categoryId, options = {}) {
     try {
+      const { page = 1, limit = 20, sortBy = 'created_at' } = options;
+
       const category = this.academicCategories.find(
         cat => cat.id === categoryId
       );
@@ -255,22 +269,54 @@ class CategoryService {
         throw new Error(`未找到分类: ${categoryId}`);
       }
 
-      console.log(`加载${category.displayName}分类的播客...`);
+      console.log(
+        `加载${category.displayName}分类的播客（第${page}页，排序: ${sortBy}）...`
+      );
 
-      const result = await requestUtil.get('/rest/v1/podcasts', {
-        select:
-          'id,title,description,cover_url,duration,play_count,channels(name)',
-        status: 'eq.published',
-        // 这里需要根据实际的分类字段进行过滤
-        // category: `eq.${category.name}`,
-        order: 'play_count.desc,created_at.desc',
-        limit: limit,
+      // 构建排序参数
+      let orderBy = '';
+      switch (sortBy) {
+        case 'play_count':
+          orderBy = 'play_count.desc';
+          break;
+        case 'favorite_count':
+          orderBy = 'favorite_count.desc';
+          break;
+        case 'created_at':
+        default:
+          orderBy = 'created_at.desc';
+          break;
+      }
+
+      // 计算偏移量
+      const offset = (page - 1) * limit;
+
+      // 使用 Supabase 客户端库查询
+      // 根据分类 name (如 'CS.AI') 過滤 podcasts.categories 数组字段
+      const result = await supabaseService.select('podcasts', {
+        columns: 'id,title,description,cover_url,duration,play_count,favorite_count,created_at,channels(id,name)',
+        filters: {
+          status: 'published',
+          categories: { operator: 'contains', val: [category.name] }
+        },
+        order: orderBy,
+        offset: offset,
+        limit: limit
       });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
 
       return {
         success: true,
-        data: result,
+        data: result.data,
         category: category,
+        pagination: {
+          page,
+          limit,
+          total: result.data.length,
+        },
       };
     } catch (error) {
       console.error(`获取分类播客失败:`, error);

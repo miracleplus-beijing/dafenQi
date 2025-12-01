@@ -1,0 +1,14 @@
+{
+  "navigationBarTitleText": "分类详情",
+  "navigationBarBackgroundColor": "#f0f9ff",
+  "backgroundColor": "#f0f9ff",
+  "navigationBarTextStyle": "black",
+  "backgroundTextStyle": "light",
+  "enablePullDownRefresh": true,
+  "onReachBottomDistance": 50,
+  "usingComponents": {
+    "t-icon": "tdesign-miniprogram/icon/icon",
+    "t-loading": "tdesign-miniprogram/loading/loading",
+    "waterfall-container": "../../components/waterfall-container/waterfall-container"
+  }
+}

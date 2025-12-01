@@ -5,16 +5,18 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
+    "build:phoenix": "babel node_modules/phoenix --out-dir node_modules/phoenix/dist",
+    "prebuild:npm": "npm run build:phoenix",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "format": "prettier --write .",
     "check-format": "prettier --check ."
   },
   "dependencies": {
+    "@renkunx/supabase-wechat-stable-v2": "^2.1.9",
     "tdesign-miniprogram": "^1.11.2"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.28.5",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",

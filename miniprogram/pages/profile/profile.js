@@ -1,5 +1,6 @@
 // 我的页面逻辑
 const authService = require('../../services/auth.service.js');
+const supabaseClient = require('../../services/supabase.service.js');
 Page({
   data: {
     // 用户登录状态
@@ -22,10 +23,14 @@ Page({
     currentX: 0,
     currentY: 0,
     isDragging: false,
+  
   },
 
-  onLoad: function (options) {
+  onLoad: async function (options) {
     console.log('我的页面加载', options);
+
+
+
 
     // 初始化页面数据
     this.initPageData();

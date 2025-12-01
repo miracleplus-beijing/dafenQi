@@ -1,89 +1,56 @@
 <!-- 我的页面 -->
 <view class="profile-container">
-  <!-- 用户区域 -->
-  <view class="user-section" wx:if="{{isLoggedIn}}">
-    <view class="user-info">
-      <text class="user-name section-title" bindtap="changeUserName">{{userInfo.nickName || '用户'}}</text>
-      <text class="user-id">ID: {{userInfo.id || '未设置'}}</text>
+  
+  <!-- 1. 用户信息区域 (已登录) -->
+  <view class="user-header" wx:if="{{isLoggedIn}}">
+    <view class="user-info-left">
+      <text class="user-name" bindtap="changeUserName">{{userInfo.nickName || '用户'}}</text>
+      <text class="user-desc" wx:if="{{userInfo.id}}">ID: {{userInfo.id}}</text>
+      <text class="user-desc" wx:else>点击设置昵称</text>
     </view>
-
-    <view class="avatar-container">
-      <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-        <image src="{{userInfo.avatarUrl || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/user.svg'}}" mode="aspectFill" />
-      </button>
-      <view class="avatar-edit-hint">点击更换头像</view>
-    </view>
+    
+    <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+      <image class="avatar-img" src="{{userInfo.avatarUrl || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/user.svg'}}" mode="aspectFill" />
+    </button>
   </view>
 
-  <!-- 菜单项区域 -->
-  <view class="menu-section" wx:if="{{isLoggedIn}}">
-    <view class="menu-list">
-      <view class="menu-item" bindtap="handleMenuClick" data-type="history">
-        <text class="menu-text">收听历史</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" bindtap="handleMenuClick" data-type="favorites">
-        <text class="menu-text">我的收藏</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" bindtap="handleMenuClick" data-type="comments">
-        <text class="menu-text">我的评论</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" bindtap="handleMenuClick" data-type="settings">
-        <text class="menu-text">设置</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <!-- <view class="menu-item" bindtap="handleMenuClick" data-type="feedback">
-        <text class="menu-text">问题反馈</text>
-        <text class="menu-arrow">›</text>
-      </view> -->
-    </view>
-
-    <!-- 退出登录按钮 -->
-  <view class="logout-btn" bindtap="handleLogout">
-    <text class="logout-text">退出登录</text>
-  </view>
+  <!-- 2. 菜单列表 (已登录) - 使用 TDesign Cell -->
+  <view class="menu-card" wx:if="{{isLoggedIn}}">
+    <t-cell-group theme="card">
+      <t-cell title="收听历史" leftIcon="time" hover arrow bindtap="handleMenuClick" data-type="history" />
+      <t-cell title="我的收藏" leftIcon="heart" hover arrow bindtap="handleMenuClick" data-type="favorites" />
+      <t-cell title="我的评论" leftIcon="chat" hover arrow bindtap="handleMenuClick" data-type="comments" />
+      <t-cell title="设置" leftIcon="setting" hover arrow bindtap="handleMenuClick" data-type="settings" />
+    </t-cell-group>
   </view>
 
-  <!-- 未登录状态 - 精美登录卡片 -->
+
+
+  <!-- 4. 未登录状态 - 精美登录卡片 -->
   <view class="login-container" wx:if="{{!isLoggedIn}}">
     <view class="login-card">
-      <!-- 图标区域 -->
-      <view class="login-icon-wrapper">
-        <view class="login-icon-bg">
-          <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/user.svg" class="login-icon"></image>
-        </view>
+      <view class="login-icon-bg">
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/user.svg" class="login-icon"></image>
       </view>
       
-      <!-- 标题文案 -->
       <text class="login-title">登录解锁更多功能</text>
       
-      <!-- 价值点列表 -->
       <view class="login-benefits">
         <view class="benefit-item">
-          <text class="benefit-icon">✓</text>
+          <t-icon name="check" size="32rpx" color="var(--color-success)" />
           <text class="benefit-text">同步收藏和历史记录</text>
         </view>
         <view class="benefit-item">
-          <text class="benefit-icon">✓</text>
+          <t-icon name="check" size="32rpx" color="var(--color-success)" />
           <text class="benefit-text">个性化推荐内容</text>
         </view>
         <view class="benefit-item">
-          <text class="benefit-icon">✓</text>
+          <t-icon name="check" size="32rpx" color="var(--color-success)" />
           <text class="benefit-text">跨设备数据同步</text>
         </view>
       </view>
       
-      <!-- CTA按钮 -->
-      <t-button 
-        theme="primary" 
-        size="large" 
-        block 
-        class="login-btn"
-        bindtap="handleLogin">
-        立即登录
-      </t-button>
+      <t-button theme="primary" size="large" block class="login-btn" bindtap="handleLogin">立即登录</t-button>
     </view>
   </view>
 
@@ -92,9 +59,4 @@
     <view class="swipe-indicator left {{swipeDirection === 'left' ? 'active' : ''}}"></view>
     <view class="swipe-indicator right {{swipeDirection === 'right' ? 'active' : ''}}"></view>
   </view>
-
-
-
 </view>
-
-

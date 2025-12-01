@@ -1,37 +1,21 @@
 <!-- 设置页面 -->
 <view class="settings-container">
-  <!-- 隐私与安全 -->
-  <view class="menu-section">
-    <view class="menu-item" bindtap="handleMenuClick" data-type="privacy-policy">
-      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/privacy-policy.svg" alt="隐私政策" class="menu-icon"></image>
-      <text class="menu-text">隐私政策</text>
-      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" alt=">" class="menu-arrow"></image>
-    </view>
-    
-    <view class="menu-item" bindtap="handleMenuClick" data-type="service-agreement">
-      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/service-agreement.svg" alt="服务协议" class="menu-icon"></image>
-      <text class="menu-text">服务协议</text>
-      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" alt=">" class="menu-arrow"></image>
-    </view>
-    
-    <view class="menu-item" bindtap="handleMenuClick" data-type="data-collection">
-      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/data-collection-checklist.svg" alt="数据收集清单" class="menu-icon"></image>
-      <text class="menu-text">数据收集清单</text>
-      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" alt=">" class="menu-arrow"></image>
-    </view>
-    
-    <view class="menu-item" bindtap="handleMenuClick" data-type="personal-info">
-      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/personal-information-checklist.svg" alt="个人信息清单" class="menu-icon"></image>
-      <text class="menu-text">个人信息清单</text>
-      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" alt=">" class="menu-arrow"></image>
-    </view>
+  <t-cell-group theme="card">
+    <t-cell title="隐私政策" arrow hover bindtap="handleMenuClick" data-type="privacy-policy" />
+    <t-cell title="服务协议" arrow hover bindtap="handleMenuClick" data-type="service-agreement" />
+    <t-cell title="数据收集清单" arrow hover bindtap="handleMenuClick" data-type="data-collection" />
+    <t-cell title="个人信息清单" arrow hover bindtap="handleMenuClick" data-type="personal-info" />
+  </t-cell-group>
 
-    <view class="section-divider"></view>
-    
-    <view class="menu-item cancel-item" bindtap="handleMenuClick" data-type="cancel-account">
-      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/cancel-account.svg" alt="注销账户" class="menu-icon"></image>
-      <text class="menu-text cancel-text">注销账户</text>
-      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/right-arrow.svg" alt=">" class="menu-arrow"></image>
-    </view>
+  <view class="logout-section">
+    <t-cell-group theme="card">
+      <t-cell title="退出登录" t-class="logout-cell" t-class-title="logout-text" bindtap="handleLogout" />
+    </t-cell-group>
+  </view>
+
+  <view class="danger-section">
+    <t-cell-group theme="card">
+      <t-cell title="注销账户" t-class-title="danger-text" arrow hover bindtap="handleMenuClick" data-type="cancel-account" />
+    </t-cell-group>
   </view>
 </view>

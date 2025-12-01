@@ -1,409 +1,213 @@
-/* 我的页面样式 */
+/* 页面容器 */
 .profile-container {
-    width: 100vw;
-    min-height: 100vh;
-    background: var(--gradient-bg-blue);
-    position: relative;
-    overflow: hidden;
+  min-height: 100vh;
+  background: var(--gradient-bg-blue); /* 全局蓝白渐变背景 */
+  padding-bottom: 40rpx;
+  box-sizing: border-box;
 }
 
-
-
-/* 全页面 text 样式 */
-text {
-    text-shadow: 0 4rpx 6rpx rgba(0, 0, 0, 0.05);
-    font-weight: 400;
-    font-size: 34rpx;
+/* ========================================
+   1. 用户信息区域 (User Header)
+   ======================================== */
+.user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 120rpx 48rpx 60rpx; /* 顶部留白，符合小宇宙风格 */
 }
 
-.user-section {
-    z-index: 2;
-    background: var(--gradient-bg-user);
-    padding: 80rpx 60rpx 40rpx;
-    width: 100%;
-    height: 320rpx;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 40rpx;
-}
-
-.user-info {
-    flex: 1;
+.user-info-left {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
 }
 
 .user-name {
-    font-size: 38rpx;
-    font-weight: 600;
-    color: var(--color-text-primary);
-    margin-bottom: 8rpx;
-    cursor: pointer;
-    transition: opacity 0.2s ease;
+  font-size: 56rpx; /* 大字号标题 */
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.2;
 }
 
-.user-name:active {
-    background-color: rgba(255, 255, 255, 0.2);
+.user-desc {
+  font-size: 26rpx;
+  color: var(--color-text-tertiary);
+  font-weight: 400;
 }
 
-.user-id {
-    font-size: 24rpx;
-    font-weight: 400;
-    display: block;
-    color: var(--color-text-secondary);
-    opacity: 0.8;
+/* 头像按钮 */
+.avatar-btn {
+  margin: 0;
+  padding: 0;
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s ease;
 }
 
-.avatar-container {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex-shrink: 0;
+.avatar-btn:active {
+  transform: scale(0.95);
 }
 
-.avatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 50px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    background: #f0f0f0;
-    cursor: pointer;
-    transition: transform 0.2s ease;
+.avatar-btn::after {
+  border: none;
 }
 
-.avatar:active {
-    transform: scale(0.95);
-}
-
-.avatar-edit-hint {
-    font-size: 22rpx;
-    color: var(--color-text-secondary);
-    margin-top: 8rpx;
-    text-align: center;
-    opacity: 0.8;
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 4rpx solid #fff;
 }
 
 /* ========================================
-   已登录状态 - 菜单区域
+   2. 菜单列表 (Menu Card)
    ======================================== */
-
-/* 菜单项区域 - 卡片化设计 */
-.menu-section {
-    position: relative;
-    z-index: 2;
-    background: transparent;
-    padding: 0 32rpx;
-    margin-top: -40rpx;
+.menu-card {
+  margin: 0 32rpx;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm); /* 微妙阴影 */
 }
 
-.menu-list {
-    background: var(--color-bg-primary);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
-    overflow: hidden;
+/* 覆盖 TDesign Cell 样式，使其背景透明或白色 */
+.menu-card .t-cell-group {
+  background-color: transparent;
 }
 
-.menu-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 28rpx 40rpx;
-    border-bottom: 1rpx solid var(--color-border-light);
-    transition: all var(--transition-normal) var(--ease-out);
+.menu-card .t-cell {
+  background-color: #fff;
+  padding: 32rpx !important;
 }
 
-.menu-item:last-child {
-    border-bottom: none;
-}
-
-.menu-item:active {
-    background: var(--gradient-hover);
-    transform: scale(0.98);
-}
-
-.menu-text {
-    font-family: 'PingFang SC', sans-serif;
-    font-size: 30rpx;
-    font-weight: 500;
-    color: var(--color-text-primary);
-}
-
-.menu-arrow {
-    font-size: 70rpx;
-    color: #CCCCCC;
-    font-weight: 300;
-    line-height: 0.65;
+.menu-card .t-cell__title-text {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--color-text-primary);
 }
 
 
-.logout-btn {
-    margin: 64rpx auto 0;
-    width: 280rpx;
-    height: 80rpx;
-    background: var(--color-bg-secondary);
-    border-radius: var(--radius-xl);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: var(--shadow-sm);
-    transition: all var(--transition-normal) var(--ease-out);
-}
-
-.logout-btn:active {
-    background: #eeeeee;
-    transform: scale(0.96);
-    box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.06);
-}
-
-.logout-text {
-    color: var(--color-danger);
-    font-family: 'PingFang SC', sans-serif;
-    font-size: 28rpx;
-    font-weight: 500;
-}
-
-/* 分割线 */
-.section-divider {
-    width: 100%;
-    height: 10px;
-    background: #f5f5f5;
-    margin: 10px 0;
-}
 
 /* ========================================
-   未登录状态样式 - 精美登录卡片
+   4. 未登录状态 (Login Card)
    ======================================== */
-
-/* 登录容器 - 垂直居中布局 */
 .login-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 60rpx;
-    z-index: 10;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 60rpx;
+  z-index: 100;
+  background: var(--gradient-bg-blue);
 }
 
-/* 登录卡片 */
 .login-card {
-    width: 100%;
-    max-width: 630rpx;
-    background: var(--color-bg-primary);
-    border-radius: var(--radius-lg);
-    padding: 64rpx 48rpx 48rpx;
-    box-shadow: var(--shadow-lg);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    animation: fadeInUp 0.6s var(--ease-out);
+  width: 100%;
+  max-width: 630rpx;
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: 64rpx 48rpx 48rpx;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeInUp 0.6s var(--ease-out);
 }
 
-/* 图标容器 */
-.login-icon-wrapper {
-    margin-bottom: 32rpx;
-}
-
-/* 图标渐变背景 - 蓝白渐变 */
 .login-icon-bg {
-    width: 120rpx;
-    height: 120rpx;
-    background: var(--gradient-primary);
-    border-radius: var(--radius-2xl);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: var(--shadow-btn-primary);
+  width: 120rpx;
+  height: 120rpx;
+  background: var(--gradient-primary); /* 蓝白渐变 */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-btn-primary);
+  margin-bottom: 32rpx;
 }
 
-/* 图标 */
 .login-icon {
-    width: 64rpx;
-    height: 64rpx;
-    opacity: 1;
-    filter: brightness(0) invert(1);
+  width: 64rpx;
+  height: 64rpx;
+  filter: brightness(0) invert(1);
 }
 
-/* 标题文案 */
 .login-title {
-    font-size: 40rpx;
-    font-weight: 600;
-    color: var(--color-text-primary);
-    margin-bottom: 40rpx;
-    text-align: center;
-    text-shadow: none;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 40rpx;
 }
 
-/* 价值点列表 */
 .login-benefits {
-    width: 100%;
-    margin-bottom: 48rpx;
+  width: 100%;
+  margin-bottom: 48rpx;
 }
 
-/* 单个价值点 */
 .benefit-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20rpx;
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+  gap: 16rpx;
 }
 
-.benefit-item:last-child {
-    margin-bottom: 0;
-}
-
-/* 勾选图标 */
-.benefit-icon {
-    font-size: 32rpx;
-    color: var(--color-success);
-    margin-right: 16rpx;
-    font-weight: 700;
-    text-shadow: none;
-    flex-shrink: 0;
-}
-
-/* 价值点文字 */
 .benefit-text {
-    font-size: 28rpx;
-    color: var(--color-text-secondary);
-    font-weight: 400;
-    text-shadow: none;
-    line-height: 1.5;
+  font-size: 28rpx;
+  color: var(--color-text-secondary);
 }
 
-/* CTA 按钮 - TDesign Button 自定义样式 */
-.login-btn {
-    width: 100%;
-    margin-top: 0;
-}
-
-/* 覆盖 t-button 默认样式 - 使用蓝白渐变 */
+/* 登录按钮样式覆盖 */
 .login-btn .t-button {
-    width: 100%;
-    height: 88rpx;
-    background: var(--gradient-blue) !important;
-    border: none !important;
-    border-radius: var(--radius-md) !important;
-    box-shadow: var(--shadow-btn-primary);
-    transition: all var(--transition-normal) var(--ease-out);
-    font-size: 32rpx;
-    font-weight: 600;
-    color: var(--color-bg-primary);
+  width: 100%;
+  height: 88rpx;
+  background: var(--gradient-blue) !important; /* 蓝色渐变 */
+  border: none !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-btn-primary);
+  font-size: 32rpx;
+  font-weight: 600;
 }
 
 .login-btn .t-button:active {
-    transform: translateY(-4rpx);
-    box-shadow: var(--shadow-btn-primary-hover);
-    background: var(--gradient-blue) !important;
+  transform: translateY(-2rpx);
+  box-shadow: var(--shadow-btn-primary-hover);
 }
 
-/* 移除 t-button 的hover背景色变化 */
-.login-btn .t-button::after {
-    display: none;
-}
-
-/* 进入动画 */
+/* 动画 */
 @keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(40rpx);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* 页面切换动画 */
-.page-transition {
-    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s ease;
-}
-
-.page-slide-left {
-    transform: translateX(-100%);
-    opacity: 0;
-}
-
-.page-slide-right {
-    transform: translateX(100%);
-    opacity: 0;
-}
-
-.page-slide-in {
-    transform: translateX(0);
-    opacity: 1;
+  from { opacity: 0; transform: translateY(40rpx); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* 触摸反馈 */
 .touch-feedback {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 1000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1000;
 }
 
 .swipe-indicator {
-    position: absolute;
-    top: 50%;
-    width: 4px;
-    height: 60px;
-    background: rgba(8, 132, 255, 0.6);
-    border-radius: 2px;
-    transform: translateY(-50%);
-    opacity: 0;
-    transition: opacity 0.2s ease;
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 60px;
+  background: var(--color-primary);
+  border-radius: 2px;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
-.swipe-indicator.left {
-    left: 10px;
-}
-
-.swipe-indicator.right {
-    right: 10px;
-}
-
-.swipe-indicator.active {
-    opacity: 1;
-}
-
-.avatar-btn {
-    background-color: transparent;
-    width: 160rpx;
-    height: 160rpx;
-    border: none;
-    outline: none;
-    padding: 0;
-    margin: 0;
-    border-radius: 50%;
-    overflow: hidden;
-    position: relative;
-    cursor: pointer;
-    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-}
-
-.avatar-btn:active {
-    transform: scale(0.92);
-}
-
-.avatar-btn image {
-    width: 100%;
-    height: 100%;
-    border-radius: var(--radius-full);
-    border: 4rpx solid var(--color-bg-primary);
-    box-shadow: var(--shadow-md);
-}
-
-.avatar-btn::after {
-    border: 0 !important;
-    content: none !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    box-shadow: none !important;
-}
+.swipe-indicator.left { left: 10px; }
+.swipe-indicator.right { right: 10px; }
+.swipe-indicator.active { opacity: 1; }
