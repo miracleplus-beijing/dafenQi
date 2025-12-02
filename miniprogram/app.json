@@ -16,6 +16,7 @@
     "pages/personal-info/personal-info",
     "pages/my-comments/my-comments"
   ],
+  "requiredBackgroundModes": ["audio"],
   "permission": {
     "scope.userAvatar": {
       "desc": "用于展示用户个人资料,便于其他用户识别"

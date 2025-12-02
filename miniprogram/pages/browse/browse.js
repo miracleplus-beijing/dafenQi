@@ -78,6 +78,13 @@ Page({
         // 阅读模式状态
         isReadingMode: false, // 是否处于阅读模式
         readingModeExpanded: false, // 阅读模式动画状态
+
+        // 波形进度条相关
+        waveformBars: [], // 波形条数据
+        waveformTotalWidth: 750, // 波形总宽度 (rpx)
+        waveformBarCount: 60, // 波形条数量
+        isDraggingWaveform: false, // 是否正在拖动波形滑块
+        waveformContainerWidth: 0, // 波形容器实际宽度 (px)
     },
 
     onLoad: function (options) {
@@ -95,8 +102,14 @@ Page({
             globalPlayer: app.globalData.globalPlayer,
         });
 
+        // 初始化波形进度条数据
+        this.initWaveformBars();
+
         // 初始化音频上下文
         this.initAudioContext();
+
+        // 检查BackgroundAudioManager的当前播放状态
+        this.checkBackgroundAudioState();
 
         // 处理来自搜索页面的播客跳转
         if (options.podcastId) {
@@ -142,7 +155,7 @@ Page({
         try {
             const audio = this.data.audioContext;
             if (audio && typeof audio.stop === 'function') {
-                audio.stop();
+                audio.pause();
             }
         } catch (_) { }
         this.setData({
@@ -296,6 +309,9 @@ Page({
         // 页面进入动画
         this.enterAnimation();
 
+        // 检查BackgroundAudioManager的当前播放状态
+        this.checkBackgroundAudioState();
+
         // 延迟检查全局播客状态，确保数据加载完成
         setTimeout(() => {
             this.checkGlobalPodcastState();
@@ -420,13 +436,7 @@ Page({
         // 清理定时器
         this.cleanupTimers();
 
-        // 销毁音频上下文
-        if (
-            this.data.audioContext &&
-            typeof this.data.audioContext.destroy === 'function'
-        ) {
-            this.data.audioContext.destroy();
-        }
+        // BackgroundAudioManager 不需要销毁，继续保持播放状态
 
 
         if (this._justNavigatedTimer) {
@@ -474,6 +484,35 @@ Page({
         }
     },
 
+    // 检查BackgroundAudioManager当前播放状态
+    checkBackgroundAudioState: function () {
+        const backgroundAudioManager = wx.getBackgroundAudioManager();
+
+        if (backgroundAudioManager.src) {
+            console.log('检测到BackgroundAudioManager正在播放音频:', backgroundAudioManager.title);
+
+            // 查找当前播放的播客在列表中的位置
+            const { podcastList } = this.data;
+            const currentAudioUrl = backgroundAudioManager.src;
+
+            const targetIndex = podcastList.findIndex(podcast =>
+                podcast.audio_url === currentAudioUrl
+            );
+
+            if (targetIndex >= 0) {
+                console.log('找到当前播放播客在列表中的位置:', targetIndex);
+                this.setData({
+                    currentIndex: targetIndex,
+                    playingPodcastId: podcastList[targetIndex].id,
+                    isPlaying: true
+                });
+
+                // 恢复播放进度
+                this.loadPlayProgress(targetIndex);
+            }
+        }
+    },
+
     // ========== 播客状态管理辅助方法 ==========
 
     // 获取当前显示的播客
@@ -517,21 +556,27 @@ Page({
         }
     },
 
-    // 初始化音频上下文
+    // 初始化音频上下文 - 使用 BackgroundAudioManager
     initAudioContext: function () {
-        const audioContext = wx.createInnerAudioContext({
-            useWebAudioImplement: true,
-            obeyMuteSwitch: false  // iOS设备即使在静音模式下也能播放
+        const backgroundAudioManager = wx.getBackgroundAudioManager();
+
+        // 设置基础配置
+        backgroundAudioManager.title = '奇绩前沿信号';
+        backgroundAudioManager.singer = '奇绩前沿信号';
+        backgroundAudioManager.coverImgUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/miracleplus_signal.png';
+        backgroundAudioManager.epname = '播客节目';
+
+        this.rebindAudioEvents(backgroundAudioManager);
+        this.setData({
+            audioContext: backgroundAudioManager
         });
-        this.rebindAudioEvents(audioContext);
-        this.setData({ audioContext });
     },
 
-    // 重新绑定音频事件监听器
-    rebindAudioEvents: function (audioContext) {
+    // 重新绑定音频事件监听器 - BackgroundAudioManager
+    rebindAudioEvents: function (backgroundAudioManager) {
         // 音频事件监听
-        audioContext.onPlay(() => {
-            console.log('音频事件：开始播放');
+        backgroundAudioManager.onPlay(() => {
+            console.log('BackgroundAudioManager：开始播放');
             const { playingPodcastId } = this.data;
 
             this.setData({
@@ -549,8 +594,8 @@ Page({
             app.setCurrentPodcast(this.getCurrentPodcast());
         });
 
-        audioContext.onPause(() => {
-            console.log('音频事件：暂停播放');
+        backgroundAudioManager.onPause(() => {
+            console.log('BackgroundAudioManager：暂停播放');
             const { playingPodcastId } = this.data;
 
             this.setData({
@@ -564,8 +609,8 @@ Page({
             }
         });
 
-        audioContext.onStop(() => {
-            console.log('音频事件：停止播放');
+        backgroundAudioManager.onStop(() => {
+            console.log('BackgroundAudioManager：停止播放');
             const { playingPodcastId } = this.data;
 
             this.setData({
@@ -579,9 +624,9 @@ Page({
             }
         });
 
-        audioContext.onTimeUpdate(() => {
-            const currentTime = audioContext.currentTime || 0;
-            const duration = audioContext.duration || 0;
+        backgroundAudioManager.onTimeUpdate(() => {
+            const currentTime = backgroundAudioManager.currentTime || 0;
+            const duration = backgroundAudioManager.duration || 0;
             const { playingPodcastId, isDraggingThumb } = this.data;
 
             if (duration > 0 && !isDraggingThumb && playingPodcastId) {
@@ -604,8 +649,8 @@ Page({
             }
         });
 
-        audioContext.onEnded(() => {
-            console.log('音频播放结束');
+        backgroundAudioManager.onEnded(() => {
+            console.log('BackgroundAudioManager：播放结束');
             const { playingPodcastId } = this.data;
 
             this.setData({
@@ -621,8 +666,8 @@ Page({
             }
         });
 
-        audioContext.onError(res => {
-            console.error('音频播放错误:', res);
+        backgroundAudioManager.onError(res => {
+            console.error('BackgroundAudioManager播放错误:', res);
             this.setData({
                 isPlaying: false,
                 audioLoading: false,
@@ -638,10 +683,10 @@ Page({
             });
         });
 
-        audioContext.onCanplay(() => {
-            console.log('音频可以播放');
+        backgroundAudioManager.onCanplay(() => {
+            console.log('BackgroundAudioManager：可以播放');
             this.hideCustomLoading();
-            const duration = audioContext.duration;
+            const duration = backgroundAudioManager.duration;
             const { playingPodcastId } = this.data;
 
             if (duration > 0 && playingPodcastId) {
@@ -655,9 +700,20 @@ Page({
             this.setData({ audioLoading: false });
         });
 
-        audioContext.onWaiting(() => {
-            console.log('音频加载中');
+        backgroundAudioManager.onWaiting(() => {
+            console.log('BackgroundAudioManager：加载中');
             this.setData({ audioLoading: true });
+        });
+
+        // 处理系统播放事件
+        backgroundAudioManager.onPrev(() => {
+            console.log('BackgroundAudioManager：上一首');
+            this.handlePreviousPodcast();
+        });
+
+        backgroundAudioManager.onNext(() => {
+            console.log('BackgroundAudioManager：下一首');
+            this.handleNextPodcast();
         });
     },
 
@@ -882,9 +938,9 @@ Page({
         // 保存上一个播客的播放进度
         this.savePlayProgress();
 
-        // 停止当前播放
+        // 停止当前播放 - BackgroundAudioManager 使用 pause 而不是 stop
         if (this.data.audioContext) {
-            this.data.audioContext.stop();
+            this.data.audioContext.pause();
         }
 
         // 更新当前索引并重置播放状态（但不清空音频源）
@@ -953,24 +1009,11 @@ Page({
         }
     },
 
-    // 开始播放的统一处理函数
+    // 开始播放的统一处理函数 - BackgroundAudioManager
     startPlayback: function (podcast) {
         const { audioContext, playingPodcastId } = this.data;
 
-        console.log('准备播放:', podcast.title, '| 当前播放ID:', playingPodcastId, '| 新播客ID:', podcast.id);
-
-        // 【关键修复】无论如何，先停止当前播放，防止多个音频同时播放
-        if (audioContext) {
-            try {
-                // 强制停止当前音频
-                if (typeof audioContext.stop === 'function') {
-                    audioContext.stop();
-                    console.log('已停止之前的音频');
-                }
-            } catch (e) {
-                console.warn('停止音频失败:', e);
-            }
-        }
+        console.log('准备播放BackgroundAudio:', podcast.title, '| 当前播放ID:', playingPodcastId, '| 新播客ID:', podcast.id);
 
         // 设置正在播放的播客ID
         this.setData({
@@ -983,22 +1026,21 @@ Page({
         const isNewAudio = currentSrc !== newSrc;
 
         if (isNewAudio) {
-            console.log('需要切换音频源');
+            console.log('BackgroundAudioManager：需要切换音频源');
             this.switchAudioSource(podcast, newSrc);
         } else {
-            // 继续播放当前音频（已经在上面停止了，现在重新播放）
-            console.log('继续播放当前音频');
+            // 继续播放当前音频
+            console.log('BackgroundAudioManager：继续播放当前音频');
             this.hideCustomLoading();
             audioContext.play();
         }
-
     },
 
-    // 切换音频源并播放
+    // 切换音频源并播放 - BackgroundAudioManager
     switchAudioSource: function (podcast, newSrc) {
         const { audioContext } = this.data;
 
-        console.log('切换音频源:', podcast.title);
+        console.log('BackgroundAudioManager：切换音频源:', podcast.title);
 
         // 显示加载动画
         this.setData({
@@ -1007,10 +1049,41 @@ Page({
             isPlaying: true, // 预设为播放状态
         });
 
-        // 设置新音频源并播放（startPlayback 已经停止了之前的音频）
-        if (audioContext) {
-            audioContext.src = newSrc;
-            audioContext.play();
+        // 设置BackgroundAudioManager的音频信息
+        audioContext.title = podcast.title;
+        audioContext.singer = podcast.channel_name || '奇绩前沿信号';
+        audioContext.coverImgUrl = podcast.cover_url;
+        audioContext.epname = '播客节目';
+        audioContext.src = newSrc;
+
+        // BackgroundAudioManager会自动开始播放
+    },
+
+    // 处理上一首播客
+    handlePreviousPodcast: function () {
+        const { currentIndex, podcastList } = this.data;
+        const newIndex = currentIndex > 0 ? currentIndex - 1 : podcastList.length - 1;
+
+        this.setData({ currentIndex: newIndex });
+
+        // 自动播放上一首
+        const prevPodcast = podcastList[newIndex];
+        if (prevPodcast) {
+            this.startPlayback(prevPodcast);
+        }
+    },
+
+    // 处理下一首播客
+    handleNextPodcast: function () {
+        const { currentIndex, podcastList } = this.data;
+        const newIndex = currentIndex < podcastList.length - 1 ? currentIndex + 1 : 0;
+
+        this.setData({ currentIndex: newIndex });
+
+        // 自动播放下一首
+        const nextPodcast = podcastList[newIndex];
+        if (nextPodcast) {
+            this.startPlayback(nextPodcast);
         }
     },
 
@@ -1535,12 +1608,17 @@ Page({
         if (!audio) return;
 
         try {
-            // 切换音源并播放
-            if (typeof audio.stop === 'function') audio.stop();
+            // 设置BackgroundAudioManager的音频信息
+            audio.title = podcast.title;
+            audio.singer = podcast.channel_name || '奇绩前沿信号';
+            audio.coverImgUrl = podcast.cover_url;
+            audio.epname = '播客节目';
+
             if (podcast.audio_url) {
                 audio.src = podcast.audio_url;
             }
-            if (typeof audio.play === 'function') audio.play();
+
+            // BackgroundAudioManager会自动开始播放
 
             // 打开页面级 mini-player，并设置当前播客
             this.setData({
@@ -1606,7 +1684,7 @@ Page({
 
         // 停止播放
         if (this.data.audioContext) {
-            this.data.audioContext.stop();
+            this.data.audioContext.pause();
             this.setData({
                 isPlaying: false,
                 'globalPlayer.isPlaying': false,
@@ -1791,7 +1869,7 @@ Page({
         });
     },
 
-    // 触发自动播放（滑动后自动播放）
+    // 触发自动播放（滑动后自动播放） - BackgroundAudioManager
     triggerAutoPlay: function () {
         const { audioContext } = this.data;
         const currentPodcast = this.getCurrentPodcast();
@@ -1801,17 +1879,7 @@ Page({
             return;
         }
 
-        console.log('触发自动播放:', currentPodcast.title);
-
-        // 【关键修复】先停止当前播放，防止多个音频同时播放
-        try {
-            if (audioContext && typeof audioContext.stop === 'function') {
-                audioContext.stop();
-                console.log('自动播放：已停止之前的音频');
-            }
-        } catch (e) {
-            console.warn('停止音频失败:', e);
-        }
+        console.log('触发BackgroundAudio自动播放:', currentPodcast.title);
 
         // 设置正在播放的播客ID
         this.setData({
@@ -1832,10 +1900,27 @@ Page({
 
         if (isNewAudio) {
             console.log('设置新音频源进行自动播放');
+            // 设置BackgroundAudioManager的音频信息
+            audioContext.title = currentPodcast.title;
+            audioContext.singer = currentPodcast.channel_name || '奇绩前沿信号';
+            audioContext.coverImgUrl = currentPodcast.cover_url;
+            audioContext.epname = '播客节目';
             audioContext.src = newSrc;
+
+            // 如果有保存的播放进度，等待音频加载后跳转
+            if (startTime > 0) {
+                setTimeout(() => {
+                    audioContext.seek(startTime);
+                }, 500);
+            }
+        } else {
+            // 同一音频，直接跳转到指定位置并播放
+            if (startTime > 0) {
+                audioContext.seek(startTime);
+            }
+            audioContext.play();
         }
 
-        // 设置起始播放位置（必须在 play 之前设置）
         // 隐藏全局播放器
         this.setData({
             'globalPlayer.isVisible': false,
@@ -1844,204 +1929,6 @@ Page({
     },
 
 
-    // 保存播放进度（适配新架构：基于 playState）
-    savePlayProgress: function (podcastId = null) {
-        const { podcastList, playingPodcastId } = this.data;
-
-        // 如果没有指定 podcastId，则保存当前正在播放的播客
-        const targetPodcastId = podcastId || playingPodcastId;
-
-        if (!targetPodcastId) {
-            console.log('savePlayProgress: 没有需要保存进度的播客');
-            return;
-        }
-
-        // 查找播客
-        const podcast = podcastList.find(p => p.id === targetPodcastId);
-
-        if (!podcast || !podcast.playState) {
-            console.warn('savePlayProgress: 未找到播客或播放状态:', targetPodcastId);
-            return;
-        }
-
-        // 只有播放位置大于0才保存（避免保存无意义的进度）
-        if (podcast.playState.position <= 0) {
-            console.log('savePlayProgress: 播放位置为0，跳过保存');
-            return;
-        }
-
-        const progressKey = `podcast_progress_${podcast.id}`;
-        const progressData = {
-            position: podcast.playState.position,
-            progress: podcast.playState.progress,
-            actualDuration: podcast.playState.actualDuration,
-            lastPlayTime: Date.now()
-        };
-
-        try {
-            wx.setStorageSync(progressKey, progressData);
-            console.log('savePlayProgress: 已保存播放进度 -', podcast.title,
-                `位置: ${this.formatTime(progressData.position)} / ${this.formatTime(progressData.actualDuration)}`);
-        } catch (error) {
-            console.error('savePlayProgress: 保存失败:', error);
-        }
-    },
-
-    // 加载播放进度（适配新架构：基于 playState）
-    loadPlayProgress: function (index) {
-        const { podcastList } = this.data;
-
-        if (!podcastList.length || index < 0 || index >= podcastList.length) {
-            console.warn('loadPlayProgress: 无效的播客索引:', index);
-            return;
-        }
-
-        const podcast = podcastList[index];
-        const progressKey = `podcast_progress_${podcast.id}`;
-
-        try {
-            const progress = wx.getStorageSync(progressKey);
-
-            if (progress && progress.position > 0) {
-                console.log('loadPlayProgress: 加载播放进度 -', podcast.title,
-                    `位置: ${this.formatTime(progress.position)}`);
-
-                // 计算进度百分比
-                const duration = progress.actualDuration || podcast.playState.actualDuration || podcast.duration || 0;
-                let progressPercentage = 0;
-                if (duration > 0) {
-                    progressPercentage = (progress.position / duration) * 100;
-                }
-
-                // 更新播客的播放状态
-                this.updatePodcastPlayState(podcast.id, {
-                    position: progress.position,
-                    progress: Math.min(100, Math.max(0, progressPercentage)),
-                    currentTimeFormatted: this.formatTime(progress.position),
-                    // 如果保存的进度中有 actualDuration，也一并更新
-                    ...(progress.actualDuration ? {
-                        actualDuration: progress.actualDuration,
-                        totalTimeFormatted: this.formatTime(progress.actualDuration)
-                    } : {}),
-                });
-
-                // 如果当前正在播放这个播客，需要 seek 到对应位置
-                const { audioContext, playingPodcastId, isPlaying } = this.data;
-                if (audioContext && playingPodcastId === podcast.id && isPlaying) {
-                    console.log('loadPlayProgress: seek 到保存的位置:', progress.position);
-                    audioContext.seek(progress.position);
-                }
-            } else {
-                console.log('loadPlayProgress: 没有保存的播放进度 -', podcast.title);
-            }
-        } catch (error) {
-            console.error('loadPlayProgress: 加载失败:', error);
-        }
-    },
-
-    // 分享功能
-    onShareAppMessage: function () {
-        const { currentIndex, podcastList } = this.data;
-        const currentPodcast = podcastList[currentIndex] || {};
-
-        return {
-            title: currentPodcast.title || '奇绩前沿信号播客',
-            path: '/pages/browse/browse',
-            imageUrl:
-                currentPodcast.cover_url || getImageUrl('icons/share-cover.jpg'),
-        };
-    },
-
-    // 分享到朋友圈
-    onShareTimeline: function () {
-        const { currentIndex, podcastList } = this.data;
-        const currentPodcast = podcastList[currentIndex] || {};
-
-        return {
-            title: '我在奇绩前沿信号听到了这个有趣的内容',
-            query: 'share=timeline',
-            imageUrl:
-                currentPodcast.cover_url || getImageUrl('icons/share-cover.jpg'),
-        };
-    },
-
-    // 格式化时间显示 (秒转为 mm:ss 或 h:mm:ss)
-    formatTime: function (seconds) {
-        if (!seconds || isNaN(seconds)) return '0:00';
-
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const secs = Math.floor(seconds % 60);
-
-        if (hours > 0) {
-            return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        } else {
-            return `${minutes}:${secs.toString().padStart(2, '0')}`;
-        }
-    },
-
-    hideCustomLoading() {
-        this.setData({
-            audioLoadingVisible: false,
-        });
-    },
-
-    // 触发自动播放（滑动后自动播放）
-    triggerAutoPlay: function () {
-        const { audioContext } = this.data;
-        const currentPodcast = this.getCurrentPodcast();
-
-        if (!currentPodcast || !currentPodcast.audio_url || !audioContext) {
-            console.log('自动播放条件不满足');
-            return;
-        }
-
-        console.log('触发自动播放:', currentPodcast.title);
-
-        // 【关键修复】先停止当前播放，防止多个音频同时播放
-        try {
-            if (audioContext && typeof audioContext.stop === 'function') {
-                audioContext.stop();
-                console.log('自动播放：已停止之前的音频');
-            }
-        } catch (e) {
-            console.warn('停止音频失败:', e);
-        }
-
-        // 设置正在播放的播客ID
-        this.setData({
-            playingPodcastId: currentPodcast.id
-        });
-
-        // 检查是否有保存的播放进度
-        let startTime = 0;
-        if (currentPodcast.playState && currentPodcast.playState.position > 0) {
-            startTime = currentPodcast.playState.position;
-            console.log('自动播放：检测到历史进度，将从', startTime, '秒开始播放');
-        }
-
-        // 检查是否需要切换音频源
-        const currentSrc = audioContext.src || '';
-        const newSrc = currentPodcast.audio_url;
-        const isNewAudio = currentSrc !== newSrc;
-
-        if (isNewAudio) {
-            console.log('设置新音频源进行自动播放');
-            audioContext.src = newSrc;
-        }
-
-        // 设置起始播放位置（必须在 play 之前设置）
-        // 注意：即使是同一个音频，stop() 后再 play() 也会重置，所以需要设置 startTime
-        if (startTime > 0) {
-            audioContext.startTime = startTime;
-        } else {
-            audioContext.startTime = 0;
-        }
-
-        // 播放音频
-        this.hideCustomLoading();
-        audioContext.play();
-    },
 
     // ========== 阅读模式相关方法 ==========
 
@@ -2082,5 +1969,118 @@ Page({
     // 防止滚动穿透
     preventScroll: function () {
         return false;
+    },
+
+    // ========== 波形进度条相关方法 ==========
+
+    // 初始化波形条数据
+    initWaveformBars: function () {
+        const barCount = this.data.waveformBarCount;
+        const bars = [];
+
+        // 生成随机但有韵律感的波形数据
+        for (let i = 0; i < barCount; i++) {
+            // 使用正弦波和随机数组合，创造自然的波形效果
+            const baseHeight = 30; // 基础高度
+            const maxVariation = 50; // 最大变化幅度
+            const sinValue = Math.sin(i * 0.3) * 0.5 + 0.5; // 0-1 范围的正弦值
+            const randomValue = Math.random() * 0.6 + 0.2; // 0.2-0.8 范围的随机值
+            const combinedValue = sinValue * 0.4 + randomValue * 0.6; // 组合值
+
+            const height = baseHeight + combinedValue * maxVariation;
+
+            bars.push({
+                height: Math.round(height),
+                index: i
+            });
+        }
+
+        this.setData({
+            waveformBars: bars
+        });
+
+        console.log('波形进度条已初始化，条数:', barCount);
+    },
+
+    // 波形触摸开始
+    handleWaveformTouchStart: function (e) {
+        const touch = e.touches[0];
+
+        // 获取波形容器的实际宽度
+        const query = this.createSelectorQuery();
+        query.select('.waveform-container').boundingClientRect((rect) => {
+            if (rect) {
+                this._waveformRect = rect;
+                this.setData({
+                    isDraggingWaveform: true,
+                    waveformContainerWidth: rect.width
+                });
+
+                // 计算并更新进度
+                this._updateWaveformProgress(touch.clientX);
+            }
+        }).exec();
+    },
+
+    // 波形触摸移动
+    handleWaveformTouchMove: function (e) {
+        if (!this.data.isDraggingWaveform || !this._waveformRect) return;
+
+        const touch = e.touches[0];
+        this._updateWaveformProgress(touch.clientX);
+    },
+
+    // 波形触摸结束
+    handleWaveformTouchEnd: function (e) {
+        if (!this.data.isDraggingWaveform) return;
+
+        const { audioContext, playingPodcastId } = this.data;
+        const playingPodcast = this.getPlayingPodcast();
+        const currentPodcast = this.getCurrentPodcast();
+
+        // 如果还没有开始播放，先开始播放
+        if (!playingPodcast && currentPodcast) {
+            this.startPlayback(currentPodcast);
+        } else if (audioContext && playingPodcast) {
+            // 跳转到拖动结束的位置
+            const duration = playingPodcast.playState.actualDuration;
+            const seekTime = (playingPodcast.playState.progress / 100) * duration;
+            audioContext.seek(seekTime);
+            console.log('波形拖动结束，跳转到:', this.formatTime(seekTime));
+        }
+
+        this.setData({
+            isDraggingWaveform: false
+        });
+        this._waveformRect = null;
+    },
+
+    // 更新波形进度（内部方法）
+    _updateWaveformProgress: function (clientX) {
+        if (!this._waveformRect) return;
+
+        const rect = this._waveformRect;
+        const relativeX = clientX - rect.left;
+        const percentage = Math.max(0, Math.min(100, (relativeX / rect.width) * 100));
+
+        const { playingPodcastId } = this.data;
+        const playingPodcast = this.getPlayingPodcast();
+        const currentPodcast = this.getCurrentPodcast();
+
+        // 如果有正在播放的播客，更新它的进度
+        // 否则更新当前显示的播客进度
+        const targetPodcast = playingPodcast || currentPodcast;
+        const targetPodcastId = playingPodcastId || (currentPodcast ? currentPodcast.id : null);
+
+        if (targetPodcast && targetPodcastId) {
+            const duration = targetPodcast.playState.actualDuration || targetPodcast.duration || 0;
+            const seekTime = (percentage / 100) * duration;
+
+            this.updatePodcastPlayState(targetPodcastId, {
+                progress: percentage,
+                position: seekTime,
+                currentTimeFormatted: this.formatTime(seekTime),
+            });
+        }
     },
 });
