@@ -1,4 +1,6 @@
 // 快速预览组件
+const { authService } = require('../../services/auth.service.js');
+
 Component({
   properties: {
     // 是否显示
@@ -161,6 +163,27 @@ Component({
 
     // 处理收藏
     handleFavorite() {
+      // 检查登录状态
+      const loginStatus = authService.checkLoginStatus();
+
+      if (!loginStatus) {
+        // 未登录，提示用户登录
+        wx.showModal({
+          title: '需要登录',
+          content: '收藏功能需要登录后使用，是否前往登录？',
+          confirmText: '去登录',
+          cancelText: '取消',
+          success: res => {
+            if (res.confirm) {
+              wx.navigateTo({
+                url: '/pages/login/login',
+              });
+            }
+          },
+        });
+        return;
+      }
+
       const { podcast } = this.data;
       const newIsFavorited = !podcast.isFavorited;
 

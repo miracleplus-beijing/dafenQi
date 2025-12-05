@@ -183,6 +183,28 @@ Component({
         return;
       }
 
+      // 检查登录状态
+      const auth = require('../../services/auth.service.js');
+      const loginStatus = auth.checkLoginStatus && auth.checkLoginStatus();
+
+      if (!loginStatus) {
+        // 未登录，提示用户登录
+        wx.showModal({
+          title: '需要登录',
+          content: '收藏功能需要登录后使用，是否前往登录？',
+          confirmText: '去登录',
+          cancelText: '取消',
+          success: res => {
+            if (res.confirm) {
+              wx.navigateTo({
+                url: '/pages/login/login',
+              });
+            }
+          },
+        });
+        return;
+      }
+
       const next = !podcast.isFavorited;
       // 本地切换收藏态；不依赖父页面
       try {
@@ -193,7 +215,6 @@ Component({
 
       try {
         const apiService = require('../../services/api.service.js');
-        const auth = require('../../services/auth.service.js');
         const user = auth.getCurrentUser && auth.getCurrentUser();
 
         if (next) {

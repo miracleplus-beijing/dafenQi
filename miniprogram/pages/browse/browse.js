@@ -947,20 +947,42 @@ Page({
         const currentPodcast = podcastList[currentIndex];
         const podcastDuration = currentPodcast?.duration || 0;
 
+        // 先加载播客的播放进度（从本地存储）
+        const savedProgress = this.loadPlayProgressSync(currentIndex);
+
+        // 根据保存的进度设置初始状态
+        const initialProgress = savedProgress?.progress || 0;
+        const initialPosition = savedProgress?.position || 0;
+        const initialCurrentTime = savedProgress?.position > 0
+            ? this.formatTime(savedProgress.position)
+            : '0:00';
+        const initialDuration = savedProgress?.actualDuration || podcastDuration;
+        const initialTotalTime = initialDuration > 0
+            ? this.formatTime(initialDuration)
+            : '0:00';
+
         this.setData({
             currentIndex,
             isPlaying: false,
-            currentProgress: 0,
-            audioPosition: 0,
-            audioDuration: podcastDuration,
-            currentTimeFormatted: '0:00',
-            totalTimeFormatted:
-                podcastDuration > 0 ? this.formatTime(podcastDuration) : '0:00',
+            currentProgress: initialProgress,
+            audioPosition: initialPosition,
+            audioDuration: initialDuration,
+            currentTimeFormatted: initialCurrentTime,
+            totalTimeFormatted: initialTotalTime,
         });
 
+        console.log(`切换到播客 ${currentIndex}，恢复进度: ${initialCurrentTime}/${initialTotalTime}`);
 
-        // 加载新播客的播放进度（延迟执行，确保状态更新完成）
-        this.loadPlayProgress(currentIndex);
+        // 更新播客的 playState（确保数据一致性）
+        if (savedProgress) {
+            this.updatePodcastPlayState(currentPodcast.id, {
+                position: savedProgress.position,
+                progress: savedProgress.progress,
+                actualDuration: savedProgress.actualDuration,
+                currentTimeFormatted: initialCurrentTime,
+                totalTimeFormatted: initialTotalTime,
+            });
+        }
 
         // 自动播放新播客（仅在启用自动播放时）
         if (this.data.autoPlayOnSwipe && podcastList[currentIndex]) {
@@ -1726,6 +1748,45 @@ Page({
         app.hideGlobalPlayer();
     },
 
+
+    // 同步加载播放进度（用于切换时立即获取进度）
+    loadPlayProgressSync: function (index) {
+        const { podcastList } = this.data;
+
+        if (!podcastList.length || index < 0 || index >= podcastList.length) {
+            return null;
+        }
+
+        const podcast = podcastList[index];
+        const progressKey = `podcast_progress_${podcast.id}`;
+
+        try {
+            const progress = wx.getStorageSync(progressKey);
+
+            if (progress && progress.position > 0) {
+                console.log('同步加载播放进度 -', podcast.title,
+                    `位置: ${this.formatTime(progress.position)}`);
+
+                // 计算进度百分比
+                const duration = progress.actualDuration || podcast.playState?.actualDuration || podcast.duration || 0;
+                let progressPercentage = 0;
+                if (duration > 0) {
+                    progressPercentage = (progress.position / duration) * 100;
+                }
+
+                return {
+                    position: progress.position,
+                    progress: Math.min(100, Math.max(0, progressPercentage)),
+                    actualDuration: progress.actualDuration || duration,
+                };
+            }
+
+            return null;
+        } catch (error) {
+            console.error('同步加载进度失败:', error);
+            return null;
+        }
+    },
 
     // 保存播放进度（适配新架构：基于 playState）
     savePlayProgress: function (podcastId = null) {

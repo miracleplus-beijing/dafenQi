@@ -20,30 +20,22 @@
         <!-- 第一行 -->
         <view class="category-row">
           <view wx:for="{{academicCategories}}" wx:key="id" wx:if="{{index < 4}}"
-                class="category-card"
+                class="category-card category-card-{{index + 1}}"
                 bindtap="selectCategory"
                 data-category="{{item}}">
-            <view class="category-icon-wrapper">
-              <t-icon name="{{item.iconName}}" class="category-icon" />
-            </view>
-            <view class="category-info">
-              <text class="category-name">{{item.displayName}}</text>
-              <text class="category-code">{{item.name}}</text>
+            <view class="category-content">
+              <text class="category-title">{{item.displayName}}</text>
             </view>
           </view>
         </view>
         <!-- 第二行 -->
         <view class="category-row">
           <view wx:for="{{academicCategories}}" wx:key="id" wx:if="{{index >= 4}}"
-                class="category-card"
+                class="category-card category-card-{{index + 1}}"
                 bindtap="selectCategory"
                 data-category="{{item}}">
-            <view class="category-icon-wrapper">
-              <t-icon name="{{item.iconName}}" class="category-icon" />
-            </view>
-            <view class="category-info">
-              <text class="category-name">{{item.displayName}}</text>
-              <text class="category-code">{{item.name}}</text>
+            <view class="category-content">
+              <text class="category-title">{{item.displayName}}</text>
             </view>
           </view>
         </view>
@@ -55,14 +47,12 @@
       <view class="categories-grid">
         <view class="category-row">
           <view wx:for="{{[1,2,3,4]}}" wx:key="index" class="skeleton-card">
-            <view class="skeleton skeleton-icon"></view>
-            <view class="skeleton skeleton-title"></view>
+            <view class="skeleton skeleton-full"></view>
           </view>
         </view>
         <view class="category-row">
           <view wx:for="{{[1,2,3]}}" wx:key="index" class="skeleton-card">
-            <view class="skeleton skeleton-icon"></view>
-            <view class="skeleton skeleton-title"></view>
+            <view class="skeleton skeleton-full"></view>
           </view>
         </view>
       </view>

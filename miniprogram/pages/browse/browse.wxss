@@ -257,7 +257,7 @@ page {
     font-size: 80rpx;
 }
 
-/* 播放/暂停覆盖层 - 固定不旋转 */
+/* 播放/暂停覆盖层 - 反向旋转保持静止 */
 .play-overlay-circle {
     position: absolute;
     top: 0;
@@ -271,8 +271,24 @@ page {
     border-radius: 50%;
     transition: opacity 0.3s ease;
     z-index: 2;
-    /* 关键修复：禁止旋转 */
-    animation: none !important;
+    /* 关键修复：反向旋转抵消父元素旋转 */
+    animation: counterRotate 20s linear infinite;
+    animation-play-state: paused;
+}
+
+/* 当封面旋转时，播放按钮执行反向旋转保持静止 */
+.podcast-cover-circle.rotating .play-overlay-circle {
+    animation-play-state: running;
+}
+
+/* 反向旋转动画 */
+@keyframes counterRotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(-360deg);
+    }
 }
 
 .play-overlay-circle.hidden {
