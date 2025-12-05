@@ -1,34 +1,21 @@
 /* 分类页面 - iOS 风格渐变设计系统 */
 
-/* CSS 变量定义 - iOS风格自然渐变色彩系统（用户需求：淡蓝色、青色、单青色为主） */
+/* CSS 变量定义 - iOS 风格柔和色彩系统 */
 page {
-  /* 主色系渐变 - 符合用户需求的淡蓝色、青色系 */
-  --gradient-lightBlue: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);    /* 淡蓝色渐变 */
-  --gradient-cyan: linear-gradient(135deg, #cffafe 0%, #a5f3fc 100%);         /* 青色渐变 */
-  --gradient-singleCyan: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);   /* 单青色渐变 */
-  --gradient-skyBlue: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);      /* 天空蓝渐变 */
-  --gradient-iceBlue: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);      /* 冰蓝渐变 */
-
-  /* 次要色系 - 自然感强的低对比度渐变 */
-  --gradient-softGreen: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);    /* 柔和绿色 */
-  --gradient-warmOrange: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);   /* 温暖橙色 */
-  --gradient-lightPurple: linear-gradient(135deg, #faf5ff 0%, #e879f9 100%);  /* 淡紫色 */
-  --gradient-pearlWhite: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);   /* 珍珠白 */
-
-  /* 卡片渐变系统 - 用于分类卡片的顶部装饰条 */
-  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);      /* 紫色渐变 */
-  --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);    /* 粉红渐变 */
-  --blue-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);         /* 蓝色渐变 */
-  --light-blue-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);   /* 浅蓝渐变 */
-  --warm-gradient: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);         /* 暖色渐变 */
-  --green-gradient: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%);        /* 绿色渐变 */
-  --pink-gradient: linear-gradient(135deg, #fad0c4 0%, #ffd1ff 100%);         /* 粉色渐变 */
+  /* iOS 风格柔和渐变色 - 降低饱和度 */
+  --gradient-softRed: linear-gradient(135deg, #ffe5e5 0%, #ffd4d4 100%);      /* 柔和红色 */
+  --gradient-softOrange: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);   /* 柔和橙色 */
+  --gradient-softBlue: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);     /* 柔和蓝色 */
+  --gradient-softGray: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);     /* 柔和灰色 */
+  --gradient-softPurple: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);   /* 柔和紫色 */
+  --gradient-softGreen: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);    /* 柔和绿色 */
+  --gradient-softPink: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);     /* 柔和粉色 */
 
   /* 背景渐变系统 - 自然的蓝色基调 */
-  --bg-primary: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
-  --bg-secondary: rgba(240, 249, 255, 0.8);
-  --bg-card: rgba(255, 255, 255, 0.9);      /* 玻璃拟态卡片 */
-  --bg-glass: rgba(255, 255, 255, 0.7);     /* 玻璃效果 */
+  --bg-primary: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+  --bg-secondary: rgba(248, 249, 250, 0.8);
+  --bg-card: rgba(255, 255, 255, 0.95);      /* 玻璃拟态卡片 */
+  --bg-glass: rgba(255, 255, 255, 0.7);      /* 玻璃效果 */
 
   /* 文字色彩 - 自然低对比度 */
   --text-primary: rgba(30, 41, 59, 0.9);
@@ -40,7 +27,7 @@ page {
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.1);        /* 玻璃阴影 */
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
   --shadow-floating: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 
   /* iOS动画系统 - 标准缓动函数 */
@@ -70,8 +57,6 @@ page {
   min-height: 100vh;
   background: var(--bg-primary);
   position: relative;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
 }
 
 /* 搜索区域 - 精简化 */
@@ -83,19 +68,17 @@ page {
 .search-bar {
   display: flex;
   align-items: center;
-  padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-radius: 18px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  box-shadow: var(--shadow-xs);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
 }
 
 .search-bar:active {
   transform: scale(0.99);
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 1);
 }
 
 .search-icon {
@@ -105,7 +88,7 @@ page {
 }
 
 .search-placeholder {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-muted);
   font-weight: 400;
 }
@@ -162,52 +145,52 @@ page {
   min-width: max-content;
 }
 
-/* 重塑后的分类卡片 - 图片风格 */
+/* 重塑后的分类卡片 - iOS 风格柔和色彩 */
 .category-card {
   position: relative;
-  min-width: 150px;
-  height: 90px;
-  border-radius: 16px;
+  min-width: 140px;
+  height: 80px;
+  border-radius: 14px;
   overflow: hidden;
   display: flex;
   align-items: flex-end;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 /* 简化的 hover 效果 - 只有缩放和阴影 */
 .category-card:active {
   transform: scale(0.98);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
 }
 
-/* 不同卡片的背景渐变 - 类似图片风格 */
+/* 不同卡片的背景渐变 - iOS 风格柔和色彩 */
 .category-card-1 {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  background: var(--gradient-softRed);
 }
 
 .category-card-2 {
-  background: linear-gradient(135deg, #ffa500 0%, #ff8c42 100%);
+  background: var(--gradient-softOrange);
 }
 
 .category-card-3 {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: var(--gradient-softBlue);
 }
 
 .category-card-4 {
-  background: linear-gradient(135deg, #a8b5c8 0%, #8b9cae 100%);
+  background: var(--gradient-softGray);
 }
 
 .category-card-5 {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-softPurple);
 }
 
 .category-card-6 {
-  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+  background: var(--gradient-softGreen);
 }
 
 .category-card-7 {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: var(--gradient-softPink);
 }
 
 /* 卡片内容区域 */
@@ -215,60 +198,57 @@ page {
   position: relative;
   z-index: 1;
   width: 100%;
-  padding: 14px 16px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.3), transparent);
+  padding: 12px 14px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.08), transparent);
 }
 
 .category-title {
   display: block;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  color: white;
+  color: var(--text-primary);
   line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-/* 精选推荐区域 */
+/* 精选推荐区域 - iOS 风格优化 */
 .featured-section {
-  padding: 0 16px 20px;
+  padding: 0 16px 16px;
 }
 
 .featured-section .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: 12px;
   text-align: left;
 }
 
 .refresh-btn {
   display: flex;
   align-items: center;
-  padding: var(--space-sm) var(--space-md);
-  background: var(--bg-glass);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
 }
 
 .refresh-btn:active {
-  transform: scale(0.95);
-  background: rgba(255, 255, 255, 0.8);
+  transform: scale(0.96);
+  background: rgba(255, 255, 255, 1);
 }
 
 .refresh-icon {
-  font-size: 16px !important;
+  font-size: 14px !important;
   color: var(--text-secondary);
-  margin-right: var(--space-xs);
+  margin-right: 4px;
 }
 
 .refresh-btn text {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
   font-weight: 500;
 }
@@ -276,32 +256,30 @@ page {
 .featured-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: 12px;
 }
 
 .featured-card {
   display: flex;
-  padding: var(--space-lg);
-  background: var(--bg-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-glass);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  border: 0.5px solid rgba(0, 0, 0, 0.04);
+  transition: all 0.2s var(--ease);
 }
 
 .featured-card:active {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  transform: scale(0.99);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .featured-cover {
   position: relative;
-  width: 80px;
-  height: 80px;
-  margin-right: var(--space-lg);
-  border-radius: var(--radius-lg);
+  width: 70px;
+  height: 70px;
+  margin-right: 12px;
+  border-radius: 10px;
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -321,11 +299,9 @@ page {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  background: rgba(0, 0, 0, 0.25);
   opacity: 0;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .featured-card:active .play-overlay {
@@ -333,7 +309,7 @@ page {
 }
 
 .play-icon {
-  font-size: 32px !important;
+  font-size: 28px !important;
   color: white;
 }
 
@@ -342,22 +318,30 @@ page {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  min-width: 0;
 }
 
 .featured-title {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: var(--space-xs);
+  margin-bottom: 4px;
   line-height: 1.4;
-  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .featured-description {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
-  line-height: 1.5;
-  margin-bottom: var(--space-sm);
+  line-height: 1.4;
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .featured-meta {
@@ -370,29 +354,27 @@ page {
 .duration {
   font-size: 12px;
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 400;
 }
 
-/* 排行榜区域 - Tab切换 */
+/* 排行榜区域 - iOS 风格优化 */
 .rankings-section {
-  padding: 0 16px 24px;
+  padding: 0 16px 20px;
 }
 
 .rankings-content {
   background: var(--bg-card);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .ranking-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .ranking-item {
@@ -401,26 +383,26 @@ page {
   padding: 10px 8px;
   border-radius: 10px;
   transition: all 0.2s ease;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.02);
 }
 
 .ranking-item:active {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(0, 0, 0, 0.05);
   transform: scale(0.99);
 }
 
 .rank-number {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #ff6b9d 0%, #ffc371 33%, #4facfe 66%, #a29bfe 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: white;
-  margin-right: 12px;
+  margin-right: 10px;
   flex-shrink: 0;
 }
 
@@ -428,7 +410,7 @@ page {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   margin-right: 8px;
   min-width: 0;
 }
@@ -450,7 +432,7 @@ page {
 }
 
 .rank-play-icon {
-  font-size: 20px !important;
+  font-size: 18px !important;
   color: var(--text-muted);
   opacity: 0.6;
   transition: all 0.2s ease;
@@ -464,11 +446,11 @@ page {
 
 /* 查看完整榜单按钮 */
 .view-full-ranking-btn {
-  margin-top: 16px;
-  padding: 10px;
+  margin-top: 12px;
+  padding: 8px;
   text-align: center;
   background: rgba(0, 0, 0, 0.02);
-  border-radius: 10px;
+  border-radius: 8px;
   transition: all 0.2s ease;
 }
 
@@ -517,9 +499,9 @@ page {
 /* 骨架屏效果 - iOS风格 */
 .skeleton {
   background: linear-gradient(90deg,
-    rgba(240, 249, 255, 0.8) 0%,
-    rgba(224, 242, 254, 0.9) 50%,
-    rgba(240, 249, 255, 0.8) 100%);
+    rgba(240, 249, 255, 0.6) 0%,
+    rgba(224, 242, 254, 0.8) 50%,
+    rgba(240, 249, 255, 0.6) 100%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
   border-radius: var(--radius-md);
@@ -532,34 +514,32 @@ page {
 
 .skeleton-card {
   position: relative;
-  min-width: 150px;
-  height: 90px;
-  border-radius: var(--radius-xl);
+  min-width: 140px;
+  height: 80px;
+  border-radius: 14px;
   overflow: hidden;
 }
 
 .skeleton-full {
   width: 100%;
   height: 100%;
-  border-radius: 16px;
+  border-radius: 14px;
 }
 
 .skeleton-featured {
   display: flex;
-  padding: var(--space-lg);
+  padding: 12px;
   background: var(--bg-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-glass);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .skeleton-cover {
-  width: 80px;
-  height: 80px;
-  margin-right: var(--space-lg);
-  border-radius: var(--radius-lg);
+  width: 70px;
+  height: 70px;
+  margin-right: 12px;
+  border-radius: 10px;
   flex-shrink: 0;
 }
 
@@ -568,11 +548,11 @@ page {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: var(--space-sm);
+  gap: 8px;
 }
 
 .skeleton-line {
-  height: 16px;
+  height: 14px;
   border-radius: var(--radius-sm);
 }
 
@@ -589,30 +569,30 @@ page {
 }
 
 
-/* 底部加载区域 */
+/* 底部加载区域 - 优化间距 */
 .bottom-loader {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px 60px;
+  padding: 32px 20px 48px;
 }
 
 .loader-icon {
-  width: 86px;
-  height: 53px;
-  margin-bottom: 20px;
+  width: 72px;
+  height: 45px;
+  margin-bottom: 16px;
 }
 
 .loader-text {
-  font-size: 14px;
+  font-size: 13px;
   color: #0884FF;
   font-weight: 400;
   text-align: center;
 }
 
 
-/* 手势反馈 */
+/* 手势反馈 - iOS 风格 */
 .gesture-feedback {
   position: fixed;
   top: 0;
@@ -630,23 +610,21 @@ page {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--space-lg);
-  background: var(--bg-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: var(--radius-xl);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
   opacity: 0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: var(--shadow-lg);
+  transition: all 0.2s var(--ease);
+  box-shadow: var(--shadow-md);
 }
 
 .swipe-indicator.left {
-  left: var(--space-lg);
+  left: 16px;
 }
 
 .swipe-indicator.right {
-  right: var(--space-lg);
+  right: 16px;
 }
 
 .swipe-indicator.active {
@@ -655,9 +633,9 @@ page {
 }
 
 .swipe-icon {
-  font-size: 24px !important;
+  font-size: 20px !important;
   color: var(--text-primary);
-  margin-bottom: var(--space-xs);
+  margin-bottom: 4px;
 }
 
 .swipe-indicator text {

@@ -1,21 +1,49 @@
-/* 分类详情页面样式 */
+/* 分类详情页面样式 - iOS 风格 */
+
+/* CSS 变量定义 - 复用 iOS 风格色彩系统 */
 page {
-  background-color: #f0f9ff;
+  /* 背景色 */
+  --bg-primary: #f8f9fa;
+  --bg-card: rgba(255, 255, 255, 0.8);
+  --bg-card-solid: rgba(255, 255, 255, 0.95);
+
+  /* 文字色彩 */
+  --text-primary: rgba(30, 41, 59, 0.9);
+  --text-secondary: rgba(100, 116, 139, 0.8);
+  --text-muted: rgba(148, 163, 184, 0.7);
+
+  /* iOS风格阴影 */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.06);
+
+  /* 圆角 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+
+  /* iOS动画 */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  background-color: var(--bg-primary);
 }
 
 .category-detail-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: #f0f9ff;
+  background-color: var(--bg-primary);
   overflow: hidden;
 }
 
-/* 头部导航栏 */
+/* 头部导航栏 - iOS 风格优化 */
 .header {
   position: relative;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e0e7ff;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.04);
   z-index: 100;
 }
 
@@ -23,8 +51,8 @@ page {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  height: 56px;
+  padding: 10px 16px;
+  height: 52px;
 }
 
 .back-btn,
@@ -32,25 +60,26 @@ page {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background-color: #f5f7fa;
-  transition: all 0.3s ease;
+  background-color: rgba(0, 0, 0, 0.04);
+  transition: all 0.2s var(--ease);
 }
 
 .back-btn:active,
 .sort-btn:active {
-  background-color: #e0e7ff;
-  transform: scale(0.95);
+  background-color: rgba(0, 0, 0, 0.08);
+  transform: scale(0.96);
 }
 
 .header-title {
   flex: 1;
   text-align: center;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: #0b0d0d;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
 }
 
 .header-actions {
@@ -58,21 +87,21 @@ page {
   gap: 8px;
 }
 
-/* 排序菜单 */
+/* 排序菜单 - iOS 风格优化 */
 .sort-menu {
   position: fixed;
-  top: 56px;
+  top: 52px;
   left: 0;
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0);
   z-index: 99;
   visibility: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.2s var(--ease);
 }
 
 .sort-menu.show {
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.2);
   visibility: visible;
 }
 
@@ -80,26 +109,31 @@ page {
   position: absolute;
   top: 0;
   right: 0;
-  width: 200px;
-  background-color: #ffffff;
-  border-radius: 8px;
+  width: 180px;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: var(--radius-lg);
   margin: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  transform: scaleY(0);
+  box-shadow: var(--shadow-md);
+  border: 0.5px solid rgba(0, 0, 0, 0.04);
+  transform: scale(0.9);
+  opacity: 0;
   transform-origin: top right;
-  transition: all 0.3s ease;
+  transition: all 0.2s var(--ease);
 }
 
 .sort-menu.show .sort-menu-content {
-  transform: scaleY(1);
+  transform: scale(1);
+  opacity: 1;
 }
 
 .sort-menu-title {
-  padding: 12px 16px;
-  font-size: 14px;
+  padding: 12px 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #0b0d0d;
-  border-bottom: 1px solid #f0f2f5;
+  color: var(--text-primary);
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.04);
 }
 
 .sort-options {
@@ -110,13 +144,13 @@ page {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  color: #575d6c;
-  transition: all 0.2s ease;
+  padding: 10px 14px;
+  color: var(--text-secondary);
+  transition: all 0.2s var(--ease);
 }
 
 .sort-option:active {
-  background-color: #f5f7fa;
+  background-color: rgba(0, 0, 0, 0.04);
 }
 
 .sort-option.active {
@@ -148,46 +182,102 @@ page {
   align-items: center;
   justify-content: center;
   height: 100%;
-  background-color: #f0f9ff;
+  background-color: var(--bg-primary);
 }
 
-/* 分类信息卡片 */
-.category-info {
-  padding: 16px;
+/* 分类信息 - 艺术化大标题展示 */
+.category-hero {
+  position: relative;
+  margin: 12px 16px 20px;
+  min-height: 160px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
-.category-card {
-  border-radius: 12px;
-  padding: 24px;
-  color: #0b0d0d;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+.hero-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
 }
 
-.card-content {
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(0, 0, 0, 0.08) 100%
+  );
+  z-index: 2;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  min-height: 160px;
+  padding: 32px 24px;
+  text-align: center;
 }
 
-.category-name {
+.hero-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.2;
+  color: rgba(30, 41, 59, 0.95);
+  margin-bottom: 8px;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.hero-subtitle {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: rgba(100, 116, 139, 0.75);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 24px;
+  margin-top: 8px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-number {
   font-size: 24px;
   font-weight: 700;
+  color: rgba(30, 41, 59, 0.9);
+  letter-spacing: -0.5px;
 }
 
-.category-code {
+.stat-label {
   font-size: 12px;
-  opacity: 0.7;
-  color: #575d6c;
+  font-weight: 500;
+  color: rgba(100, 116, 139, 0.7);
+  letter-spacing: 0.3px;
 }
 
-.podcast-count {
-  font-size: 14px;
-  margin-top: 8px;
-  opacity: 0.75;
-  color: #575d6c;
-}
-
-/* 播客列表 */
+/* 播客列表 - iOS 风格优化 */
 .podcasts-list {
   padding: 0 16px 80px 16px;
 }
@@ -196,24 +286,26 @@ page {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  margin-bottom: 12px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  transition: all 0.2s ease;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  border: 0.5px solid rgba(0, 0, 0, 0.03);
+  transition: all 0.2s var(--ease);
 }
 
 .podcast-item:active {
-  background-color: #f5f7fa;
-  transform: scale(0.98);
+  background-color: rgba(255, 255, 255, 0.95);
+  transform: scale(0.99);
+  box-shadow: var(--shadow-sm);
 }
 
 .podcast-cover {
   position: relative;
-  width: 80px;
-  height: 80px;
-  border-radius: 6px;
+  width: 70px;
+  height: 70px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -228,25 +320,26 @@ page {
   position: absolute;
   bottom: 4px;
   right: 4px;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.65);
   color: #ffffff;
   font-size: 10px;
   padding: 2px 6px;
-  border-radius: 3px;
+  border-radius: 4px;
+  font-weight: 500;
 }
 
 .podcast-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   min-width: 0;
 }
 
 .podcast-title {
   font-size: 14px;
   font-weight: 600;
-  color: #0b0d0d;
+  color: var(--text-primary);
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -256,20 +349,20 @@ page {
 
 .podcast-channel {
   font-size: 12px;
-  color: #8a8f99;
+  color: var(--text-muted);
 }
 
 .podcast-meta {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   font-size: 11px;
-  color: #8a8f99;
+  color: var(--text-muted);
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .date {
@@ -279,35 +372,35 @@ page {
 .podcast-action {
   display: flex;
   align-items: center;
-  color: #bcc1cc;
+  color: rgba(0, 0, 0, 0.2);
   flex-shrink: 0;
 }
 
-/* 空状态 */
+/* 空状态 - iOS 风格优化 */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 400px;
-  gap: 12px;
+  gap: 10px;
 }
 
 .empty-icon {
-  font-size: 48px;
-  color: #c0c4cc;
-  opacity: 0.5;
+  font-size: 42px;
+  color: rgba(0, 0, 0, 0.15);
+  opacity: 0.6;
 }
 
 .empty-text {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
-  color: #0b0d0d;
+  color: var(--text-primary);
 }
 
 .empty-hint {
-  font-size: 12px;
-  color: #8a8f99;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 /* 加载更多提示 */
@@ -325,34 +418,35 @@ page {
   justify-content: center;
   padding: 20px;
   font-size: 12px;
-  color: #8a8f99;
+  color: var(--text-muted);
 }
 
-/* 分享按钉 */
+/* 分享按钮 - iOS 风格优化 */
 .share-btn {
   position: fixed;
-  bottom: 24px;
+  bottom: 20px;
   right: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
   padding: 10px 16px;
-  min-width: 56px;
-  height: 44px;
-  background: linear-gradient(135deg, #0884ff 0%, #5c9ffe 100%);
+  min-width: 52px;
+  height: 40px;
+  background: linear-gradient(135deg, #0884ff 0%, #3b9eff 100%);
   border: none;
-  border-radius: 22px;
-  box-shadow: 0 4px 12px rgba(8, 132, 255, 0.3);
+  border-radius: 20px;
+  box-shadow: 0 3px 10px rgba(8, 132, 255, 0.25);
   color: #ffffff;
-  font-size: 12px;
-  transition: all 0.3s ease;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s var(--ease);
   z-index: 50;
 }
 
 .share-btn:active {
-  transform: scale(0.95);
-  box-shadow: 0 2px 8px rgba(8, 132, 255, 0.2);
+  transform: scale(0.96);
+  box-shadow: 0 2px 6px rgba(8, 132, 255, 0.2);
 }
 
 /* 响应式设计 */
@@ -371,8 +465,8 @@ page {
   }
 
   .podcast-cover {
-    width: 70px;
-    height: 70px;
+    width: 64px;
+    height: 64px;
   }
 
   .podcast-title {

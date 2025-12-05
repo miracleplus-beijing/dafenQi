@@ -49,16 +49,22 @@
 
   <!-- 内容区域 -->
   <view wx:else class="content">
-    <!-- 分类信息 -->
-    <view class="category-info">
+    <!-- 分类信息 - 艺术化大标题展示 -->
+    <view class="category-hero">
       <view
-        class="category-card"
+        class="hero-background"
         style="background: linear-gradient(135deg, {{category && category.color && category.color[0] ? category.color[0] : '#e0f2fe'}} 0%, {{category && category.color && category.color[1] ? category.color[1] : '#0ea5e9'}} 100%)"
       >
-        <view class="card-content">
-          <view class="category-name">{{ category.displayName }}</view>
-          <view class="category-code">{{ category.name }}</view>
-          <view class="podcast-count">共 {{ podcasts.length }} 期播客</view>
+        <view class="hero-overlay"></view>
+      </view>
+      <view class="hero-content">
+        <view class="hero-title">{{ category.displayName }}</view>
+        <view class="hero-subtitle">{{ category.name }}</view>
+        <view class="hero-stats">
+          <view class="stat-item">
+            <text class="stat-number">{{ podcasts.length }}</text>
+            <text class="stat-label">期播客</text>
+          </view>
         </view>
       </view>
     </view>

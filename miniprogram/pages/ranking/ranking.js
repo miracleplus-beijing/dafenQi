@@ -99,7 +99,7 @@ Page({
               if (channelId === '59e0fed4-8c47-4849-9cc3-a3b819771d65') {
                 // 奇绩前沿信号频道
                 channelCoverUrl =
-                  'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/miracleplus_signal.png';
+                  'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/daily_paper_report.png';
               } else if (channelId === '3f1c022b-222a-420a-9126-f96c63144ddc') {
                 // 经典论文解读频道
                 channelCoverUrl =
@@ -162,7 +162,7 @@ Page({
               if (channelId === '59e0fed4-8c47-4849-9cc3-a3b819771d65') {
                 // 奇绩前沿信号频道
                 channelCoverUrl =
-                  'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/miracleplus_signal.png';
+                  'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/daily_paper_report.png';
               } else if (channelId === '3f1c022b-222a-420a-9126-f96c63144ddc') {
                 // 经典论文解读频道
                 channelCoverUrl =
@@ -224,7 +224,7 @@ Page({
               if (channelId === '59e0fed4-8c47-4849-9cc3-a3b819771d65') {
                 // 奇绩前沿信号频道
                 channelCoverUrl =
-                  'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/miracleplus_signal.png';
+                  'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/daily_paper_report.png';
               } else if (channelId === '3f1c022b-222a-420a-9126-f96c63144ddc') {
                 // 经典论文解读频道
                 channelCoverUrl =

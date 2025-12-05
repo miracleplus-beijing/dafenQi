@@ -563,7 +563,7 @@ Page({
         // 设置基础配置
         backgroundAudioManager.title = '奇绩前沿信号';
         backgroundAudioManager.singer = '奇绩前沿信号';
-        backgroundAudioManager.coverImgUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/miracleplus_signal.png';
+        backgroundAudioManager.coverImgUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/daily_paper_report.png';
         backgroundAudioManager.epname = '播客节目';
 
         this.rebindAudioEvents(backgroundAudioManager);
