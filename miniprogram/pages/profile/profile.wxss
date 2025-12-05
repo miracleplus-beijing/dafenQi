@@ -1,213 +1,356 @@
-/* 页面容器 */
+/* 个人中心页面 - iOS 风格设计系统 */
+
+/* CSS 变量定义 - 复用 iOS 风格色彩系统 */
+page {
+  /* 背景色 */
+  --bg-primary: #f8f9fa;
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-glass: rgba(255, 255, 255, 0.7);
+
+  /* 文字色彩 */
+  --text-primary: rgba(30, 41, 59, 0.9);
+  --text-secondary: rgba(100, 116, 139, 0.8);
+  --text-muted: rgba(148, 163, 184, 0.7);
+
+  /* iOS风格阴影 */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.06);
+
+  /* 圆角 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+
+  /* iOS动画 */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* 功能色 */
+  --color-blue: #0884ff;
+  --color-red: #ff3b30;
+  --color-green: #34c759;
+  --color-orange: #ff9500;
+  --color-gray: #8e8e93;
+
+  background-color: var(--bg-primary);
+}
+
+/* 主容器 */
 .profile-container {
   min-height: 100vh;
-  background: var(--gradient-bg-blue); /* 全局蓝白渐变背景 */
-  padding-bottom: 40rpx;
-  box-sizing: border-box;
+  background: var(--bg-primary);
+  padding-bottom: 20px;
 }
 
-/* ========================================
-   1. 用户信息区域 (User Header)
-   ======================================== */
-.user-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 120rpx 48rpx 60rpx; /* 顶部留白，符合小宇宙风格 */
+/* ===================================
+   1. 已登录视图
+   =================================== */
+.logged-in-view {
+  padding: 16px;
 }
 
-.user-info-left {
+/* 用户信息卡片 */
+.user-card {
   display: flex;
   flex-direction: column;
-  gap: 12rpx;
+  align-items: center;
+  padding: 32px 24px;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  border: 0.5px solid rgba(0, 0, 0, 0.04);
+  margin-bottom: 20px;
 }
 
-.user-name {
-  font-size: 56rpx; /* 大字号标题 */
-  font-weight: 700;
-  color: var(--color-text-primary);
-  line-height: 1.2;
-}
-
-.user-desc {
-  font-size: 26rpx;
-  color: var(--color-text-tertiary);
-  font-weight: 400;
-}
-
-/* 头像按钮 */
-.avatar-btn {
+.avatar-wrapper {
+  position: relative;
   margin: 0;
   padding: 0;
-  width: 140rpx;
-  height: 140rpx;
-  border-radius: 50%;
   background: transparent;
-  box-shadow: var(--shadow-md);
-  transition: transform 0.2s ease;
+  border: none;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 16px;
 }
 
-.avatar-btn:active {
-  transform: scale(0.95);
-}
-
-.avatar-btn::after {
+.avatar-wrapper::after {
   border: none;
 }
 
-.avatar-img {
-  width: 100%;
-  height: 100%;
+.user-avatar {
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  border: 4rpx solid #fff;
+  border: 3px solid rgba(255, 255, 255, 1);
+  box-shadow: var(--shadow-md);
 }
 
-/* ========================================
-   2. 菜单列表 (Menu Card)
-   ======================================== */
-.menu-card {
-  margin: 0 32rpx;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm); /* 微妙阴影 */
-}
-
-/* 覆盖 TDesign Cell 样式，使其背景透明或白色 */
-.menu-card .t-cell-group {
-  background-color: transparent;
-}
-
-.menu-card .t-cell {
-  background-color: #fff;
-  padding: 32rpx !important;
-}
-
-.menu-card .t-cell__title-text {
-  font-size: 30rpx;
-  font-weight: 500;
-  color: var(--color-text-primary);
-}
-
-
-
-/* ========================================
-   4. 未登录状态 (Login Card)
-   ======================================== */
-.login-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+.avatar-edit-hint {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  background: var(--color-blue);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 60rpx;
-  z-index: 100;
-  background: var(--gradient-bg-blue);
+  border: 2px solid #fff;
+  box-shadow: var(--shadow-sm);
+  color: #fff;
 }
 
-.login-card {
-  width: 100%;
-  max-width: 630rpx;
-  background: #fff;
-  border-radius: var(--radius-lg);
-  padding: 64rpx 48rpx 48rpx;
-  box-shadow: var(--shadow-lg);
+.user-info-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  animation: fadeInUp 0.6s var(--ease-out);
+  gap: 4px;
 }
 
-.login-icon-bg {
-  width: 120rpx;
-  height: 120rpx;
-  background: var(--gradient-primary); /* 蓝白渐变 */
+.user-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.user-id {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* 菜单区域 */
+.menu-section {
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  padding: 0 8px 8px 8px;
+}
+
+.menu-group {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 0.5px solid rgba(0, 0, 0, 0.04);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  transition: all 0.2s var(--ease);
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.04);
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item:active {
+  background-color: rgba(0, 0, 0, 0.04);
+  transform: scale(0.99);
+}
+
+.menu-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  color: #fff;
+}
+
+.menu-icon-wrapper.blue {
+  background: linear-gradient(135deg, #0884ff 0%, #3b9eff 100%);
+}
+
+.menu-icon-wrapper.red {
+  background: linear-gradient(135deg, #ff3b30 0%, #ff6b6b 100%);
+}
+
+.menu-icon-wrapper.green {
+  background: linear-gradient(135deg, #34c759 0%, #5dd87f 100%);
+}
+
+.menu-icon-wrapper.gray {
+  background: linear-gradient(135deg, #8e8e93 0%, #aeaeb2 100%);
+}
+
+.menu-icon-wrapper.orange {
+  background: linear-gradient(135deg, #ff9500 0%, #ffb340 100%);
+}
+
+.menu-label {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.logout-text {
+  color: var(--color-red);
+}
+
+.menu-arrow {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+/* ===================================
+   2. 未登录视图 - iOS 风格
+   =================================== */
+.login-view {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 32px 24px;
+}
+
+.login-hero {
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: 48px 32px 32px;
+  box-shadow: var(--shadow-md);
+  border: 0.5px solid rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeInUp 0.4s var(--ease);
+}
+
+.login-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #0884ff 0%, #3b9eff 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-btn-primary);
-  margin-bottom: 32rpx;
-}
-
-.login-icon {
-  width: 64rpx;
-  height: 64rpx;
-  filter: brightness(0) invert(1);
+  margin-bottom: 24px;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(8, 132, 255, 0.3);
 }
 
 .login-title {
-  font-size: 40rpx;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin-bottom: 40rpx;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+  text-align: center;
 }
 
-.login-benefits {
+.login-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.login-features {
   width: 100%;
-  margin-bottom: 48rpx;
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.benefit-item {
+.feature-item {
   display: flex;
   align-items: center;
-  margin-bottom: 20rpx;
-  gap: 16rpx;
+  gap: 12px;
 }
 
-.benefit-text {
-  font-size: 28rpx;
-  color: var(--color-text-secondary);
+.feature-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-green);
 }
 
-/* 登录按钮样式覆盖 */
-.login-btn .t-button {
+.feature-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.login-button {
   width: 100%;
-  height: 88rpx;
-  background: var(--gradient-blue) !important; /* 蓝色渐变 */
-  border: none !important;
-  border-radius: var(--radius-md) !important;
-  box-shadow: var(--shadow-btn-primary);
-  font-size: 32rpx;
+  height: 48px;
+  background: linear-gradient(135deg, #0884ff 0%, #3b9eff 100%);
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(8, 132, 255, 0.25);
+  color: #fff;
+  font-size: 16px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s var(--ease);
+  margin: 0;
+  padding: 0;
 }
 
-.login-btn .t-button:active {
-  transform: translateY(-2rpx);
-  box-shadow: var(--shadow-btn-primary-hover);
+.login-button::after {
+  border: none;
+}
+
+.login-button:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(8, 132, 255, 0.2);
 }
 
 /* 动画 */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(40rpx); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* 触摸反馈 */
-.touch-feedback {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1000;
-}
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .user-card {
+    padding: 24px 20px;
+  }
 
-.swipe-indicator {
-  position: absolute;
-  top: 50%;
-  width: 4px;
-  height: 60px;
-  background: var(--color-primary);
-  border-radius: 2px;
-  transform: translateY(-50%);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
+  .user-avatar {
+    width: 70px;
+    height: 70px;
+  }
 
-.swipe-indicator.left { left: 10px; }
-.swipe-indicator.right { right: 10px; }
-.swipe-indicator.active { opacity: 1; }
+  .avatar-wrapper {
+    width: 70px;
+    height: 70px;
+  }
+
+  .login-hero {
+    padding: 40px 24px 24px;
+  }
+
+  .login-title {
+    font-size: 22px;
+  }
+}

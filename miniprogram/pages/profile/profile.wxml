@@ -1,62 +1,114 @@
-<!-- 我的页面 -->
+<!-- 我的页面 - iOS 风格 -->
 <view class="profile-container">
-  
-  <!-- 1. 用户信息区域 (已登录) -->
-  <view class="user-header" wx:if="{{isLoggedIn}}">
-    <view class="user-info-left">
-      <text class="user-name" bindtap="changeUserName">{{userInfo.nickName || '用户'}}</text>
-      <text class="user-desc" wx:if="{{userInfo.id}}">ID: {{userInfo.id}}</text>
-      <text class="user-desc" wx:else>点击设置昵称</text>
-    </view>
-    
-    <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-      <image class="avatar-img" src="{{userInfo.avatarUrl || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/user.svg'}}" mode="aspectFill" />
-    </button>
-  </view>
 
-  <!-- 2. 菜单列表 (已登录) - 使用 TDesign Cell -->
-  <view class="menu-card" wx:if="{{isLoggedIn}}">
-    <t-cell-group theme="card">
-      <t-cell title="收听历史" leftIcon="time" hover arrow bindtap="handleMenuClick" data-type="history" />
-      <t-cell title="我的收藏" leftIcon="heart" hover arrow bindtap="handleMenuClick" data-type="favorites" />
-      <t-cell title="我的评论" leftIcon="chat" hover arrow bindtap="handleMenuClick" data-type="comments" />
-      <t-cell title="设置" leftIcon="setting" hover arrow bindtap="handleMenuClick" data-type="settings" />
-    </t-cell-group>
-  </view>
+  <!-- 1. 已登录状态 -->
+  <view class="logged-in-view" wx:if="{{isLoggedIn}}">
+    <!-- 用户信息卡片 -->
+    <view class="user-card">
+      <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+        <image
+          class="user-avatar"
+          src="{{userInfo.avatarUrl || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/user.svg'}}"
+          mode="aspectFill"
+        />
+        <view class="avatar-edit-hint">
+          <t-icon name="edit" size="16px" />
+        </view>
+      </button>
 
-
-
-  <!-- 4. 未登录状态 - 精美登录卡片 -->
-  <view class="login-container" wx:if="{{!isLoggedIn}}">
-    <view class="login-card">
-      <view class="login-icon-bg">
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/user.svg" class="login-icon"></image>
+      <view class="user-info-section">
+        <text class="user-name" bindtap="changeUserName">{{userInfo.nickName || '点击设置昵称'}}</text>
+        <text class="user-id" wx:if="{{userInfo.id}}">ID: {{userInfo.id}}</text>
       </view>
-      
-      <text class="login-title">登录解锁更多功能</text>
-      
-      <view class="login-benefits">
-        <view class="benefit-item">
-          <t-icon name="check" size="32rpx" color="var(--color-success)" />
-          <text class="benefit-text">同步收藏和历史记录</text>
+    </view>
+
+    <!-- 功能菜单组 -->
+    <view class="menu-section">
+      <view class="section-title">我的内容</view>
+      <view class="menu-group">
+        <view class="menu-item" bindtap="handleMenuClick" data-type="history">
+          <view class="menu-icon-wrapper blue">
+            <t-icon name="time" size="20px" />
+          </view>
+          <text class="menu-label">收听历史</text>
+          <t-icon name="chevron-right" size="18px" class="menu-arrow" />
         </view>
-        <view class="benefit-item">
-          <t-icon name="check" size="32rpx" color="var(--color-success)" />
-          <text class="benefit-text">个性化推荐内容</text>
+
+        <view class="menu-item" bindtap="handleMenuClick" data-type="favorites">
+          <view class="menu-icon-wrapper red">
+            <t-icon name="heart" size="20px" />
+          </view>
+          <text class="menu-label">我的收藏</text>
+          <t-icon name="chevron-right" size="18px" class="menu-arrow" />
         </view>
-        <view class="benefit-item">
-          <t-icon name="check" size="32rpx" color="var(--color-success)" />
-          <text class="benefit-text">跨设备数据同步</text>
+
+        <view class="menu-item" bindtap="handleMenuClick" data-type="comments">
+          <view class="menu-icon-wrapper green">
+            <t-icon name="chat" size="20px" />
+          </view>
+          <text class="menu-label">我的评论</text>
+          <t-icon name="chevron-right" size="18px" class="menu-arrow" />
         </view>
       </view>
-      
-      <t-button theme="primary" size="large" block class="login-btn" bindtap="handleLogin">立即登录</t-button>
+    </view>
+
+    <!-- 设置菜单组 -->
+    <view class="menu-section">
+      <view class="section-title">更多</view>
+      <view class="menu-group">
+        <view class="menu-item" bindtap="handleMenuClick" data-type="settings">
+          <view class="menu-icon-wrapper gray">
+            <t-icon name="setting" size="20px" />
+          </view>
+          <text class="menu-label">设置</text>
+          <t-icon name="chevron-right" size="18px" class="menu-arrow" />
+        </view>
+
+        <view class="menu-item" bindtap="handleLogout">
+          <view class="menu-icon-wrapper orange">
+            <t-icon name="logout" size="20px" />
+          </view>
+          <text class="menu-label logout-text">退出登录</text>
+          <t-icon name="chevron-right" size="18px" class="menu-arrow" />
+        </view>
+      </view>
     </view>
   </view>
 
-  <!-- 触摸反馈 -->
-  <view class="touch-feedback" wx:if="{{showSwipeIndicator}}">
-    <view class="swipe-indicator left {{swipeDirection === 'left' ? 'active' : ''}}"></view>
-    <view class="swipe-indicator right {{swipeDirection === 'right' ? 'active' : ''}}"></view>
+  <!-- 2. 未登录状态 - iOS 风格登录卡片 -->
+  <view class="login-view" wx:if="{{!isLoggedIn}}">
+    <view class="login-hero">
+      <view class="login-icon-wrapper">
+        <t-icon name="user" size="48px" />
+      </view>
+
+      <text class="login-title">欢迎使用达芬Qi说</text>
+      <text class="login-subtitle">登录后享受完整功能</text>
+
+      <view class="login-features">
+        <view class="feature-item">
+          <view class="feature-icon">
+            <t-icon name="check-circle" size="20px" />
+          </view>
+          <text class="feature-text">同步收藏和历史</text>
+        </view>
+        <view class="feature-item">
+          <view class="feature-icon">
+            <t-icon name="check-circle" size="20px" />
+          </view>
+          <text class="feature-text">个性化推荐内容</text>
+        </view>
+        <view class="feature-item">
+          <view class="feature-icon">
+            <t-icon name="check-circle" size="20px" />
+          </view>
+          <text class="feature-text">跨设备数据同步</text>
+        </view>
+      </view>
+
+      <button class="login-button" bindtap="handleLogin">
+        <text>立即登录</text>
+      </button>
+    </view>
   </view>
 </view>

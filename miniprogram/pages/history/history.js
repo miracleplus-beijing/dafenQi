@@ -30,6 +30,21 @@ Page({
   },
 
   /**
+   * 返回上一页
+   */
+  goBack: function () {
+    wx.navigateBack({
+      delta: 1,
+      fail: () => {
+        // 如果返回失败，跳转到个人中心
+        wx.switchTab({
+          url: '/pages/profile/profile',
+        });
+      },
+    });
+  },
+
+  /**
    * 初始化页面
    */
   async initPage() {

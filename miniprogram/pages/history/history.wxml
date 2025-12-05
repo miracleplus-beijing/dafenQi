@@ -1,33 +1,41 @@
-<!-- 历史记录页面 -->
+<!-- 历史记录页面 - iOS 风格 -->
 <view class="history-container">
-  <!-- 加载状态 -->
-  <view class="loading-wrapper" wx:if="{{loading}}">
-    <view class="loading-indicator">
-      <view class="loading-spinner"></view>
-      <text class="loading-text">加载中...</text>
+  <!-- 导航栏 -->
+  <view class="nav-bar">
+    <view class="nav-content">
+      <view class="nav-back" bindtap="goBack">
+        <t-icon name="chevron-left" size="24px" />
+      </view>
+      <text class="nav-title">收听历史</text>
+      <view class="nav-placeholder"></view>
     </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <t-loading size="large" text="加载中..." />
   </view>
 
   <!-- 空状态 -->
   <view class="empty-state" wx:elif="{{historyList.length === 0}}">
-    <view class="empty-content">
-      <t-icon name="history" class="empty-icon" />
-      <text class="empty-title">暂无播放历史</text>
-      <text class="empty-desc">听过的内容会显示在这里</text>
+    <view class="empty-icon">
+      <t-icon name="history" size="64px" />
     </view>
+    <text class="empty-title">暂无播放历史</text>
+    <text class="empty-desc">听过的内容会显示在这里</text>
   </view>
 
   <!-- 历史列表 -->
   <view class="history-content" wx:else>
-    <!-- 列表头部 -->
-    <view class="history-header">
-      <text class="header-title">播放历史</text>
-      <view class="header-count">
-        <text class="count-text">{{historyList.length}} 条记录</text>
+    <!-- 统计信息 -->
+    <view class="stats-card">
+      <view class="stats-item">
+        <text class="stats-number">{{historyList.length}}</text>
+        <text class="stats-label">播放记录</text>
       </view>
     </view>
 
-    <!-- 历史列表 -->
+    <!-- 列表区域 -->
     <view class="history-list">
       <view
         wx:for="{{historyList}}"
@@ -36,86 +44,60 @@
         bindtap="playHistoryItem"
         data-item="{{item}}"
       >
-        <!-- 左侧封面 -->
-        <view class="item-cover-wrapper">
+        <!-- 封面 -->
+        <view class="item-cover">
           <image
             src="{{item.cover || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png'}}"
-            class="item-cover-image"
+            class="cover-image"
             mode="aspectFill"
-          ></image>
-          <view class="cover-overlay">
-            <t-icon name="play-circle" class="play-icon" />
+          />
+          <view class="play-badge">
+            <t-icon name="play-circle-filled" size="24px" />
           </view>
         </view>
 
-        <!-- 中间信息 -->
-        <view class="item-content">
-          <view class="item-header">
-            <text class="item-title">{{item.title}}</text>
+        <!-- 内容信息 -->
+        <view class="item-info">
+          <text class="item-title">{{item.title}}</text>
+          <text class="item-channel">{{item.channel}}</text>
 
-            <!-- 频道信息 -->
-            <view class="channel-info">
-              <text class="channel-name">{{item.channel}}</text>
-              <view class="channel-badges" wx:if="{{item.isOfficial || item.channelCategory}}">
-                <text class="official-badge" wx:if="{{item.isOfficial}}">官方</text>
-                <text class="category-badge" wx:if="{{item.channelCategory}}">{{item.channelCategory}}</text>
-              </view>
+          <view class="item-meta">
+            <view class="meta-item">
+              <t-icon name="time" size="14px" />
+              <text class="meta-text">{{item.playTimeText}}</text>
+            </view>
+            <view class="meta-divider">·</view>
+            <view class="meta-item">
+              <t-icon name="play-circle" size="14px" />
+              <text class="meta-text">{{item.stats.playCount}}</text>
             </view>
           </view>
 
-          <!-- 学术信息 -->
-          <view class="paper-info" wx:if="{{item.paperInfo.title}}">
-            <view class="paper-title-line">
-              <t-icon name="file-text" class="paper-icon" />
-              <text class="paper-title">{{item.paperInfo.title}}</text>
-            </view>
-
-            <view class="paper-meta">
-              <text class="paper-authors">{{item.paperInfo.authors}}</text>
-              <view class="meta-divider" wx:if="{{item.paperInfo.authors && item.paperInfo.institution}}">·</view>
-              <text class="paper-institution" wx:if="{{item.paperInfo.institution}}">{{item.paperInfo.institution}}</text>
-            </view>
-
-            <view class="paper-details" wx:if="{{item.paperInfo.publishDateText || item.paperInfo.arxivId}}">
-              <text class="publish-date" wx:if="{{item.paperInfo.publishDateText}}">{{item.paperInfo.publishDateText}}</text>
-              <view class="meta-divider" wx:if="{{item.paperInfo.publishDateText && item.paperInfo.arxivId}}">·</view>
-              <text class="arxiv-id" wx:if="{{item.paperInfo.arxivId}}">arXiv:{{item.paperInfo.arxivId}}</text>
-            </view>
-          </view>
-
-          <!-- 播放统计 -->
-          <view class="stats-info">
-        
-            <t-icon name="eye" class="stats-icon" />
-
-            <text class="stats-text">{{item.stats.playCount}}次播放</text>
-          </view>
-
-          <!-- 状态标识 -->
-          <view class="status-badges">
-            <text class="completed-badge" wx:if="{{item.completed}}">已完成</text>
-            <text class="in-progress-badge" wx:elif="{{item.progressPercent > 0}}">进行中</text>
+          <!-- 状态标签 -->
+          <view class="item-status" wx:if="{{item.completed || item.progressPercent > 0}}">
+            <text class="status-badge completed" wx:if="{{item.completed}}">已完成</text>
+            <text class="status-badge in-progress" wx:else>进行中</text>
           </view>
         </view>
 
-        <!-- 右侧操作按钮 -->
-        <view class="item-actions">
+        <!-- 删除按钮 -->
+        <view class="item-action">
           <view
-            class="action-btn delete-btn"
+            class="delete-btn"
             catchtap="removeFromHistory"
             data-id="{{item.id}}"
           >
-            <t-icon name="delete" class="action-icon" catchtap="removeFromHistory" data-id="{{item.id}}" />
+            <t-icon name="delete" size="20px" />
           </view>
         </view>
       </view>
     </view>
 
-    <!-- 底部操作区域 -->
+    <!-- 底部清空按钮 -->
     <view class="bottom-actions">
-      <button class="clear-all-btn" bindtap="clearAllHistory">
-        <t-icon name="delete" class="btn-icon" />
-        <text class="btn-text">清空历史记录</text>
+      <button class="clear-button" bindtap="clearAllHistory">
+        <t-icon name="delete" size="18px" />
+        <text>清空全部历史</text>
       </button>
     </view>
   </view>
