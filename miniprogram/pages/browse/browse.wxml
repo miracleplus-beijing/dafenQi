@@ -1,5 +1,25 @@
-<view>
-    <!-- 漫游页面 - 音乐播放器风格设计 -->
+<view class="browse-page-container">
+    <!-- 引入 WXS 模块处理逻辑 (放在顶部) -->
+    <wxs module="waveformUtils">
+    module.exports.isPlayed = function(index, progress, total) {
+        var current = Math.floor(progress / 100 * total);
+        return index < current;
+    }
+    module.exports.isActive = function(index, progress, total) {
+        var current = Math.floor(progress / 100 * total);
+        return index === current;
+    }
+    </wxs>
+
+    <!-- 全局纹理背景 -->
+    <view class="bg-paper-pattern"></view>
+    
+    <!-- 背景装饰光斑 -->
+    <view class="bg-decoration-blob blob-1"></view>
+    <view class="bg-decoration-blob blob-2"></view>
+    <view class="bg-decoration-blob blob-3"></view>
+
+    <!-- 漫游页面主体 -->
     <view class="browse-page">
 
         <!-- Swiper模式 -->
@@ -11,7 +31,7 @@
             </view>
 
             <!-- 主要内容区域 -->
-            <view wx:if="{{!loading && podcastList.length > 0}}">
+            <view wx:if="{{!loading && podcastList.length > 0}}" class="h-full">
                 <swiper class="browse-swiper"
                         vertical="true"
                         indicator-dots="{{false}}"
@@ -25,104 +45,100 @@
                 >
 
                     <swiper-item wx:for="{{podcastList}}" wx:key="id" class="browse-container">
-
-                        <!-- 内容展示区域 -->
-                        <view class="content-display">
-
-                            <!-- 圆形播客封面 + 光晕效果 -->
-                            <view class="podcast-cover-wrapper">
-                                <!-- 光晕背景 -->
-                                <view class="cover-glow {{index === currentIndex && isPlaying ? 'playing' : ''}}"></view>
-
-                                <!-- 圆形封面容器 -->
-                                <view class="podcast-cover-circle {{index === currentIndex && isPlaying ? 'rotating' : ''}}"
-                                      bindtap="handlePlayPause">
-                                    <image wx:if="{{item.cover_url}}"
-                                           src="{{item.cover_url}}"
-                                           class="cover-image-circle"
-                                           mode="aspectFill"
-                                           alt="{{item.title}}"/>
-                                    <view wx:else class="cover-placeholder-circle">
-                                        <view class="cover-icon">🎵</view>
-                                    </view>
-
-                                    <!-- 播放/暂停按钮覆盖层 -->
-                                    <view class="play-overlay-circle {{index === currentIndex && isPlaying ? 'hidden' : ''}}">
-                                        <t-icon name="play" size="80rpx" color="#ffffff" class="play-icon-overlay"/>
-                                    </view>
+                        
+                        <!-- 1. 封面区域 (上部) -->
+                        <view class="cover-section">
+                            <!-- 光晕 -->
+                            <view class="cover-glow {{index === currentIndex && isPlaying ? 'playing' : ''}}"></view>
+                            
+                            <!-- 圆形封面 -->
+                            <view class="podcast-cover-circle {{index === currentIndex && isPlaying ? 'rotating' : ''}}"
+                                  bindtap="handlePlayPause">
+                                <image wx:if="{{item.cover_url}}"
+                                       src="{{item.cover_url}}"
+                                       class="cover-image-circle"
+                                       mode="aspectFill"
+                                       alt="{{item.title}}"/>
+                                <view wx:else class="cover-placeholder-circle">
+                                    <t-icon name="music" size="80rpx" color="#ffffff" />
                                 </view>
-                            </view>
 
-                            <!-- 标题区域 -->
-                            <view class="title-section">
-                                <text class="main-title">{{item.title}}</text>
-                                <text class="sub-title">{{item.channel_name || '奇绩前沿信号'}}</text>
-                            </view>
-
-                            <!-- 内容摘要 - 一行小字 -->
-                            <view class="content-summary-line" bindtap="handleEnterReadingMode">
-                                <text class="summary-text-line">{{item.description || '这是一期精彩的播客内容，包含了丰富的知识点和深度思考。'}}</text>
+                                <!-- 播放暂停覆盖 -->
+                                <view class="play-overlay-circle {{index === currentIndex && isPlaying ? 'hidden' : ''}}">
+                                    <t-icon name="play" size="60rpx" color="#ffffff" class="play-icon-overlay"/>
+                                </view>
                             </view>
                         </view>
 
-                        <!-- 播放控制区域 -->
-                        <view class="playback-section">
+                        <!-- 2. 信息与控制面板 (Frosted Paper) -->
+                        <view class="info-panel frosted-paper">
+                            
+                            <!-- 标题与摘要 -->
+                            <view class="text-center-section">
+                                <text class="main-title font-serif-display">{{item.title}}</text>
+                                
+                                <view class="meta-info">
+                                    <view class="theme-dot"></view>
+                                    <text class="channel-name">{{item.channel_name || '奇绩前沿信号'}}</text>
+                                </view>
+                                
+                                <!-- 摘要点击进入阅读模式 -->
+                                <view class="summary-link" bindtap="handleEnterReadingMode">
+                                    <text class="summary-text">{{item.description || '这是一期精彩的播客内容，包含了丰富的知识点和深度思考...'}} (Read More)</text>
+                                </view>
+                            </view>
 
-                            <!-- 韵律波形进度条 -->
-                            <view class="waveform-progress-section">
-                                <!-- 波形可视化区域 -->
-                                <view class="waveform-container"
+                            <!-- 播放控制与波形 -->
+                            <view class="controls-section">
+                                <!-- 进度时间 -->
+                                <view class="time-info">
+                                    <text class="current-time">{{item.playState.currentTimeFormatted}}</text>
+                                    <text class="total-time">{{item.playState.totalTimeFormatted}}</text>
+                                </view>
+
+                                <!-- 重塑后的波形进度条 -->
+                                <view class="waveform-progress-bar"
                                       bindtouchstart="handleWaveformTouchStart"
                                       bindtouchmove="handleWaveformTouchMove"
                                       bindtouchend="handleWaveformTouchEnd"
                                       data-podcast-id="{{item.id}}">
-                                    <!-- 波形条 -->
-                                    <view class="waveform-bars">
-                                        <view wx:for="{{waveformBars}}"
-                                              wx:for-item="bar"
-                                              wx:for-index="barIndex"
-                                              wx:key="barIndex"
-                                              class="waveform-bar {{barIndex < (item.playState.progress / 100 * waveformBars.length) ? 'played' : 'unplayed'}}"
-                                              style="height: {{bar.height}}rpx;">
+                                    
+                                    <!-- 使用动态波形数据 -->
+                                    <view class="waveform-strip">
+                                        <view wx:for="{{waveformBars}}" wx:key="index" wx:for-item="bar"
+                                              class="wave-bar {{waveformUtils.isPlayed(index, item.playState.progress, waveformBars.length) ? 'played' : ''}} {{waveformUtils.isActive(index, item.playState.progress, waveformBars.length) ? 'active' : ''}}"
+                                              style="height: {{bar.height}}%; animation-delay: {{index * 0.1}}s">
                                         </view>
                                     </view>
-                                    <!-- 拖动滑块 - 竖状光栅 -->
-                                    <view class="waveform-thumb {{isDraggingWaveform ? 'dragging' : ''}}"
-                                          style="left: {{item.playState.progress}}%;">
+                                </view>
+
+                                <!-- 操作栏 -->
+                                <view class="action-bar">
+                                    <!-- 收藏/点赞 -->
+                                    <view class="icon-btn" bindtap="handleFavorite">
+                                        <t-icon name="{{item.isFavorited ? 'heart-filled' : 'heart'}}" size="48rpx" color="{{item.isFavorited ? '#ef4444' : '#9ca3af'}}" />
                                     </view>
-                                </view>
 
-                                <!-- 时间显示 -->
-                                <view class="time-info-waveform">
-                                    <text class="current-time">{{item.playState.currentTimeFormatted}}</text>
-                                    <!-- <t-icon name="sound" size="32rpx" color="#1a365d" class="sound-icon"/> -->
-                                    <text class="total-time">{{item.playState.totalTimeFormatted}}</text>
-                                </view>
-                            </view>
+                                    <!-- 评论 -->
+                                    <view class="icon-btn" bindtap="handleOpenComments">
+                                        <t-icon name="chat" size="48rpx" color="#9ca3af" />
+                                    </view>
+                                    
+                                    <!-- 主播放按钮 -->
+                                    <view class="main-play-btn shadow-glow" bindtap="handlePlayPause">
+                                        <view class="play-btn-bg"></view>
+                                        <t-icon name="{{isPlaying && index === currentIndex ? 'pause' : 'play'}}" size="56rpx" color="#ffffff" class="relative z-10" />
+                                    </view>
+                                    
+                                    <!-- 分享 -->
+                                    <button class="icon-btn share-btn" open-type="share">
+                                        <t-icon name="share" size="48rpx" color="#9ca3af" />
+                                    </button>
 
-                            <!-- 底部操作按钮 -->
-                            <view class="bottom-actions">
-                                <!-- 评论 -->
-                                <view class="action-btn" bindtap="handleOpenComments">
-                                    <t-icon name="chat" size="48rpx" color="#718096"/>
-                                </view>
-
-                                <!-- 分享 -->
-                                <button class="action-btn share-btn" open-type="share">
-                                    <t-icon name="share" size="48rpx" color="#718096"/>
-                                </button>
-
-                                <!-- 更多操作 -->
-                                <view class="action-btn" bindtap="handleMore">
-                                    <t-icon name="ellipsis" size="48rpx" color="#718096"/>
-                                </view>
-
-                                <!-- 收藏按钮 -->
-                                <view class="action-btn" bindtap="handleFavorite">
-                                    <t-icon
-                                        name="{{podcastList[currentIndex].isFavorited ? 'heart-filled' : 'heart'}}"
-                                        size="48rpx"
-                                        color="{{podcastList[currentIndex].isFavorited ? '#ed8936' : '#718096'}}"/>
+                                    <!-- 更多 -->
+                                    <view class="icon-btn" bindtap="handleMore">
+                                        <t-icon name="ellipsis" size="48rpx" color="#9ca3af" />
+                                    </view>
                                 </view>
                             </view>
                         </view>
@@ -132,7 +148,7 @@
             </view>
         </view>
 
-        <!-- 瀑布流模式（封装为容器组件） -->
+        <!-- 瀑布流模式（保持不变，略作背景适配） -->
         <view wx:if="{{browseMode === 'waterfall'}}" class="waterfall-mode">
             <waterfall-container bind:play="handleWaterfallPlay"/>
         </view>
@@ -151,7 +167,7 @@
         <!-- 自定义音频加载指示器 -->
         <view wx:if="{{audioLoadingVisible}}" class="custom-audio-loading">
             <view class="loading-overlay"></view>
-            <view class="loading-content">
+            <view class="loading-content frosted-glass">
                 <image src="{{cdnImages.loadingIcon}}" class="custom-loading-icon" alt="加载中"></image>
                 <text class="loading-text">{{audioLoadingText}}</text>
             </view>
@@ -160,7 +176,7 @@
         <!-- 更多操作弹窗 -->
         <view class="more-popup {{showMorePopup ? 'show' : ''}}" catchtouchmove="preventScroll">
             <view class="popup-mask" bindtap="handleCloseMorePopup"></view>
-            <view class="popup-content more-popup-content">
+            <view class="popup-content more-popup-content frosted-paper-popup">
                 <view class="popup-header">
                     <text class="popup-title">更多操作</text>
                     <view class="popup-close" bindtap="handleCloseMorePopup">
@@ -168,15 +184,11 @@
                     </view>
                 </view>
 
-                <!-- 操作选项列表 -->
                 <view class="more-actions-list">
-                    <!-- 播放倍速 -->
                     <view class="more-action-item" bindtap="handleSpeedChange">
                         <t-icon name="time" size="48rpx" color="#718096" class="action-icon"/>
                         <text class="action-text">倍速 {{playbackSpeed}}×</text>
                     </view>
-
-                    <!-- 下载操作 -->
                     <view class="more-action-item" bindtap="handleDownload">
                         <t-icon name="download" size="48rpx" color="#718096" class="action-icon"/>
                         <text class="action-text">下载</text>
@@ -200,17 +212,17 @@
 
     </view>
 
-    <!-- 阅读模式遮罩层 -->
-    <view wx:if="{{isReadingMode}}" class="reading-mode-overlay {{readingModeExpanded ? 'active' : ''}}"
-          catchtouchmove="preventScroll">
+    <!-- 阅读模式遮罩层 (Paper Texture Overlay) -->
+    <view wx:if="{{isReadingMode}}" class="reading-mode-overlay {{readingModeExpanded ? 'active' : ''}}">
         <!-- 顶部操作栏 -->
-        <view class="reading-header">
+        <view class="reading-header" catchtouchmove="preventScroll">
             <view class="reading-close-btn" bindtap="handleExitReadingMode">
-                <t-icon name="close" size="48rpx" color="#2d3748"/>
+                <t-icon name="close" size="48rpx" color="#1a1a1a"/>
             </view>
-            <view class="reading-share-btn" bindtap="handleShare">
-                <t-icon name="share" size="44rpx" color="#718096"/>
-            </view>
+            <text class="reading-mode-title font-serif-display">Reading Mode</text>
+            <button class="reading-share-btn" open-type="share">
+                <t-icon name="share" size="44rpx" color="#4a4a4a"/>
+            </button>
         </view>
 
         <!-- 内容滚动区域 -->
@@ -219,65 +231,36 @@
                 scroll-y="true"
                 enable-back-to-top="true"
                 scroll-with-animation="true">
-            <view class="reading-content-wrapper">
-                <text class="reading-title">{{podcastList[currentIndex].title}}</text>
+            <view class="reading-content-wrapper font-serif">
+                <text class="reading-title font-serif-display">{{podcastList[currentIndex].title}}</text>
+                
+                <view class="reading-meta">
+                    <view class="theme-dot-small"></view>
+                    <text class="reading-channel">{{podcastList[currentIndex].channel_name}}</text>
+                </view>
+
                 <text class="reading-text">{{podcastList[currentIndex].description || '暂无内容摘要'}}</text>
+                
+                <view class="reading-footer-spacer"></view>
             </view>
         </scroll-view>
 
-        <!-- 简化播放控制栏 -->
-        <view class="reading-playback-bar">
-            <!-- 播客信息 -->
-            <view class="reading-podcast-info">
-                <image
-                        src="{{podcastList[currentIndex].cover_url}}"
-                        class="reading-mini-cover"
-                        mode="aspectFill"/>
-                <view class="reading-podcast-text">
-                    <text class="reading-podcast-title">{{podcastList[currentIndex].title}}</text>
-                    <text class="reading-podcast-channel">{{podcastList[currentIndex].channel_name}}</text>
-                </view>
+        <!-- 底部迷你播放条 (Frosted) -->
+        <view class="reading-playback-bar frosted-paper-bottom" catchtouchmove="preventScroll">
+            <image src="{{podcastList[currentIndex].cover_url}}" class="mini-cover-img" mode="aspectFill"></image>
+            <view class="mini-info">
+                <text class="mini-title">{{podcastList[currentIndex].title}}</text>
+                <text class="mini-status">PLAYING</text>
             </view>
-
-            <!-- 进度条 -->
-            <view class="reading-progress-container">
-                <t-slider
-                        value="{{podcastList[currentIndex].playState.progress}}"
-                        min="{{0}}"
-                        max="{{100}}"
-                        step="{{0.1}}"
-                        theme="filled"
-                        color="#ed8936"
-                        track-color="#e2e8f0"
-                        class="reading-slider"
-                        bind:change="handleSliderChange"
-                        bind:dragstart="handleSliderTouchStart"
-                        bind:dragend="handleSliderTouchEnd"
-                        show-value="{{false}}"
-                />
-            </view>
-
-            <!-- 播放控制按钮 -->
-            <view class="reading-controls">
-                <view class="reading-control-btn" bindtap="handleRewind">
-                    <t-icon name="backward" size="44rpx" color="#718096"/>
+            <view class="mini-controls">
+                <view class="mini-btn" bindtap="handleRewind">
+                    <t-icon name="backward" size="40rpx" color="#4a4a4a"/>
                 </view>
-
-                <view class="reading-play-btn" bindtap="handlePlayPause">
-                    <t-icon
-                            wx:if="{{isPlaying}}"
-                            size="80rpx"
-                            class="control-icon"
-                            name="pause"/>
-                    <t-icon
-                            wx:else
-                            size="80rpx"
-                            class="control-icon"
-                            name="play"/>
+                <view class="mini-play-btn" bindtap="handlePlayPause">
+                    <t-icon name="{{isPlaying ? 'pause' : 'play'}}" size="56rpx" color="#0884ff"/>
                 </view>
-
-                <view class="reading-control-btn" bindtap="handleFastForward">
-                    <t-icon name="forward" size="44rpx" color="#718096"/>
+                <view class="mini-btn" bindtap="handleFastForward">
+                    <t-icon name="forward" size="40rpx" color="#4a4a4a"/>
                 </view>
             </view>
         </view>

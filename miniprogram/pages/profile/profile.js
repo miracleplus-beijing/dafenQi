@@ -335,7 +335,7 @@ Page({
   onShareAppMessage: function () {
     const title = this.data.isLoggedIn
       ? `${this.data.userInfo.nickName}邀请你一起听播客`
-      : '奇绩前沿信号 - 发现精彩的学术内容';
+      : '奇绩信号 Alpha Sight - 发现精彩的学术内容';
 
     return {
       title: title,

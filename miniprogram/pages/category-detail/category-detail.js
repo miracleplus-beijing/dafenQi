@@ -237,7 +237,7 @@ Page({
       audio_url: item.audio_url,
       cover_url:
         item.cover_url ||
-        'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png',
+        'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/default_cover.png',
       duration: item.duration,
       channel: item.channel,
       play_count: item.play_count || 0,
@@ -341,7 +341,7 @@ Page({
   onShareAppMessage: function () {
     const { category } = this.data;
     return {
-      title: `奇绩前沿信号 - ${category?.displayName || '分类详情'}`,
+      title: `奇绩信号 Alpha Sight - ${category?.displayName || '分类详情'}`,
       path: `/pages/category-detail/category-detail?id=${this.data.categoryId}&name=${encodeURIComponent(this.data.categoryName)}`,
       imageUrl:
         'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/share-cover.jpg',
@@ -352,7 +352,7 @@ Page({
   onShareTimeline: function () {
     const { category } = this.data;
     return {
-      title: `推荐${category?.displayName || '分类详情'} - 奇绩前沿信号`,
+      title: `推荐${category?.displayName || '分类详情'} - 奇绩信号 Alpha Sight`,
       query: 'share=timeline',
       imageUrl:
         'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/share-cover.jpg',

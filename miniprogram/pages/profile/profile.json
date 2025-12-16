@@ -5,7 +5,7 @@
     "t-image": "tdesign-miniprogram/image/image",
     "t-button": "tdesign-miniprogram/button/button"
   },
-  "navigationBarTitleText": "奇绩前沿信号",
+  "navigationBarTitleText": "奇绩信号 Alpha Sight",
   "navigationBarTextStyle": "white",
   "backgroundTextStyle": "light",
   "enablePullDownRefresh": true,

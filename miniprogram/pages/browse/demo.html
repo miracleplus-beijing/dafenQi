@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Page - Frosted Paper Theme</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;600&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #Fdfbf7;
+            color: #1a1a1a;
+            overflow: hidden; /* App-like feel */
+        }
+
+        .font-serif-display {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* 纸张纹理 - 全局底纹 */
+        .bg-paper-pattern {
+            background-image: radial-gradient(#a3a3a3 0.5px, transparent 0.5px), radial-gradient(#a3a3a3 0.5px, #Fdfbf7 0.5px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+
+        /* 磨砂纸感核心类 (Frosted Paper) */
+        .frosted-paper {
+            background-color: rgba(253, 251, 247, 0.75); /* 稍微增加不透明度以突出蓝色 */
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(8, 132, 255, 0.1); /* 蓝色微边框 */
+            box-shadow: 
+                0 12px 40px -8px rgba(8, 132, 255, 0.15),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+        }
+
+        /* 播放时的光晕动画 - 蓝色系 */
+        @keyframes pulse-glow-blue {
+            0%, 100% { box-shadow: 0 0 30px 10px rgba(8, 132, 255, 0.2); }
+            50% { box-shadow: 0 0 60px 25px rgba(8, 132, 255, 0.4); }
+        }
+        
+        .cover-glow.playing {
+            animation: pulse-glow-blue 4s infinite ease-in-out;
+        }
+
+        /* 唱片旋转动画 */
+        @keyframes rotate-disk {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .rotating {
+            animation: rotate-disk 20s linear infinite;
+        }
+
+        /* 波形动画 - 增加律动感 */
+        @keyframes wave-scale {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.5); }
+        }
+        .wave-active {
+            animation: wave-scale 1s ease-in-out infinite;
+            background-color: rgb(8, 132, 255);
+            box-shadow: 0 0 8px rgba(8, 132, 255, 0.5);
+        }
+
+        /* 阅读模式遮罩 - 纯粹的纸感 */
+        .reading-overlay {
+            background-color: #Fdfbf7;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+        }
+
+        /* 隐藏滚动条 */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="h-screen w-screen relative">
+
+    <!-- 全局纹理 -->
+    <div class="absolute inset-0 bg-paper-pattern opacity-60 pointer-events-none -z-20"></div>
+
+    <!-- 模拟 Swiper 容器 -->
+    <div class="h-full w-full flex flex-col justify-center items-center relative overflow-hidden">
+        
+        <!-- 背景装饰 (主题色 Blue 融合) -->
+        <!-- 使用 (8, 132, 255) 的变种：浅蓝、深蓝、紫色偏蓝 -->
+        <div class="absolute top-[-10%] right-[-20%] w-96 h-96 bg-[rgba(8,132,255,0.2)] rounded-full mix-blend-multiply filter blur-[80px] opacity-70 animate-pulse"></div>
+        <div class="absolute bottom-[-10%] left-[-20%] w-96 h-96 bg-[rgba(100,200,255,0.3)] rounded-full mix-blend-multiply filter blur-[80px] opacity-60 animate-pulse" style="animation-delay: 2s;"></div>
+        <div class="absolute top-[20%] left-[10%] w-48 h-48 bg-[rgba(8,132,255,0.1)] rounded-full mix-blend-multiply filter blur-[60px]"></div>
+
+        <!-- ================= 主要内容区域 (Swiper Item) ================= -->
+        <div class="w-full max-w-md h-full flex flex-col px-6 pt-12 pb-24 relative z-10">
+            
+            <!-- 1. 封面区域 -->
+            <div class="flex-1 flex flex-col items-center justify-center min-h-0 relative">
+                <!-- 光晕 (蓝色) -->
+                <div class="absolute w-64 h-64 rounded-full bg-[rgba(8,132,255,0.3)] blur-3xl cover-glow playing"></div>
+                
+                <!-- 圆形封面 (Frosted 边框) -->
+                <div class="relative w-72 h-72 rounded-full border-8 border-white/40 shadow-2xl flex items-center justify-center overflow-hidden rotating backdrop-blur-sm">
+                    <img src="https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=600&auto=format&fit=crop" 
+                         class="w-full h-full object-cover opacity-95" 
+                         alt="Podcast Cover">
+                    <!-- 播放暂停覆盖 (交互时显示) -->
+                    <div class="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 hover:opacity-100 transition-opacity cursor-pointer">
+                        <svg class="w-16 h-16 text-white drop-shadow-md" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 信息与控制区域 (Frosted Paper 面板) -->
+            <div class="frosted-paper rounded-[32px] p-6 mt-6 flex flex-col gap-5 relative">
+                
+                <!-- 标题与摘要 -->
+                <div class="text-center space-y-2">
+                    <h2 class="font-serif-display font-bold text-2xl text-gray-900 leading-tight line-clamp-2">
+                        The Future of Artificial Intelligence in Art
+                    </h2>
+                    <div class="flex items-center justify-center gap-2 text-xs font-mono text-gray-500 uppercase tracking-widest">
+                        <!-- 主题色点缀 -->
+                        <span class="w-2 h-2 rounded-full bg-[rgb(8,132,255)] shadow-[0_0_5px_rgba(8,132,255,0.5)]"></span>
+                        <span>Tech Daily • Vol. 42</span>
+                    </div>
+                    <!-- 摘要点击进入阅读模式 -->
+                    <p class="text-sm text-gray-600 line-clamp-2 leading-relaxed opacity-80 cursor-pointer hover:opacity-100 hover:text-[rgb(8,132,255)] transition-all border-b border-dashed border-gray-300 pb-1 inline-block" onclick="document.getElementById('reading-mode').classList.remove('translate-y-full')">
+                        Exploring how generative algorithms are reshaping the creative landscape... (Read More)
+                    </p>
+                </div>
+
+                <!-- 播放控制与波形 (重塑：全宽波形) -->
+                <div class="space-y-5 pt-1">
+                    <!-- 进度时间 -->
+                    <div class="flex justify-between text-[10px] font-mono font-medium text-gray-400 px-1">
+                        <span class="text-[rgb(8,132,255)]">12:45</span>
+                        <span>45:00</span>
+                    </div>
+
+                    <!-- 重塑后的波形进度条：填满宽度，增加条数，使用主题色 -->
+                    <div class="h-10 w-full flex items-center justify-between gap-[3px] opacity-90 cursor-pointer group">
+                        <!-- 已播放部分 (蓝色主题色 + 渐变/透明度变化) -->
+                        <div class="w-1 bg-[rgb(8,132,255)] h-3 rounded-full opacity-40"></div>
+                        <div class="w-1 bg-[rgb(8,132,255)] h-5 rounded-full opacity-60"></div>
+                        <div class="w-1 bg-[rgb(8,132,255)] h-8 rounded-full opacity-80"></div>
+                        <div class="w-1 bg-[rgb(8,132,255)] h-4 rounded-full opacity-50"></div>
+                        <div class="w-1 bg-[rgb(8,132,255)] h-6 rounded-full opacity-70"></div>
+                        <div class="w-1 bg-[rgb(8,132,255)] h-10 rounded-full opacity-90"></div>
+                        <div class="w-1 bg-[rgb(8,132,255)] h-5 rounded-full opacity-60"></div>
+                        <div class="w-1 bg-[rgb(8,132,255)] h-7 rounded-full opacity-80"></div>
+                        
+                        <!-- 当前播放位置 (高亮 + 动态) -->
+                        <div class="w-1.5 h-12 rounded-full wave-active"></div> 
+                        
+                        <!-- 未播放部分 (灰色，Hover时变深) -->
+                        <div class="w-1 bg-gray-300 h-6 rounded-full group-hover:bg-gray-400 transition-colors"></div>
+                        <div class="w-1 bg-gray-300 h-4 rounded-full group-hover:bg-gray-400 transition-colors"></div>
+                        <div class="w-1 bg-gray-300 h-8 rounded-full group-hover:bg-gray-400 transition-colors"></div>
+                        <div class="w-1 bg-gray-300 h-3 rounded-full group-hover:bg-gray-400 transition-colors"></div>
+                        <div class="w-1 bg-gray-300 h-5 rounded-full group-hover:bg-gray-400 transition-colors"></div>
+                        <div class="w-1 bg-gray-300 h-9 rounded-full group-hover:bg-gray-400 transition-colors"></div>
+                        <div class="w-1 bg-gray-300 h-4 rounded-full group-hover:bg-gray-400 transition-colors"></div>
+                        <div class="w-1 bg-gray-300 h-7 rounded-full group-hover:bg-gray-400 transition-colors"></div>
+                        <div class="w-1 bg-gray-300 h-3 rounded-full group-hover:bg-gray-400 transition-colors"></div>
+                        <div class="w-1 bg-gray-300 h-5 rounded-full group-hover:bg-gray-400 transition-colors"></div>
+                        <div class="w-1 bg-gray-300 h-2 rounded-full group-hover:bg-gray-400 transition-colors"></div>
+                    </div>
+
+                    <!-- 操作栏 -->
+                    <div class="flex justify-between items-center px-4">
+                        <button class="text-gray-400 hover:text-[rgb(8,132,255)] transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg></button>
+                        <button class="text-gray-400 hover:text-[rgb(8,132,255)] transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg></button>
+                        
+                        <!-- 播放按钮 (主题色渐变) -->
+                        <button class="w-14 h-14 flex items-center justify-center rounded-full shadow-[0_8px_20px_rgba(8,132,255,0.4)] hover:scale-105 active:scale-95 transition-all overflow-hidden relative group">
+                            <div class="absolute inset-0 bg-gradient-to-br from-[rgb(8,132,255)] to-[#005BB5]"></div>
+                            <svg class="w-7 h-7 text-white fill-current relative z-10 ml-1" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+                        </button>
+                        
+                        <button class="text-gray-400 hover:text-[rgb(8,132,255)] transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 阅读模式遮罩 (Overlay) ================= -->
+    <div id="reading-mode" class="fixed inset-0 z-50 reading-overlay transform translate-y-full transition-transform duration-500 flex flex-col">
+        <!-- 顶部操作栏 -->
+        <div class="px-6 pt-12 pb-4 flex justify-between items-center border-b border-gray-200 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
+            <button onclick="document.getElementById('reading-mode').classList.add('translate-y-full')" class="p-2 rounded-full hover:bg-black/5 transition-colors">
+                <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <span class="font-serif-display italic text-lg text-[rgb(8,132,255)]">Reading Mode</span>
+            <button class="p-2 rounded-full hover:bg-black/5 transition-colors">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+            </button>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="flex-1 overflow-y-auto p-8 max-w-2xl mx-auto">
+            <h1 class="font-serif-display font-bold text-3xl mb-6 leading-tight text-gray-900">The Future of Artificial Intelligence in Art</h1>
+            <div class="prose prose-lg text-gray-700 font-serif leading-relaxed">
+                <p class="mb-4 first-letter:text-5xl first-letter:font-serif-display first-letter:float-left first-letter:mr-2 first-letter:leading-none first-letter:text-[rgb(8,132,255)]">
+                    Artificial Intelligence has rapidly evolved from a tool for data analysis to a creative partner. In this episode, we explore the nuances of generative art...
+                </p>
+                <p class="mb-4">
+                    The intersection of technology and creativity raises profound questions about authorship and originality. As algorithms become more sophisticated, the line between human and machine-made art blurs.
+                </p>
+                <!-- 引用块主题色 -->
+                <blockquote class="pl-4 border-l-4 border-[rgb(8,132,255)] italic my-6 text-gray-600 bg-[rgba(8,132,255,0.05)] py-2 pr-2 rounded-r">
+                    "Art is not just about the final product, but the human experience embedded within it."
+                </blockquote>
+                <p>
+                    Join us as we interview leading digital artists and computer scientists to uncover the potential and pitfalls of this brave new world.
+                </p>
+            </div>
+            
+            <div class="h-24"></div> <!-- Spacer -->
+        </div>
+
+        <!-- 底部迷你播放条 (Frosted) -->
+        <div class="absolute bottom-0 w-full frosted-paper border-t border-black/5 px-6 py-4 flex items-center gap-4">
+            <img src="https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=100&auto=format&fit=crop" class="w-10 h-10 rounded-lg object-cover shadow-sm">
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-bold text-gray-900 truncate">The Future of AI in Art</div>
+                <div class="text-xs text-[rgb(8,132,255)] font-mono font-bold">PLAYING</div>
+            </div>
+            <div class="flex items-center gap-4">
+                <button><svg class="w-6 h-6 text-gray-600 hover:text-[rgb(8,132,255)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg></button>
+                <button><svg class="w-8 h-8 text-[rgb(8,132,255)] fill-current" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button>
+                <button><svg class="w-6 h-6 text-gray-600 hover:text-[rgb(8,132,255)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全局迷你播放器 (当不在 Reading Mode 时显示，这里为了 Demo 简化放在底部) -->
+    <div class="fixed bottom-6 left-6 right-6 frosted-paper rounded-full p-2 pl-4 flex items-center justify-between shadow-xl border border-white/40 z-30 transition-transform duration-300 hover:scale-[1.02]">
+        <div class="flex items-center gap-3 overflow-hidden">
+            <div class="w-2 h-2 bg-[rgb(8,132,255)] rounded-full animate-pulse"></div>
+            <span class="text-xs font-bold text-gray-800 truncate max-w-[150px]">Now Playing: Tech Daily</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button class="w-8 h-8 bg-[rgb(8,132,255)] rounded-full flex items-center justify-center text-white shadow-md">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>

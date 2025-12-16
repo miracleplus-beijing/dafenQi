@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的 - Frosted Paper Theme</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Serif+SC:wght@400;700&family=Outfit:wght@300;400;600&display=swap');
+        
+        :root {
+            --theme-blue: rgb(8, 132, 255);
+            --theme-blue-light: rgba(8, 132, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #Fdfbf7;
+            color: #1a1a1a;
+            overflow-x: hidden;
+        }
+
+        /* 替换为衬线字体以匹配中文语境的学术感 */
+        .font-serif-display {
+            font-family: 'Noto Serif SC', serif;
+        }
+
+        /* 纸张纹理 - 全局底纹 */
+        .bg-paper-pattern {
+            background-image: radial-gradient(#a3a3a3 0.5px, transparent 0.5px), radial-gradient(#a3a3a3 0.5px, #Fdfbf7 0.5px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+
+        /* 磨砂纸感核心类 */
+        .frosted-paper {
+            background-color: rgba(253, 251, 247, 0.75);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(8, 132, 255, 0.08);
+            box-shadow: 
+                0 10px 30px -5px rgba(8, 132, 255, 0.08),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+        }
+
+        /* 登录卡片专用 - 更强的玻璃感 */
+        .login-card-glass {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 
+                0 25px 50px -12px rgba(8, 132, 255, 0.15),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+        }
+
+        /* 菜单项 Hover 效果 */
+        .menu-item-hover:active {
+            background-color: rgba(8, 132, 255, 0.05);
+            transform: scale(0.99);
+        }
+
+        /* 隐藏滚动条 */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="min-h-screen relative flex justify-center">
+
+    <!-- 全局纹理 -->
+    <div class="fixed inset-0 bg-paper-pattern opacity-60 pointer-events-none -z-20"></div>
+
+    <!-- 背景装饰 (Blue Theme) -->
+    <div class="fixed top-[-10%] right-[-20%] w-96 h-96 bg-[rgba(8,132,255,0.2)] rounded-full mix-blend-multiply filter blur-[80px] opacity-70 animate-pulse pointer-events-none -z-10"></div>
+    <div class="fixed bottom-[-10%] left-[-20%] w-96 h-96 bg-[rgba(100,200,255,0.3)] rounded-full mix-blend-multiply filter blur-[80px] opacity-60 animate-pulse pointer-events-none -z-10" style="animation-delay: 2s;"></div>
+
+    <!-- 模拟移动端容器 -->
+    <div class="w-full max-w-md min-h-screen pb-24 relative flex flex-col">
+        
+        <!-- 调试：状态切换按钮 (用于预览) -->
+        <button onclick="toggleLoginState()" class="fixed top-4 right-4 z-50 bg-white/80 backdrop-blur border border-gray-200 px-3 py-1 rounded-full text-xs font-mono text-gray-500 shadow-sm hover:bg-white hover:text-[rgb(8,132,255)] transition-colors">
+            切换登录状态
+        </button>
+
+        <!-- ================= 1. 已登录状态 (Logged In) ================= -->
+        <div id="logged-in-view" class="flex flex-col px-6 pt-12 gap-8 transition-opacity duration-500 hidden">
+            
+            <!-- 用户信息卡片 -->
+            <div class="frosted-paper rounded-[32px] p-6 flex items-center gap-5 relative overflow-hidden group">
+                <!-- 装饰性背景光 -->
+                <div class="absolute right-0 top-0 w-32 h-32 bg-[rgba(8,132,255,0.1)] rounded-full blur-2xl -mr-10 -mt-10"></div>
+
+                <!-- 头像 -->
+                <div class="relative cursor-pointer">
+                    <div class="w-20 h-20 rounded-full p-1 border border-white/50 shadow-sm bg-white/30 backdrop-blur-sm">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=DaVinci" 
+                             class="w-full h-full rounded-full object-cover" 
+                             alt="Avatar">
+                    </div>
+                    <!-- 编辑提示 -->
+                    <div class="absolute bottom-0 right-0 w-7 h-7 bg-white rounded-full shadow-md flex items-center justify-center border border-gray-100 text-[rgb(8,132,255)]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </div>
+                </div>
+
+                <!-- 用户名/ID -->
+                <div class="flex-1 z-10">
+                    <h2 class="font-serif-display font-bold text-2xl text-gray-900 leading-tight mb-1">Alpha Sight 用户</h2>
+                    <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[rgba(8,132,255,0.08)] border border-[rgba(8,132,255,0.1)]">
+                        <span class="text-[10px] font-mono text-[rgb(8,132,255)] tracking-wide">ID: 894302</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 菜单区域 1: 我的内容 -->
+            <div class="flex flex-col gap-3">
+                <h3 class="font-serif-display italic text-xl text-gray-800 px-2">我的内容</h3>
+                
+                <div class="frosted-paper rounded-[24px] overflow-hidden">
+                    <!-- 收听历史 -->
+                    <div class="flex items-center gap-4 p-4 border-b border-[rgba(8,132,255,0.05)] cursor-pointer menu-item-hover transition-transform">
+                        <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <span class="flex-1 font-medium text-gray-700">收听历史</span>
+                        <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+
+                    <!-- 我的收藏 -->
+                    <div class="flex items-center gap-4 p-4 border-b border-[rgba(8,132,255,0.05)] cursor-pointer menu-item-hover transition-transform">
+                        <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                        </div>
+                        <span class="flex-1 font-medium text-gray-700">我的收藏</span>
+                        <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+
+                    <!-- 我的评论 -->
+                    <div class="flex items-center gap-4 p-4 cursor-pointer menu-item-hover transition-transform">
+                        <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        </div>
+                        <span class="flex-1 font-medium text-gray-700">我的评论</span>
+                        <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 菜单区域 2: 更多 -->
+            <div class="flex flex-col gap-3">
+                <h3 class="font-serif-display italic text-xl text-gray-800 px-2">更多</h3>
+                
+                <div class="frosted-paper rounded-[24px] overflow-hidden">
+                    <!-- 设置 -->
+                    <div class="flex items-center gap-4 p-4 border-b border-[rgba(8,132,255,0.05)] cursor-pointer menu-item-hover transition-transform">
+                        <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        </div>
+                        <span class="flex-1 font-medium text-gray-700">设置</span>
+                        <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+
+                    <!-- 退出登录 -->
+                    <div class="flex items-center gap-4 p-4 cursor-pointer menu-item-hover transition-transform" onclick="toggleLoginState()">
+                        <div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        </div>
+                        <span class="flex-1 font-medium text-orange-600">退出登录</span>
+                        <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= 2. 未登录状态 (Logged Out) - 默认显示 ================= -->
+        <div id="logged-out-view" class="h-full flex flex-col justify-center items-center px-8 transition-opacity duration-500 pt-32">
+            
+            <div class="login-card-glass rounded-[40px] p-10 w-full flex flex-col items-center text-center relative overflow-hidden shadow-2xl">
+                <!-- 装饰光效 -->
+                <div class="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent pointer-events-none"></div>
+                <div class="absolute top-[-50px] left-[-50px] w-48 h-48 bg-[rgba(8,132,255,0.15)] rounded-full blur-2xl animate-pulse"></div>
+                <div class="absolute bottom-[-20px] right-[-20px] w-32 h-32 bg-[rgba(100,200,255,0.2)] rounded-full blur-xl"></div>
+
+                <!-- Hero Icon -->
+                <div class="w-24 h-24 rounded-full bg-gradient-to-br from-[rgb(8,132,255)] to-[#2563eb] flex items-center justify-center mb-8 shadow-lg shadow-blue-200/50 relative z-10 border-4 border-white/50">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                </div>
+
+                <!-- Title -->
+                <h1 class="font-serif-display font-bold text-3xl text-gray-900 mb-2 relative z-10">欢迎使用达芬Qi说</h1>
+                <p class="text-sm text-gray-500 mb-10 leading-relaxed max-w-[200px] relative z-10 font-medium">登录后享受完整功能</p>
+
+                <!-- Features List -->
+                <div class="w-full space-y-5 mb-10 text-left relative z-10">
+                    <div class="flex items-center gap-4 p-2 rounded-xl hover:bg-white/40 transition-colors">
+                        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0 shadow-sm border border-green-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <span class="text-sm text-gray-700 font-medium">同步收藏和历史</span>
+                    </div>
+                    <div class="flex items-center gap-4 p-2 rounded-xl hover:bg-white/40 transition-colors">
+                        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0 shadow-sm border border-green-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <span class="text-sm text-gray-700 font-medium">个性化推荐内容</span>
+                    </div>
+                    <div class="flex items-center gap-4 p-2 rounded-xl hover:bg-white/40 transition-colors">
+                        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0 shadow-sm border border-green-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <span class="text-sm text-gray-700 font-medium">跨设备数据同步</span>
+                    </div>
+                </div>
+
+                <!-- Login Button -->
+                <button onclick="toggleLoginState()" class="w-full py-4 rounded-2xl bg-gray-900 text-white font-bold text-sm tracking-widest shadow-[0_10px_20px_-10px_rgba(0,0,0,0.5)] hover:scale-[1.02] active:scale-95 transition-all relative z-10 hover:bg-black">
+                    立即登录
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // 简单的状态切换逻辑
+        let isLoggedIn = false; // 默认为未登录状态，方便您预览
+        const viewIn = document.getElementById('logged-in-view');
+        const viewOut = document.getElementById('logged-out-view');
+
+        function toggleLoginState() {
+            isLoggedIn = !isLoggedIn;
+            if (isLoggedIn) {
+                viewOut.classList.add('hidden');
+                viewIn.classList.remove('hidden');
+            } else {
+                viewIn.classList.add('hidden');
+                viewOut.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

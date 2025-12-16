@@ -61,7 +61,7 @@
             mode="aspectFill"
             class="cover-image"
             lazy-load
-            error="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png"
+            error="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/default_cover.png"
           />
         </view>
 

@@ -1,11 +1,17 @@
 <!-- 榜单详情页面 -->
 <view class="container">
+  <!-- 背景光效 -->
+  <view class="bg-glow bg-glow-1"></view>
+  <view class="bg-glow bg-glow-2"></view>
+
   <!-- Header -->
   <view class="header">
     <view class="search-bar">
-      <input type="text" class="search-input" placeholder="听你想听的论文" 
-             value="{{searchValue}}" bindinput="onSearchInput" />
-      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/search.svg" class="search-icon" alt="Search"></image>
+      <view class="search-input-wrapper">
+        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/search.svg" class="search-icon" alt="Search"></image>
+        <input type="text" class="search-input" placeholder="听你想听的论文" placeholder-class="search-placeholder"
+               value="{{searchValue}}" bindinput="onSearchInput" />
+      </view>
     </view>
     
     <view class="tab-nav">
@@ -18,63 +24,78 @@
     </view>
   </view>
 
-  <!-- 最热榜内容 -->
-  <view wx:if="{{currentTab === 'hot'}}" class="tab-content">
-    <view class="section">
-      <text class="section-title">最热榜 TOP 10</text>
-      
-      <view wx:for="{{hotRankings}}" wx:key="id" class="ranking-item">
-        <view class="ranking-number">{{index + 1}}</view>
-        <image src="{{item.channel_cover_url}}" class="ranking-cover" mode="aspectFill" alt="{{item.channel}}"></image>
-        <view class="ranking-content">
-          <view class="ranking-title">{{item.title}}</view>
-          <view class="ranking-channel">{{item.channel}}</view>
+  <!-- 列表内容容器 -->
+  <view class="content-wrapper">
+    <!-- 最热榜内容 -->
+    <view wx:if="{{currentTab === 'hot'}}" class="tab-content fade-in">
+      <view class="ranking-list">
+        <view wx:for="{{hotRankings}}" wx:key="id" class="ranking-item glass-card">
+          <view class="ranking-index index-{{index + 1}}">{{index + 1}}</view>
+          <image src="{{item.channel_cover_url}}" class="ranking-cover" mode="aspectFill" alt="{{item.channel}}"></image>
+          <view class="ranking-info">
+            <view class="ranking-title">{{item.title}}</view>
+            <view class="ranking-meta">
+              <text class="ranking-channel">{{item.channel}}</text>
+              <view class="ranking-stat" wx:if="{{item.play_count}}">
+                <text class="stat-icon">▶</text> {{item.play_count}}
+              </view>
+            </view>
+          </view>
+          <view class="play-btn" bindtap="playPodcast" data-item="{{item}}">
+            <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="play-icon"></image>
+          </view>
         </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg"
-               class="ranking-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
       </view>
     </view>
-  </view>
 
-  <!-- 最新榜内容 -->
-  <view wx:elif="{{currentTab === 'new'}}" class="tab-content">
-    <view class="section">
-      <text class="section-title">最新榜 TOP 10</text>
-      
-      <view wx:for="{{newRankings}}" wx:key="id" class="ranking-item">
-        <view class="ranking-number">{{index + 1}}</view>
-        <image src="{{item.channel_cover_url}}" class="ranking-cover" mode="aspectFill" alt="{{item.channel}}"></image>
-        <view class="ranking-content">
-          <view class="ranking-title">{{item.title}}</view>
-          <view class="ranking-channel">{{item.channel}}</view>
+    <!-- 最新榜内容 -->
+    <view wx:elif="{{currentTab === 'new'}}" class="tab-content fade-in">
+      <view class="ranking-list">
+        <view wx:for="{{newRankings}}" wx:key="id" class="ranking-item glass-card">
+          <view class="ranking-index index-{{index + 1}}">{{index + 1}}</view>
+          <image src="{{item.channel_cover_url}}" class="ranking-cover" mode="aspectFill" alt="{{item.channel}}"></image>
+          <view class="ranking-info">
+            <view class="ranking-title">{{item.title}}</view>
+            <view class="ranking-meta">
+              <text class="ranking-channel">{{item.channel}}</text>
+              <view class="ranking-stat" wx:if="{{item.duration}}">
+                <text class="stat-icon">⏱</text> {{item.duration}}
+              </view>
+            </view>
+          </view>
+          <view class="play-btn" bindtap="playPodcast" data-item="{{item}}">
+            <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="play-icon"></image>
+          </view>
         </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg"
-               class="ranking-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
       </view>
     </view>
-  </view>
 
-  <!-- 综述榜内容 -->
-  <view wx:elif="{{currentTab === 'review'}}" class="tab-content">
-    <view class="section">
-      <text class="section-title">综述榜 TOP 10</text>
-      
-      <view wx:for="{{reviewRankings}}" wx:key="id" class="ranking-item">
-        <view class="ranking-number">{{index + 1}}</view>
-        <image src="{{item.channel_cover_url}}" class="ranking-cover" mode="aspectFill" alt="{{item.channel}}"></image>
-        <view class="ranking-content">
-          <view class="ranking-title">{{item.title}}</view>
-          <view class="ranking-channel">{{item.channel}}</view>
+    <!-- 综述榜内容 -->
+    <view wx:elif="{{currentTab === 'review'}}" class="tab-content fade-in">
+      <view class="ranking-list">
+        <view wx:for="{{reviewRankings}}" wx:key="id" class="ranking-item glass-card">
+          <view class="ranking-index index-{{index + 1}}">{{index + 1}}</view>
+          <image src="{{item.channel_cover_url}}" class="ranking-cover" mode="aspectFill" alt="{{item.channel}}"></image>
+          <view class="ranking-info">
+            <view class="ranking-title">{{item.title}}</view>
+            <view class="ranking-meta">
+              <text class="ranking-channel">{{item.channel}}</text>
+              <view class="ranking-stat" wx:if="{{item.favorite_count}}">
+                <text class="stat-icon">★</text> {{item.favorite_count}}
+              </view>
+            </view>
+          </view>
+          <view class="play-btn" bindtap="playPodcast" data-item="{{item}}">
+            <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg" class="play-icon"></image>
+          </view>
         </view>
-        <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/play-small.svg"
-               class="ranking-play" alt="Play" bindtap="playPodcast" data-item="{{item}}"></image>
       </view>
     </view>
-  </view>
 
-  <!-- 底部加载区域 -->
-  <view class="bottom-loader">
-    <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/loading.svg" class="loader-icon" alt="加载中"></image>
-    <view class="loader-text">从源头最大化驱动创新</view>
+    <!-- 底部加载区域 -->
+    <view class="bottom-loader">
+      <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/loading.svg" class="loader-icon" alt="加载中"></image>
+      <view class="loader-text">从源头最大化驱动创新</view>
+    </view>
   </view>
 </view>

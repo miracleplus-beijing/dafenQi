@@ -82,7 +82,7 @@ Page({
         // 波形进度条相关
         waveformBars: [], // 波形条数据
         waveformTotalWidth: 750, // 波形总宽度 (rpx)
-        waveformBarCount: 60, // 波形条数量
+        waveformBarCount: 22, // 波形条数量（与 demo.html 保持一致）
         isDraggingWaveform: false, // 是否正在拖动波形滑块
         waveformContainerWidth: 0, // 波形容器实际宽度 (px)
     },
@@ -361,7 +361,7 @@ Page({
 
                 // 确保播客数据格式正确
                 const channelName =
-                    globalData.currentPodcast.channel_name || '奇绩前沿信号';
+                    globalData.currentPodcast.channel_name || '奇绩信号 Alpha Sight';
                 const formattedPodcast = {
                     ...globalData.currentPodcast,
                     isFavorited: false,
@@ -474,12 +474,12 @@ Page({
         const baseUrl =
             'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/';
 
-        if (channelName && channelName.includes('奇绩前沿信号')) {
+        if (channelName && channelName.includes('奇绩信号 Alpha Sight')) {
             return baseUrl + 'miracleplus_signal.png';
         } else if (channelName && channelName.includes('经典论文解读')) {
             return baseUrl + 'classic_paper_interpretation.png';
         } else {
-            // 默认使用奇绩前沿信号封面
+            // 默认使用奇绩信号 Alpha Sight封面
             return baseUrl + 'miracleplus_signal.png';
         }
     },
@@ -561,8 +561,8 @@ Page({
         const backgroundAudioManager = wx.getBackgroundAudioManager();
 
         // 设置基础配置
-        backgroundAudioManager.title = '奇绩前沿信号';
-        backgroundAudioManager.singer = '奇绩前沿信号';
+        backgroundAudioManager.title = '奇绩信号 Alpha Sight';
+        backgroundAudioManager.singer = '奇绩信号 Alpha Sight';
         backgroundAudioManager.coverImgUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/daily_paper_report.png';
         backgroundAudioManager.epname = '播客节目';
 
@@ -738,7 +738,7 @@ Page({
                     newPodcasts.map(async podcast => {
                         const channelName = podcast.channels
                             ? podcast.channels.name
-                            : podcast.channel_name || '奇绩前沿信号';
+                            : podcast.channel_name || '奇绩信号 Alpha Sight';
 
                         // 检查收藏状态
                         let isFavorited = false;
@@ -882,7 +882,7 @@ Page({
 
                     return Object.assign({}, item, {
                         audio_url: audioUrl,
-                        channel_name: item.channels ? item.channels.name : '奇绩前沿信号',
+                        channel_name: item.channels ? item.channels.name : '奇绩信号 Alpha Sight',
                     });
                 });
 
@@ -1073,7 +1073,7 @@ Page({
 
         // 设置BackgroundAudioManager的音频信息
         audioContext.title = podcast.title;
-        audioContext.singer = podcast.channel_name || '奇绩前沿信号';
+        audioContext.singer = podcast.channel_name || '奇绩信号 Alpha Sight';
         audioContext.coverImgUrl = podcast.cover_url;
         audioContext.epname = '播客节目';
         audioContext.src = newSrc;
@@ -1576,11 +1576,18 @@ Page({
         // 关闭弹窗
         this.setData({ showMorePopup: false });
 
-        // 触发分享
+        // 触发分享 - 在小程序中需要通过button的open-type="share"来实现
+        // 这里提示用户点击右上角分享
         wx.showShareMenu({
             withShareTicket: true,
+            menus: ['shareAppMessage', 'shareTimeline'],
             success: () => {
-                console.log('分享菜单显示成功');
+                console.log('分享菜单已显示');
+                wx.showToast({
+                    title: '请点击右上角分享',
+                    icon: 'none',
+                    duration: 2000,
+                });
             },
             fail: error => {
                 console.error('分享菜单显示失败:', error);
@@ -1632,7 +1639,7 @@ Page({
         try {
             // 设置BackgroundAudioManager的音频信息
             audio.title = podcast.title;
-            audio.singer = podcast.channel_name || '奇绩前沿信号';
+            audio.singer = podcast.channel_name || '奇绩信号 Alpha Sight';
             audio.coverImgUrl = podcast.cover_url;
             audio.epname = '播客节目';
 
@@ -1889,10 +1896,9 @@ Page({
         const currentPodcast = podcastList[currentIndex] || {};
 
         return {
-            title: currentPodcast.title || '奇绩前沿信号播客',
-            path: '/pages/browse/browse',
-            imageUrl:
-                currentPodcast.cover_url || getImageUrl('icons/share-cover.jpg'),
+            title: currentPodcast.title || '奇绩信号 Alpha Sight播客',
+            path: `/pages/browse/browse?podcastId=${currentPodcast.id}&autoPlay=false`,
+            imageUrl: currentPodcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/miracleplus_signal.png',
         };
     },
 
@@ -1902,10 +1908,9 @@ Page({
         const currentPodcast = podcastList[currentIndex] || {};
 
         return {
-            title: '我在奇绩前沿信号听到了这个有趣的内容',
-            query: 'share=timeline',
-            imageUrl:
-                currentPodcast.cover_url || getImageUrl('icons/share-cover.jpg'),
+            title: currentPodcast.title || '我在奇绩信号 Alpha Sight听到了这个有趣的内容',
+            query: `podcastId=${currentPodcast.id}`,
+            imageUrl: currentPodcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/miracleplus_signal.png',
         };
     },
 
@@ -1963,7 +1968,7 @@ Page({
             console.log('设置新音频源进行自动播放');
             // 设置BackgroundAudioManager的音频信息
             audioContext.title = currentPodcast.title;
-            audioContext.singer = currentPodcast.channel_name || '奇绩前沿信号';
+            audioContext.singer = currentPodcast.channel_name || '奇绩信号 Alpha Sight';
             audioContext.coverImgUrl = currentPodcast.cover_url;
             audioContext.epname = '播客节目';
             audioContext.src = newSrc;
@@ -2069,7 +2074,7 @@ Page({
 
         // 获取波形容器的实际宽度
         const query = this.createSelectorQuery();
-        query.select('.waveform-container').boundingClientRect((rect) => {
+        query.select('.waveform-progress-bar').boundingClientRect((rect) => {
             if (rect) {
                 this._waveformRect = rect;
                 this.setData({

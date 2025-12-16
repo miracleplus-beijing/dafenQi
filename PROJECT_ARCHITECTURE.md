@@ -1,8 +1,8 @@
-# 奇绩前沿信号 WeChat 小程序 - 项目架构全面分析
+# 奇绩信号 Alpha Sight WeChat 小程序 - 项目架构全面分析
 
 ## 一、项目概览
 
-**项目名称**: 奇绩前沿信号  
+**项目名称**: 奇绩信号 Alpha Sight  
 **项目类型**: WeChat 原生小程序 + Supabase 云端集成  
 **框架技术**:
 - Glass-easel (组件框架)

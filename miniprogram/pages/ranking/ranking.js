@@ -97,7 +97,7 @@ Page({
 
               let channelCoverUrl;
               if (channelId === '59e0fed4-8c47-4849-9cc3-a3b819771d65') {
-                // 奇绩前沿信号频道
+                // 奇绩信号 Alpha Sight频道
                 channelCoverUrl =
                   'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/daily_paper_report.png';
               } else if (channelId === '3f1c022b-222a-420a-9126-f96c63144ddc') {
@@ -109,7 +109,7 @@ Page({
                 channelCoverUrl =
                   podcast.channels?.cover_url ||
                   podcast.cover_url ||
-                  'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png';
+                  'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/default_cover.png';
               }
 
               return {
@@ -127,7 +127,7 @@ Page({
             });
 
             // 手动调整最热榜顺序：
-            // 1. 奇绩前沿信号 9.10 放在第一位
+            // 1. 奇绩信号 Alpha Sight 9.10 放在第一位
             // 2. Attention Is All You Need 放在第二位
             const manuallyOrderedPodcasts = this.arrangeHotRankings(podcasts);
             resolve({ success: true, data: manuallyOrderedPodcasts });
@@ -160,7 +160,7 @@ Page({
 
               let channelCoverUrl;
               if (channelId === '59e0fed4-8c47-4849-9cc3-a3b819771d65') {
-                // 奇绩前沿信号频道
+                // 奇绩信号 Alpha Sight频道
                 channelCoverUrl =
                   'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/daily_paper_report.png';
               } else if (channelId === '3f1c022b-222a-420a-9126-f96c63144ddc') {
@@ -172,7 +172,7 @@ Page({
                 channelCoverUrl =
                   podcast.channels?.cover_url ||
                   podcast.cover_url ||
-                  'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png';
+                  'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/default_cover.png';
               }
 
               return {
@@ -190,7 +190,7 @@ Page({
             });
 
             // 手动调整最新榜顺序：
-            // 1. 奇绩前沿信号 9.11 放在第一位
+            // 1. 奇绩信号 Alpha Sight 9.11 放在第一位
             const manuallyOrderedPodcasts = this.arrangeNewRankings(podcasts);
             resolve({ success: true, data: manuallyOrderedPodcasts });
           } else {
@@ -222,7 +222,7 @@ Page({
 
               let channelCoverUrl;
               if (channelId === '59e0fed4-8c47-4849-9cc3-a3b819771d65') {
-                // 奇绩前沿信号频道
+                // 奇绩信号 Alpha Sight频道
                 channelCoverUrl =
                   'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/daily_paper_report.png';
               } else if (channelId === '3f1c022b-222a-420a-9126-f96c63144ddc') {
@@ -234,7 +234,7 @@ Page({
                 channelCoverUrl =
                   podcast.channels?.cover_url ||
                   podcast.cover_url ||
-                  'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png';
+                  'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/default_cover.png';
               }
 
               return {
@@ -263,7 +263,7 @@ Page({
   // 手动调整最热榜顺序
   arrangeHotRankings: function (podcasts) {
     // 定义特定 episodes 的 ID
-    const qiji910Id = 'b1b2c3d4-e5f6-7890-abcd-ef1234567890'; // 奇绩前沿信号 9.10
+    const qiji910Id = 'b1b2c3d4-e5f6-7890-abcd-ef1234567890'; // 奇绩信号 Alpha Sight 9.10
     const attentionId = '172b5cf1-58c3-4a53-852e-6d222e890882'; // Attention Is All You Need
 
     // 找到特定的 episodes
@@ -288,7 +288,7 @@ Page({
   // 手动调整最新榜顺序
   arrangeNewRankings: function (podcasts) {
     // 定义特定 episodes 的 ID
-    const qiji911Id = 'c1b2c3d4-e5f6-7890-abcd-ef1234567890'; // 奇绩前沿信号 9.11
+    const qiji911Id = 'c1b2c3d4-e5f6-7890-abcd-ef1234567890'; // 奇绩信号 Alpha Sight 9.11
 
     // 找到特定的 episode
     const qiji911 = podcasts.find(p => p.id === qiji911Id);
@@ -351,7 +351,7 @@ Page({
       audio_url: item.audio_url,
       cover_url:
         item.cover_url ||
-        'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png',
+        'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/default_cover.png',
       duration: item.duration,
       channel: item.channel,
       play_count: item.play_count || 0,
@@ -398,7 +398,7 @@ Page({
   // 分享功能
   onShareAppMessage: function () {
     return {
-      title: `奇绩前沿信号 - 完整榜单`,
+      title: `奇绩信号 Alpha Sight - 完整榜单`,
       path: `/pages/ranking/ranking?defaultTab=${this.data.currentTab}`,
       imageUrl:
         'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/share-cover.jpg',

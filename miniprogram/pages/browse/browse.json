@@ -5,11 +5,11 @@
     "waterfall-container": "../../components/waterfall-container/waterfall-container",
     "comment-popup": "../../components/comment-popup/comment-popup"
   },
-  "navigationBarTitleText": "奇绩前沿信号",
   "navigationBarTextStyle": "black",
   "backgroundTextStyle": "light",
   "enablePullDownRefresh": false,
   "onReachBottomDistance": 50,
   "navigationBarBackgroundColor": "#f0f9ff",
-  "backgroundColor": "#f0f9ff"
+  "backgroundColor": "#f0f9ff",
+  "navigationBarTitleText": "奇绩信号 Alpha Sight"
 }

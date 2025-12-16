@@ -151,7 +151,7 @@ Component({
           const processedData = rawData.map(podcast => {
             const channelName = podcast.channels
               ? podcast.channels.name
-              : podcast.channel_name || '奇绩前沿信号';
+              : podcast.channel_name || '奇绩信号 Alpha Sight';
             return {
               id: podcast.id,
               title: podcast.title,
@@ -371,7 +371,7 @@ Component({
         return originalCoverUrl;
       }
       const baseUrl = 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/';
-      if (channelName && channelName.includes('奇绩前沿信号')) {
+      if (channelName && channelName.includes('奇绩信号 Alpha Sight')) {
         return baseUrl + 'miracleplus_signal.png';
       } else if (channelName && channelName.includes('经典论文解读')) {
         return baseUrl + 'classic_paper_interpretation.png';
@@ -401,7 +401,7 @@ Component({
             }
             return Object.assign({}, item, {
               audio_url: audioUrl,
-              channel_name: item.channels ? item.channels.name : '奇绩前沿信号',
+              channel_name: item.channels ? item.channels.name : '奇绩信号 Alpha Sight',
             });
           });
           return { success: true, data };

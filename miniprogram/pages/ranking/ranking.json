@@ -1,3 +1,5 @@
 {
-  "navigationBarTitleText": "完整榜单"
+  "navigationBarTitleText": "完整榜单",
+  "navigationBarBackgroundColor": "#FFFFFF",
+  "navigationBarTextStyle": "black"
 }

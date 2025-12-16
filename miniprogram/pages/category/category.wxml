@@ -1,174 +1,157 @@
-<!-- 分类页面 - iOS 风格重设计 -->
-<view class="category-container">
-  <!-- 搜索区域 -->
-  <view class="search-section">
-    <view class="search-bar" bindtap="goToSearch">
+<!-- miniprogram/pages/category/category.wxml -->
+<view class="category-container" bindtouchstart="touchStart" bindtouchmove="touchMove" bindtouchend="touchEnd">
+  
+  <!-- 全局纸张纹理底层 -->
+  <view class="bg-paper-pattern"></view>
+
+  <!-- 1. 搜索区域 (iOS 风格的吸顶模糊 + E-Ink 的文字质感) -->
+  <view class="search-sticky-header">
+    <view class="search-bar-frosted frosted-paper" bindtap="goToSearch">
       <t-icon name="{{icons.search}}" class="search-icon" />
-      <text class="search-placeholder">听你想听的论文</text>
+      <input disabled type="text" placeholder="听你想听的论文..." class="search-input-placeholder" />
     </view>
   </view>
 
-  <!-- 学术分类 - 横向滚动两行布局 -->
+  <!-- 2. 学术分类 (横向滚动) -->
   <view class="academic-section">
     <view class="section-header">
-      <text class="section-title">学术领域</text>
-      <text class="section-subtitle">向右滑动查看更多</text>
+      <text class="section-title font-serif">学术领域</text>
+      <text class="section-subtitle">Swipe for more</text>
     </view>
-
-    <scroll-view wx:if="{{!loading.categories}}" class="categories-scroll" scroll-x enable-flex>
-      <view class="categories-grid">
-        <!-- 第一行 -->
-        <view class="category-row">
-          <view wx:for="{{academicCategories}}" wx:key="id" wx:if="{{index < 4}}"
-                class="category-card category-card-{{index + 1}}"
-                bindtap="selectCategory"
+    
+    <scroll-view class="categories-scroll" scroll-x enable-flex>
+      <view class="categories-scroll-content">
+        <view class="categories-grid">
+          <view wx:for="{{academicCategories}}" wx:key="id" 
+                class="category-card-frosted frosted-paper"
+                bindtap="selectCategory" 
                 data-category="{{item}}">
-            <view class="category-content">
-              <text class="category-title">{{item.displayName}}</text>
-            </view>
-          </view>
-        </view>
-        <!-- 第二行 -->
-        <view class="category-row">
-          <view wx:for="{{academicCategories}}" wx:key="id" wx:if="{{index >= 4}}"
-                class="category-card category-card-{{index + 1}}"
-                bindtap="selectCategory"
-                data-category="{{item}}">
-            <view class="category-content">
-              <text class="category-title">{{item.displayName}}</text>
-            </view>
+            <view class="category-indicator"></view>
+            <text class="category-name">{{item.displayName}}</text>
           </view>
         </view>
       </view>
     </scroll-view>
-
-    <!-- 分类加载状态 - 骨架屏 -->
-    <view wx:if="{{loading.categories}}" class="categories-scroll">
-      <view class="categories-grid">
-        <view class="category-row">
-          <view wx:for="{{[1,2,3,4]}}" wx:key="index" class="skeleton-card">
-            <view class="skeleton skeleton-full"></view>
-          </view>
-        </view>
-        <view class="category-row">
-          <view wx:for="{{[1,2,3]}}" wx:key="index" class="skeleton-card">
-            <view class="skeleton skeleton-full"></view>
-          </view>
-        </view>
-      </view>
-    </view>
   </view>
 
-  <!-- 精选推荐区域 -->
+  <!-- 3. 精选推荐 (大卡片：E-Ink 排版 + iOS 玻璃层叠) -->
   <view class="featured-section">
-    <view class="section-header">
-      <text class="section-title">编辑精选</text>
-      <view class="refresh-btn" bindtap="refreshContent">
+    <view class="section-header items-center">
+      <text class="section-title font-serif italic">编辑精选</text>
+      <view class="refresh-btn-frosted" bindtap="refreshContent">
         <t-icon name="refresh" class="refresh-icon" />
-        <text>换一换</text>
+        <text>Refresh</text>
       </view>
     </view>
 
-    <view wx:if="{{!loading.featured}}" class="featured-content">
-      <view wx:for="{{featuredContent}}" wx:key="id" class="featured-card">
-        <view class="featured-cover">
-          <image src="{{item.podcast.cover_url}}"
-                 class="cover-image"
-                 mode="aspectFill"
+    <view class="featured-content">
+      <block wx:if="{{!loading.featured}}">
+        <view wx:for="{{featuredContent}}" wx:key="id" 
+              class="featured-card-large frosted-paper"
+              bindtap="playPodcast" 
+              data-item="{{item.podcast}}">
+          <!-- 背景图：带有做旧感 -->
+          <image src="{{item.podcast.cover_url}}" 
+                 class="featured-bg-image" 
+                 mode="aspectFill" 
                  lazy-load="{{lazyLoadEnabled}}" />
-          <view class="play-overlay" bindtap="playPodcast" data-item="{{item.podcast}}">
-            <t-icon name="play" class="play-icon" />
+          
+          <!-- 播放按钮 (浮动玻璃) -->
+          <view class="play-button-glass frosted-paper">
+            <t-icon name="play" size="24" />
+          </view>
+
+          <!-- 底部信息层 (核心融合点：磨砂纸感面板) -->
+          <view class="featured-info-glass frosted-paper">
+            <view class="featured-header">
+              <text class="featured-tag">Featured</text>
+              <text class="featured-read-time">{{item.podcast.duration || '?'}} MIN READ</text>
+            </view>
+            <text class="featured-title-large font-serif">{{item.podcast.title}}</text>
+            <text class="featured-desc">{{item.recommendationText}}</text>
+            <view class="featured-meta-row">
+              <view class="channel-info">
+                <view class="channel-avatar"></view>
+                <text class="channel-name">{{item.podcast.channels.name}}</text>
+              </view>
+              <text class="vol-text">Vol. {{1024 + index}}</text>
+            </view>
           </view>
         </view>
-        <view class="featured-info">
-          <text class="featured-title">{{item.podcast.title}}</text>
-          <text class="featured-description">{{item.recommendationText}}</text>
-          <view class="featured-meta">
-            <text class="channel-name">{{item.podcast.channels.name}}</text>
-            <text class="duration">{{item.podcast.duration || "时长未知"}}</text>
-          </view>
-        </view>
-      </view>
+      </block>
+      
+      <!-- 加载状态 -->
+      <block wx:if="{{loading.featured}}">
+        <view class="featured-card-large skeleton"></view>
+      </block>
 
-      <!-- 如果没有精选内容 -->
-      <view wx:if="{{featuredContent.length === 0}}" class="empty-placeholder">
-        <t-icon name="help-circle" class="empty-icon" />
-        <text>暂无精选内容</text>
-      </view>
-    </view>
-
-    <!-- 精选加载状态 - 骨架屏 -->
-    <view wx:if="{{loading.featured}}" class="featured-content">
-      <view wx:for="{{[1,2,3]}}" wx:key="index" class="skeleton-featured">
-        <view class="skeleton skeleton-cover"></view>
-        <view class="skeleton-info">
-          <view class="skeleton skeleton-line long"></view>
-          <view class="skeleton skeleton-line medium"></view>
-          <view class="skeleton skeleton-line short"></view>
-        </view>
+      <!-- 空状态 -->
+      <view wx:if="{{!loading.featured && featuredContent.length === 0}}" class="empty-placeholder">
+        <text style="color: #999; font-size: 14px; padding: 20px;">暂无精选内容</text>
       </view>
     </view>
   </view>
 
-  <!-- 排行榜区域 - Tab切换 -->
+  <!-- 4. 排行榜 (Tabs + 列表) -->
   <view class="rankings-section">
     <view class="section-header">
-      <text class="section-title">排行榜</text>
+      <text class="section-title font-serif">排行榜</text>
     </view>
 
-    <view wx:if="{{!loading.rankings}}" class="rankings-content">
-      <!-- Tab栏 -->
-      <t-tabs value="{{currentRankingTab}}" bind:change="onRankingTabChange" theme="tag" space-evenly="{{false}}">
-        <t-tab-panel label="最热" value="hot"></t-tab-panel>
-        <t-tab-panel label="最新" value="new"></t-tab-panel>
-        <t-tab-panel label="综述" value="review"></t-tab-panel>
-      </t-tabs>
+    <!-- Custom Tabs Pill -->
+    <view class="tabs-pill">
+      <view class="tab-item {{currentRankingTab === 'hot' ? 'active' : ''}}" 
+            catchtap="onRankingTabChange" data-value="hot">最热</view>
+      <view class="tab-item {{currentRankingTab === 'new' ? 'active' : ''}}" 
+            catchtap="onRankingTabChange" data-value="new">最新</view>
+      <view class="tab-item {{currentRankingTab === 'review' ? 'active' : ''}}" 
+            catchtap="onRankingTabChange" data-value="review">综述</view>
+    </view>
 
-      <!-- 榜单列表 -->
-      <view class="ranking-list">
-        <view wx:for="{{rankings[currentRankingTab]}}" wx:for-index="idx" wx:key="id"
-              class="ranking-item"
-              bindtap="playPodcast"
-              data-item="{{item}}">
-          <text class="rank-number">{{idx + 1}}</text>
-          <view class="rank-content">
-            <text class="rank-title">{{item.title}}</text>
-            <text class="rank-play-count">{{item.play_count}}次播放</text>
-          </view>
-          <t-icon name="play-circle" class="rank-play-icon" />
+    <view class="ranking-list" wx:if="{{!loading.rankings}}">
+      <view wx:for="{{rankings[currentRankingTab]}}" wx:key="id" wx:for-index="idx"
+            class="ranking-item-row"
+            bindtap="playPodcast"
+            data-item="{{item}}">
+        <text class="rank-num-serif {{idx < 3 ? 'top3' : ''}}">{{idx + 1}}</text>
+        <view class="rank-info">
+          <text class="rank-title-text">{{item.title}}</text>
+          <text class="rank-play-count">{{item.play_count}} plays</text>
+        </view>
+        <view class="rank-play-btn">
+          <t-icon name="play" size="16" />
         </view>
       </view>
-
-      <!-- 查看完整榜单按钮 -->
-      <view class="view-full-ranking-btn" bindtap="viewFullRanking">
-        <text>查看完整榜单</text>
-      </view>
+    </view>
+    
+    <!-- 加载状态 -->
+    <view wx:if="{{loading.rankings}}" style="margin-top: 10px;">
+        <view class="skeleton" style="height: 60px; border-radius: 12px; margin-bottom: 10px;"></view>
+        <view class="skeleton" style="height: 60px; border-radius: 12px; margin-bottom: 10px;"></view>
+        <view class="skeleton" style="height: 60px; border-radius: 12px;"></view>
     </view>
 
-    <!-- 排行榜加载状态 - 骨架屏 -->
-    <view wx:if="{{loading.rankings}}" class="rankings-content">
-      <view class="skeleton skeleton-line long" style="margin-bottom: 16px;"></view>
-      <view wx:for="{{[1,2,3]}}" wx:key="index" style="margin-bottom: 12px;">
-        <view class="skeleton skeleton-line medium"></view>
-      </view>
+    <view class="view-full-btn" bindtap="viewFullRanking">
+      View All Rankings
     </view>
   </view>
 
-  <!-- 底部区域 -->
+  <!-- 5. 底部加载 (保留公司 Logo + 奇迹蓝) -->
   <view class="bottom-loader">
-    <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/loading.svg" class="loader-icon" alt="加载中"></image>
+    <image src="https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/icons/loading.svg" class="loader-icon" mode="aspectFit" />
     <view class="loader-text">从源头最大化驱动创新</view>
   </view>
 
-  <!-- 手势反馈指示器 -->
+  <!-- 6. 手势反馈 (浮动玻璃胶囊) -->
   <view class="gesture-feedback" wx:if="{{showSwipeIndicator}}">
-    <view class="swipe-indicator left {{swipeDirection === 'left' ? 'active' : ''}}">
-      <t-icon name="chevron-left" class="swipe-icon" />
-      <text>个人中心</text>
+    <view class="gesture-pill frosted-paper {{swipeDirection === 'left' ? 'active' : ''}}">
+      <t-icon name="chevron-left" class="gesture-icon" />
+      <text class="gesture-text">Profile</text>
     </view>
-    <view class="swipe-indicator right {{swipeDirection === 'right' ? 'active' : ''}}">
-      <text>浏览</text>
-      <t-icon name="chevron-right" class="swipe-icon" />
+    <view class="gesture-pill frosted-paper {{swipeDirection === 'right' ? 'active' : ''}}">
+      <text class="gesture-text">Browse</text>
+      <t-icon name="chevron-right" class="gesture-icon" />
     </view>
   </view>
+
 </view>

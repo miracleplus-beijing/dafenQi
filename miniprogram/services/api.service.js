@@ -417,7 +417,7 @@ class ApiService {
         // 合并播客和频道信息
         const formattedResult = podcasts.map(podcast => ({
           ...podcast,
-          channel_name: channelsMap[podcast.channel_id]?.name || '奇绩前沿信号',
+          channel_name: channelsMap[podcast.channel_id]?.name || '奇绩信号 Alpha Sight',
         }));
 
         console.log('最终格式化结果:', formattedResult);

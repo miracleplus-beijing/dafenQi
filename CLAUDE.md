@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**奇绩前沿信号** is a WeChat miniprogram for audio podcast platform with Supabase backend integration. Built with native WeChat miniprogram framework (libVersion: 3.10.2), using glass-easel component framework, TDesign UI library (v1.10.1), and comprehensive service-oriented architecture.
+**奇绩信号 Alpha Sight** is a WeChat miniprogram for audio podcast platform with Supabase backend integration. Built with native WeChat miniprogram framework (libVersion: 3.10.2), using glass-easel component framework, TDesign UI library (v1.10.1), and comprehensive service-oriented architecture.
 
 ## Architecture
 
@@ -155,7 +155,7 @@ const { apiService } = require('../../services/api.service.js')
 
 - **`podcasts`** (34 records) - Individual podcast episodes
   - `id` (UUID) - Episode unique identifier
-  - `title` - Episode title (e.g., "奇绩前沿信号 8.1")
+  - `title` - Episode title (e.g., "奇绩信号 Alpha Sight 8.1")
   - `description` - Episode description
   - `cover_url` - Episode cover image
   - `audio_url` - Audio file URL in podcast-audios bucket

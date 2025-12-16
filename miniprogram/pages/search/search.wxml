@@ -52,7 +52,7 @@
             </view>
             <!-- 播客信息 -->
             <view class="podcast-info">
-              <view class="podcast-channel">{{item.channel_name || '奇绩前沿信号'}}</view>
+              <view class="podcast-channel">{{item.channel_name || '奇绩信号 Alpha Sight'}}</view>
               <view class="podcast-title">
                 <rich-text nodes="{{item.highlightedTitle || item.title}}"></rich-text>
               </view>

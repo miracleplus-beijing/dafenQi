@@ -40,7 +40,7 @@ App({
 
 
     onLaunch: function () {
-        console.log('奇绩前沿信号小程序启动');
+        console.log('奇绩信号 Alpha Sight小程序启动');
 
         // 检查登录状态
         this.checkLoginStatus();

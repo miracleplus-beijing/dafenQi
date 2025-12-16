@@ -440,7 +440,7 @@ class CommentService {
             ...this.formatCommentData(comment),
             // 添加播客信息
             podcast_title: podcast.title || '未知博客',
-            podcast_cover: podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png',
+            podcast_cover: podcast.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/default_cover.png',
             podcast_channel: channels.name || '未知频道',
             podcast_duration: podcast.duration || 0,
           };

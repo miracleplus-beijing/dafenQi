@@ -199,7 +199,7 @@ Page({
 
     onShareAppMessage() {
         return {
-            title: '查看我在奇绩前沿信号的评论',
+            title: '查看我在奇绩信号 Alpha Sight的评论',
             path: '/pages/browse/browse',
             imageUrl: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/share-cover.jpg',
         };
@@ -207,7 +207,7 @@ Page({
 
     onShareTimeline() {
         return {
-            title: '我在奇绩前沿信号发表了评论',
+            title: '我在奇绩信号 Alpha Sight发表了评论',
             query: 'share=timeline',
             imageUrl: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/share-cover.jpg',
         };

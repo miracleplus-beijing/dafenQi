@@ -1,62 +1,118 @@
-/* 榜单详情页面样式 - 复用分类页面样式 */
+/* 榜单详情页面样式 - Linear + Glassmorphism (Light Theme) */
+
+/* 全局容器与背景 */
 .container {
   width: 100%;
   min-height: 100vh;
-  background: white;
+  background: #F5F7FA;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F3F5F9 100%);
   position: relative;
   padding-bottom: 90px;
+  overflow-x: hidden;
+  color: #1A1A1A;
+}
+
+/* 背景光效 - 亮色主题下更柔和 */
+.bg-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  z-index: 0;
+  opacity: 0.6;
+  pointer-events: none; /* 防止遮挡点击 */
+}
+
+.bg-glow-1 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0) 70%);
+  top: -100px;
+  left: -100px;
+}
+
+.bg-glow-2 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, rgba(139, 92, 246, 0) 70%);
+  bottom: 20%;
+  right: -50px;
 }
 
 /* Header */
 .header {
-  padding: 44px 20px 0;
-  background: white;
-  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 10px 20px 0;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
 }
 
+/* Search Bar */
 .search-bar {
-  position: relative;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
-.search-input {
+.search-input-wrapper {
+  position: relative;
   width: 100%;
-  height: 42px;
-  background: #F3F3F3;
-  border: none;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.02);
   border-radius: 10px;
-  padding-left: 44px;
-  font-size: 14px;
-  color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.search-input-wrapper:focus-within {
+  background: #FFFFFF;
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.08);
 }
 
 .search-icon {
-  position: absolute;
-  left: 12px;
-  top: 9px;
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
+  opacity: 0.4;
+  margin-right: 10px;
+  /* 移除反转滤镜，保持原始深色或使用特定颜色 */
+}
+
+.search-input {
+  flex: 1;
+  height: 100%;
+  font-size: 15px;
+  color: #1A1A1A;
+}
+
+.search-placeholder {
+  color: rgba(0, 0, 0, 0.35);
 }
 
 /* Tab Navigation */
 .tab-nav {
   display: flex;
   justify-content: space-around;
-  padding: 0 35px;
-  margin-bottom: 20px;
+  padding-bottom: 4px;
 }
 
 .tab {
-  font-size: 17px;
-  font-weight: 400;
-  color: #85C2FF;
-  padding: 10px 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.5);
+  padding: 10px 12px;
   position: relative;
+  transition: all 0.3s ease;
 }
 
 .tab.active {
   color: #0884FF;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .tab.active::after {
@@ -65,124 +121,197 @@
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 100px;
-  height: 2px;
+  width: 20px;
+  height: 3px;
   background: #0884FF;
-}
-
-/* Rankings Section */
-.section {
-  padding: 20px 0;
-}
-
-.section-title {
-  font-size: 17px;
-  font-weight: 400;
-  color: #0884FF;
-  margin: 0 35px 15px;
-  display: block;
-}
-
-.ranking-item {
-  display: flex;
-  padding: 12px 35px;
-  border-bottom: 1px solid #f8f8f8;
-  align-items: center;
-}
-
-.ranking-item:active {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.ranking-number {
-  width: 40px;
-  height: 40px;
-  background: #F2F2F7;
   border-radius: 2px;
+  box-shadow: 0 2px 8px rgba(8, 132, 255, 0.3);
+}
+
+/* Content Wrapper */
+.content-wrapper {
+  position: relative;
+  z-index: 1;
+  padding: 20px;
+}
+
+/* Ranking List */
+.ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.glass-card {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  font-weight: 510;
-  color: rgba(0, 0, 0, 0.5);
-  margin-right: 15px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.02);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
+.glass-card:active {
+  transform: scale(0.99);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
+}
+
+/* Ranking Number */
+.ranking-index {
+  font-size: 18px;
+  font-weight: 700;
+  width: 28px;
+  text-align: center;
+  margin-right: 12px;
+  color: rgba(0, 0, 0, 0.3);
+  font-family: 'DIN Alternate', sans-serif;
+}
+
+/* Top 3 Styling */
+.index-1 {
+  color: #FFB800;
+  /* text-shadow: 0 2px 8px rgba(255, 184, 0, 0.2); */
+  font-size: 22px;
+}
+.index-2 {
+  color: #9CA3AF;
+  /* text-shadow: 0 2px 8px rgba(156, 163, 175, 0.2); */
+  font-size: 20px;
+}
+.index-3 {
+  color: #B45309;
+  /* text-shadow: 0 2px 8px rgba(180, 83, 9, 0.15); */
+  font-size: 20px;
+}
+
+/* Cover Image */
 .ranking-cover {
-  width: 60px;
-  height: 60px;
-  border-radius: 4px;
-  margin-right: 15px;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  margin-right: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   flex-shrink: 0;
+  background: #f0f0f0;
 }
 
-.ranking-content {
+/* Info */
+.ranking-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  margin-right: 10px;
 }
 
-.ranking-content .ranking-title {
+.ranking-title {
   font-size: 15px;
-  font-weight: 510;
-  color: rgba(0, 0, 0, 0.9);
+  font-weight: 600;
+  color: #1A1A1A;
   margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
 }
 
-.ranking-channel {
+.ranking-meta {
+  display: flex;
+  align-items: center;
   font-size: 12px;
   color: rgba(0, 0, 0, 0.5);
 }
 
-.ranking-play {
-  width: 24px;
-  height: 24px;
-  margin-left: 15px;
+.ranking-channel {
+  margin-right: 10px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.tab-content {
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-  opacity: 1;
-  transform: translateX(0);
+.ranking-stat {
+  display: flex;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
-/* 页面切换动画 */
-.page-transition {
-  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s ease;
+.stat-icon {
+  font-size: 10px;
+  margin-right: 3px;
+  opacity: 0.6;
 }
 
-.page-slide-left {
-  transform: translateX(-100%);
-  opacity: 0;
+/* Play Button */
+.play-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  transition: all 0.3s ease;
 }
 
-.page-slide-right {
-  transform: translateX(100%);
-  opacity: 0;
+.play-btn:active {
+  background: #0884FF;
+  border-color: #0884FF;
 }
 
-.page-slide-in {
-  transform: translateX(0);
-  opacity: 1;
+.play-btn:active .play-icon {
+  filter: brightness(0) invert(1); /* Active时变白 */
 }
 
-/* 底部加载区域 */
+.play-icon {
+  width: 14px;
+  height: 14px;
+  opacity: 0.6;
+  transform: translateX(1px);
+  transition: all 0.3s ease;
+  /* 默认为深色 */
+}
+
+/* Loading */
 .bottom-loader {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px 60px;
-  background: white;
+  padding: 40px 0 20px;
 }
 
 .loader-icon {
-  width: 86px;
-  height: 53px;
-  margin-bottom: 20px;
+  width: 50px;
+  height: 30px;
+  margin-bottom: 10px;
+  opacity: 0.3;
+  /* 默认加载图标可能是白色，需要反转为深色吗？如果原图黑色则不需要 */
+  /* 假设原图是黑色 */
 }
 
 .loader-text {
-  font-size: 14px;
-  color: #0884FF;
-  font-weight: 400;
-  text-align: center;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }

@@ -169,7 +169,7 @@ class AuthService {
           success: true,
           action: 'goto_login',
           user: user,
-          message: '欢迎使用奇绩前沿信号！请完善您的个人信息',
+          message: '欢迎使用奇绩信号 Alpha Sight！请完善您的个人信息',
         };
       } else {
         // 老用户，直接跳转到profile

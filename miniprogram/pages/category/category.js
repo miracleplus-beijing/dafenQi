@@ -45,7 +45,7 @@ Page({
           id: 'p1',
           title: '深度学习最新进展：Transformer架构的演进',
           cover_url:
-            'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png',
+            'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/default_cover.png',
           duration: 45,
           channels: { name: 'AI前沿' },
         },
@@ -57,7 +57,7 @@ Page({
           id: 'p2',
           title: '量子计算与机器学习的交叉研究',
           cover_url:
-            'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png',
+            'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/default_cover.png',
           duration: 38,
           channels: { name: '量子科技' },
         },
@@ -69,7 +69,7 @@ Page({
           id: 'p3',
           title: '大语言模型的伦理与社会影响',
           cover_url:
-            'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png',
+            'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/default_cover.png',
           duration: 52,
           channels: { name: 'AI伦理' },
         },
@@ -457,7 +457,7 @@ Page({
       audio_url: item.audio_url,
       cover_url:
         item.cover_url ||
-        'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/defult_cover.png',
+        'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/default_cover.png',
       duration: item.duration,
       channel: item.channel,
       play_count: item.play_count || 0,
@@ -490,7 +490,8 @@ Page({
 
   // 切换排行榜tab
   onRankingTabChange: function (e) {
-    const { value } = e.detail;
+    // 兼容 TDesign 事件和原生 dataset 事件
+    const value = e.detail?.value || e.currentTarget.dataset.value;
     console.log('切换排行榜tab:', value);
 
     // 触觉反馈
@@ -675,7 +676,7 @@ Page({
   // 分享功能
   onShareAppMessage: function () {
     return {
-      title: '奇绩前沿信号 - 发现精彩的学术内容',
+      title: '奇绩信号 Alpha Sight - 发现精彩的学术内容',
       path: '/pages/category/category',
       imageUrl:
         'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/share-cover.jpg',

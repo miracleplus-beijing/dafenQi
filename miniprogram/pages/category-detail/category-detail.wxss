@@ -90,7 +90,7 @@ page {
 /* 排序菜单 - iOS 风格优化 */
 .sort-menu {
   position: fixed;
-  top: 52px;
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;

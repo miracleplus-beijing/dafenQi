@@ -105,7 +105,7 @@ Page({
             ...podcast,
             highlightedTitle: this.highlightText(podcast.title, query),
             highlightedChannelName: this.highlightText(
-              podcast.channel_name || '奇绩前沿信号',
+              podcast.channel_name || '奇绩信号 Alpha Sight',
               query
             ),
           }))

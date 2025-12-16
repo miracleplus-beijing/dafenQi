@@ -12,9 +12,8 @@ Page({
     favoriteList: [],
     commentsData: [],
 
-    showActionModal: false,
     showLoginPrompt: false, // 显示登录提示
-    selectedItem: null,
+    currentShareItem: null, // 当前分享的播客
 
     // 加载状态
     loading: false,
@@ -31,7 +30,7 @@ Page({
 
     // 检查用户登录状态
     if (!authService.checkLoginStatus()) {
-      // 未登录用户，显示登录提示
+      // 未登录用户,显示登录提示
       this.setData({
         favoriteList: [],
         showLoginPrompt: true,
@@ -51,17 +50,40 @@ Page({
 
     this.loadFavoriteList();
   },
-  async removeFromFavorites(e) {
-    const id = e.currentTarget.dataset.id || this.data.selectedItem?.id;
 
-    if (!id) return;
+  /**
+   * 返回上一页
+   */
+  goBack: function () {
+    wx.navigateBack({
+      delta: 1,
+      fail: () => {
+        // 如果返回失败，跳转到个人中心
+        wx.switchTab({
+          url: '/pages/profile/profile',
+        });
+      },
+    });
+  },
+
+  /**
+   * 直接取消收藏（带确认）
+   */
+  async removeFromFavorites(e) {
+    const id = e.currentTarget.dataset.id;
+
+    if (!id) {
+      console.error('取消收藏：缺少播客ID');
+      return;
+    }
 
     try {
       const result = await wx.showModal({
         title: '取消收藏',
-        content: '确定要取消收藏这个内容吗？',
-        confirmText: '确定',
-        cancelText: '取消',
+        content: '确定要取消收藏这个播客吗？',
+        confirmText: '取消收藏',
+        confirmColor: '#ff3b30',
+        cancelText: '我再想想',
       });
 
       if (result.confirm) {
@@ -71,7 +93,7 @@ Page({
           mask: true,
         });
 
-        // 直接调用API删除收藏
+        // 调用API删除收藏
         const removeResult = await apiService.user.removeFavorite(
           this.data.userInfo.id,
           id
@@ -80,12 +102,10 @@ Page({
         wx.hideLoading();
 
         if (removeResult.success) {
-          // 关闭弹窗
-          this.hideActionModal();
-
           wx.showToast({
             title: '已取消收藏',
             icon: 'success',
+            duration: 1500,
           });
 
           // 重新加载收藏列表
@@ -256,43 +276,75 @@ Page({
     });
   },
 
-  // =============== 更多操作 ===============
+  // =============== 分享功能 ===============
 
-  showMoreActions(e) {
+  /**
+   * 分享播客
+   */
+  shareItem(e) {
     const item = e.currentTarget.dataset.item;
-    this.setData({
-      showActionModal: true,
-      selectedItem: item,
-    });
-  },
 
-  hideActionModal() {
-    this.setData({
-      showActionModal: false,
-      selectedItem: null,
-    });
-  },
+    if (!item) {
+      console.error('分享：缺少播客数据');
+      return;
+    }
 
-  stopPropagation() {
-    // 阻止事件冒泡，防止弹窗关闭
-  },
+    console.log('分享播客:', item);
 
-  shareItem() {
-    const item = this.data.selectedItem;
-    if (!item) return;
-
-    // 分享功能（可以后续扩展）
-    wx.showShareMenu({
-      withShareTicket: true,
-      menus: ['shareAppMessage', 'shareTimeline'],
-    });
-
-    this.hideActionModal();
-
+    // 使用微信小程序原生分享功能
+    // 注意：小程序分享需要在 onShareAppMessage 中配置
     wx.showToast({
-      title: '分享功能开发中',
+      title: '点击右上角分享',
       icon: 'none',
+      duration: 2000,
     });
+
+    // 保存当前要分享的播客数据到页面数据中
+    this.setData({
+      currentShareItem: item,
+    });
+  },
+
+  /**
+   * 分享到聊天
+   */
+  onShareAppMessage() {
+    const item = this.data.currentShareItem;
+
+    if (!item) {
+      return {
+        title: '奇绩信号 Alpha Sight - 我的收藏',
+        path: '/pages/browse/browse',
+        imageUrl: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/share-cover.jpg',
+      };
+    }
+
+    return {
+      title: `推荐播客：${item.title}`,
+      path: `/pages/browse/browse?podcastId=${item.id}`,
+      imageUrl: item.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/default_cover.png',
+    };
+  },
+
+  /**
+   * 分享到朋友圈
+   */
+  onShareTimeline() {
+    const item = this.data.currentShareItem;
+
+    if (!item) {
+      return {
+        title: '奇绩信号 Alpha Sight - 我的收藏',
+        query: 'from=timeline',
+        imageUrl: 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/share-cover.jpg',
+      };
+    }
+
+    return {
+      title: `${item.title} - 奇绩信号 Alpha Sight`,
+      query: `from=timeline&podcastId=${item.id}`,
+      imageUrl: item.cover_url || 'https://gxvfcafgnhzjiauukssj.supabase.co/storage/v1/object/public/static-images/podcast_cover/default_cover.png',
+    };
   },
 
   // =============== 数据格式化函数 ===============
