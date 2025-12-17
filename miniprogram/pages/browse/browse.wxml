@@ -11,14 +11,6 @@
     }
     </wxs>
 
-    <!-- 全局纹理背景 -->
-    <view class="bg-paper-pattern"></view>
-    
-    <!-- 背景装饰光斑 -->
-    <view class="bg-decoration-blob blob-1"></view>
-    <view class="bg-decoration-blob blob-2"></view>
-    <view class="bg-decoration-blob blob-3"></view>
-
     <!-- 漫游页面主体 -->
     <view class="browse-page">
 

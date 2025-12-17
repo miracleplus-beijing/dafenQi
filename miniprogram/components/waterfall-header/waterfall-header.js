@@ -150,6 +150,12 @@ Component({
       const option = this.data.sortOptions.find(item => item.value === value);
       return option ? option.label : '';
     },
+
+    // 防止事件冒泡（新增）
+    preventBubble: function (e) {
+      // 阻止事件冒泡，避免点击下拉面板时触发遮罩层的关闭事件
+      return false;
+    },
   },
 
   /**

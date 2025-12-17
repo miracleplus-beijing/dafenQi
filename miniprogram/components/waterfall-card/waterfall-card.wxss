@@ -1,188 +1,290 @@
-/* 瀑布流卡片组件样式 */
+/* 瀑布流卡片组件 - Frosted Paper Theme */
+
+/* ========== 主题色变量 ========== */
+page {
+  --card-bg: #ffffff;
+  --card-shadow-base: 0 2rpx 10rpx rgba(0, 0, 0, 0.02);
+  --card-shadow-hover: 0 4rpx 20rpx rgba(8, 132, 255, 0.08);
+  --theme-blue: rgb(8, 132, 255);
+  --theme-blue-light: rgba(8, 132, 255, 0.1);
+  --theme-red: #ef4444;
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a5568;
+  --text-tertiary: #9ca3af;
+  --border-light: rgba(0, 0, 0, 0.03);
+}
+
+/* ========== 卡片容器 ========== */
 .waterfall-card {
-  background: var(--bg-primary);
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-sm);
+  background: var(--card-bg);
+  border-radius: 20rpx;
   overflow: hidden;
+  border: 1rpx solid var(--border-light);
+  box-shadow: var(--card-shadow-base);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  margin-bottom: 24rpx;
   position: relative;
-  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-  margin-bottom: var(--spacing-md);
 }
 
 .waterfall-card:active {
   transform: scale(0.98);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--card-shadow-hover);
 }
 
-.waterfall-card.selected {
-  border: 2px solid var(--accent-color);
-  box-shadow: 0 0 0 4px rgba(237, 137, 54, 0.1);
+/* 播放中的卡片特殊样式 */
+.waterfall-card.playing {
+  border-color: rgba(8, 132, 255, 0.2);
+  box-shadow: 0 4rpx 20rpx rgba(8, 132, 255, 0.15);
 }
 
-/* 选择指示器 */
-.select-indicator {
-  position: absolute;
-  top: 16rpx;
-  right: 16rpx;
-  z-index: 10;
-  width: 48rpx;
-  height: 48rpx;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(8rpx);
-}
-
-/* 封面区域 */
-.card-cover {
+/* ========== 封面区域 ========== */
+.card-cover-wrapper {
   position: relative;
   width: 100%;
-  height: 280rpx;
+  /* 动态高度：根据图片比例自适应 */
+  aspect-ratio: 4/3;
   overflow: hidden;
+  background: linear-gradient(135deg, #e0e7ff 0%, #cffafe 100%);
 }
 
 .cover-image {
   width: 100%;
   height: 100%;
-  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
-  transition: transform 0.3s ease;
+  transition: transform 0.5s ease;
 }
 
 .waterfall-card:active .cover-image {
   transform: scale(1.05);
 }
 
-/* 播放状态指示器 */
-.play-indicator {
+/* ========== 正在播放态遮罩 ========== */
+.playing-overlay {
   position: absolute;
-  top: 16rpx;
-  left: 16rpx;
-  z-index: 5;
-}
-
-.play-waves {
+  inset: 0;
+  background: rgba(8, 132, 255, 0.25);
+  backdrop-filter: blur(2rpx);
   display: flex;
-  gap: 4rpx;
-  align-items: end;
-  height: 32rpx;
+  align-items: center;
+  justify-content: center;
+  animation: playingPulse 2s ease-in-out infinite;
 }
 
-.wave {
-  width: 6rpx;
-  background: var(--accent-color);
-  border-radius: 3rpx;
-  animation: wave 1.2s ease-in-out infinite;
+@keyframes playingPulse {
+  0%, 100% {
+    background: rgba(8, 132, 255, 0.2);
+  }
+  50% {
+    background: rgba(8, 132, 255, 0.3);
+  }
 }
 
-.wave:nth-child(2) {
-  animation-delay: 0.1s;
+/* 播放脉冲图标 */
+.play-pulse-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: 2rpx solid rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10rpx);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  animation: iconPulse 1.5s ease-in-out infinite;
 }
 
-.wave:nth-child(3) {
-  animation-delay: 0.2s;
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10rpx rgba(255, 255, 255, 0);
+  }
 }
 
-@keyframes wave {
-  0%, 40%, 100% {
+/* 脉冲条（播放波形动画） */
+.pulse-bar {
+  width: 4rpx;
+  height: 16rpx;
+  background: #ffffff;
+  border-radius: 2rpx;
+  animation: barPulse 1s ease-in-out infinite;
+}
+
+.pulse-bar:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.pulse-bar:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes barPulse {
+  0%, 100% {
     height: 8rpx;
   }
-  20% {
-    height: 32rpx;
+  50% {
+    height: 24rpx;
   }
 }
 
-/* 时长标识 */
+/* ========== 时长标识 ========== */
 .duration-badge {
   position: absolute;
-  bottom: 16rpx;
-  right: 16rpx;
-  background: rgba(0, 0, 0, 0.7);
+  bottom: 12rpx;
+  right: 12rpx;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4rpx);
   color: #ffffff;
-  padding: 8rpx 12rpx;
-  border-radius: var(--border-radius-sm);
-  font-size: var(--font-size-xs);
-  backdrop-filter: blur(8rpx);
+  padding: 6rpx 10rpx;
+  border-radius: 8rpx;
+  font-size: 20rpx;
+  font-family: monospace;
+  z-index: 2;
 }
 
-/* 播放悬浮层 */
-.play-overlay {
+/* ========== 播放按钮悬浮层 ========== */
+.play-btn-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  z-index: 3;
 }
 
-.waterfall-card:active .play-overlay {
+.waterfall-card:active .play-btn-overlay {
   opacity: 1;
+  background: rgba(0, 0, 0, 0.25);
 }
 
-/* 卡片信息区域 */
-.card-info {
-  padding: var(--spacing-md);
+.play-btn-circle {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8rpx 24rpx rgba(8, 132, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
 }
 
+.waterfall-card:active .play-btn-circle {
+  transform: scale(1);
+}
+
+/* ========== 卡片主体内容 ========== */
+.card-body {
+  padding: 24rpx;
+  background: var(--card-bg);
+}
+
+/* 标题 */
 .card-title {
   color: var(--text-primary);
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-semibold);
+  font-size: 28rpx;
+  font-weight: 600;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: 16rpx;
+  letter-spacing: 0.3rpx;
 }
 
-.channel-info {
+/* ========== 底部操作栏 ========== */
+.card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--spacing-sm);
+  margin-top: 12rpx;
 }
 
-.channel-name {
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+/* 频道标签 */
+.channel-tag {
+  flex: 1;
+  padding: 6rpx 12rpx;
+  background: rgba(8, 132, 255, 0.06);
+  border: 1rpx solid rgba(8, 132, 255, 0.12);
+  border-radius: 8rpx;
+  display: inline-flex;
+  align-items: center;
+  max-width: fit-content;
 }
 
-.publish-time {
-  color: var(--text-tertiary);
-  font-size: var(--font-size-xs);
+.tag-text {
+  font-size: 22rpx;
+  color: var(--theme-blue);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200rpx;
 }
 
-/* 快速操作 */
-.quick-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-sm);
-}
-
+/* 操作按钮 */
 .action-btn {
-  width: 56rpx;
-  height: 56rpx;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: var(--bg-secondary);
+  background: rgba(156, 163, 175, 0.08);
   transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-left: 12rpx;
 }
 
 .action-btn:active {
   transform: scale(0.9);
-  background: var(--secondary-dark);
+  background: rgba(156, 163, 175, 0.15);
 }
 
 .action-btn.favorited {
-  background: rgba(237, 137, 54, 0.1);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.action-btn.favorited:active {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* ========== 空状态占位 ========== */
+.cover-image[src=""],
+.cover-image:not([src]) {
+  background: linear-gradient(135deg, #e0e7ff 0%, #cffafe 100%);
+}
+
+/* ========== 图片加载动画 ========== */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.cover-image {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.cover-image[data-loaded="true"] {
+  animation: none;
+  background: none;
 }

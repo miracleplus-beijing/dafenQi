@@ -52,66 +52,7 @@ page {
     background-color: var(--bg-paper);
 }
 
-/* 纸张纹理 - 点阵 */
-.bg-paper-pattern {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    /* 使用径向渐变模拟点阵纸 */
-    background-image: 
-        radial-gradient(#a3a3a3 1rpx, transparent 1rpx), 
-        radial-gradient(#a3a3a3 1rpx, var(--bg-paper) 1rpx);
-    background-size: 40rpx 40rpx;
-    background-position: 0 0, 20rpx 20rpx;
-    opacity: 0.6;
-    pointer-events: none;
-    z-index: 0;
-}
-
-/* 背景装饰光斑 (Blobs) */
-.bg-decoration-blob {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    mix-blend-mode: multiply;
-    opacity: 0.6;
-    z-index: 0;
-    pointer-events: none;
-}
-
-.blob-1 {
-    top: -10%;
-    right: -20%;
-    width: 600rpx;
-    height: 600rpx;
-    /* 浅棕色 (Light Brown) - 梦幻暖色调 */
-    background: rgba(210, 180, 140, 0.4);
-    animation: blobPulse 8s infinite alternate;
-}
-
-.blob-2 {
-    bottom: -10%;
-    left: -20%;
-    width: 600rpx;
-    height: 600rpx;
-    /* 浅蓝色 (Light Blue) - 梦幻冷色调 */
-    background: rgba(135, 206, 235, 0.4);
-    animation: blobPulse 10s infinite alternate-reverse;
-}
-
-.blob-3 {
-    top: 30%;
-    left: 10%;
-    width: 300rpx;
-    height: 300rpx;
-    background: rgba(8, 132, 255, 0.1);
-}
-
-@keyframes blobPulse {
-    0% { transform: scale(1); opacity: 0.6; }
-    100% { transform: scale(1.1); opacity: 0.4; }
-}
+/* 纸张纹理和光斑已移除，保持简洁背景 */
 
 /* === 3. 漫游页面主体 (Main Layout) === */
 .browse-page {

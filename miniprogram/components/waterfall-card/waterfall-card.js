@@ -148,6 +148,12 @@ Component({
 
    
 
+    // 卡片点击事件（新增）
+    handleCardTap: function (e) {
+      // 不做任何操作，只作为视觉反馈容器
+      // 实际的播放操作由内部的 play-btn-overlay 触发
+    },
+
     // 长按卡片（不再进入批量模式）
     handleCardLongPress: function () {
       const podcast = this.properties.podcast;

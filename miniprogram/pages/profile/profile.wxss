@@ -117,15 +117,15 @@ page {
 .logged-in-view {
   position: relative;
   z-index: 1;
-  padding: calc(env(safe-area-inset-top) + 60rpx) 32rpx 40rpx;
+  padding: calc(env(safe-area-inset-top) + 40rpx) 32rpx 40rpx;
   display: flex;
   flex-direction: column;
-  gap: 48rpx;
+  gap: 32rpx;
 }
 
 /* 用户信息卡片 */
 .user-card {
-  padding: 80rpx 48rpx;
+  padding: 48rpx 48rpx;
   border-radius: var(--radius-card);
   display: flex;
   flex-direction: column;
@@ -156,9 +156,9 @@ page {
   padding: 0;
   background: transparent;
   border: none;
-  width: 160rpx;
-  height: 160rpx;
-  margin-bottom: 32rpx;
+  width: 140rpx;
+  height: 140rpx;
+  margin-bottom: 24rpx;
   z-index: 10;
 }
 
@@ -167,8 +167,8 @@ page {
 }
 
 .avatar-border {
-  width: 160rpx;
-  height: 160rpx;
+  width: 140rpx;
+  height: 140rpx;
   padding: 8rpx;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -206,13 +206,13 @@ page {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16rpx;
+  gap: 12rpx;
   z-index: 10;
 }
 
 .user-name {
   font-family: 'Times New Roman', serif;
-  font-size: 48rpx;
+  font-size: 40rpx;
   font-weight: 700;
   color: var(--text-main);
   line-height: 1.2;
@@ -330,7 +330,7 @@ page {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 160rpx 64rpx;
+  padding: 80rpx 48rpx;
   position: relative;
   z-index: 1;
 }
@@ -339,7 +339,7 @@ page {
 .login-card {
   width: 100%;
   border-radius: var(--radius-card);
-  padding: 80rpx 64rpx 64rpx;
+  padding: 56rpx 48rpx 48rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -394,14 +394,14 @@ page {
 
 /* Hero Icon */
 .login-icon-wrapper {
-  width: 192rpx;
-  height: 192rpx;
+  width: 160rpx;
+  height: 160rpx;
   background: linear-gradient(135deg, var(--primary-blue) 0%, #3b9eff 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 64rpx;
+  margin-bottom: 48rpx;
   color: #ffffff;
   box-shadow: 0 8rpx 24rpx rgba(8, 132, 255, 0.3);
   position: relative;
@@ -411,19 +411,19 @@ page {
 
 /* Title */
 .login-title {
-  font-size: 60rpx;
+  font-size: 48rpx;
   font-weight: 700;
   color: var(--text-main);
   letter-spacing: -1rpx;
-  margin-bottom: 16rpx;
+  margin-bottom: 12rpx;
   position: relative;
   z-index: 10;
 }
 
 .login-subtitle {
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: var(--text-secondary);
-  margin-bottom: 80rpx;
+  margin-bottom: 56rpx;
   line-height: 1.5;
   max-width: 400rpx;
   position: relative;
@@ -434,10 +434,10 @@ page {
 /* Features List */
 .login-features {
   width: 100%;
-  margin-bottom: 80rpx;
+  margin-bottom: 56rpx;
   display: flex;
   flex-direction: column;
-  gap: 40rpx;
+  gap: 28rpx;
   text-align: left;
   position: relative;
   z-index: 10;
@@ -446,9 +446,9 @@ page {
 .feature-item {
   display: flex;
   align-items: center;
-  gap: 32rpx;
-  padding: 16rpx;
-  border-radius: 24rpx;
+  gap: 24rpx;
+  padding: 12rpx;
+  border-radius: 20rpx;
   transition: background-color 0.2s;
 }
 
@@ -457,8 +457,8 @@ page {
 }
 
 .feature-icon {
-  width: 64rpx;
-  height: 64rpx;
+  width: 56rpx;
+  height: 56rpx;
   border-radius: 50%;
   background: rgba(16, 185, 129, 0.1);
   display: flex;
@@ -471,7 +471,7 @@ page {
 }
 
 .feature-text {
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: var(--text-secondary);
   font-weight: 500;
 }
@@ -479,13 +479,13 @@ page {
 /* Login Button */
 .login-button {
   width: 100%;
-  height: 96rpx;
+  height: 88rpx;
   background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
   border: none;
-  border-radius: 32rpx;
+  border-radius: 28rpx;
   box-shadow: 0 20rpx 40rpx -20rpx rgba(0, 0, 0, 0.5);
   color: #ffffff;
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -562,24 +562,24 @@ page {
 /* === 9. 响应式设计 === */
 @media (max-width: 375px) {
   .user-card {
-    padding: 60rpx 32rpx;
+    padding: 40rpx 32rpx;
   }
 
   .avatar-wrapper,
   .avatar-border {
-    width: 140rpx;
-    height: 140rpx;
+    width: 120rpx;
+    height: 120rpx;
   }
 
   .user-name {
-    font-size: 44rpx;
+    font-size: 36rpx;
   }
 
   .login-card {
-    padding: 64rpx 48rpx 48rpx;
+    padding: 48rpx 40rpx 40rpx;
   }
 
   .login-title {
-    font-size: 52rpx;
+    font-size: 44rpx;
   }
 }

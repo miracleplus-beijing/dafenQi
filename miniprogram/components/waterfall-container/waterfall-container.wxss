@@ -1,108 +1,192 @@
-/* 瀑布流容器组件样式（从 browse.wxss 按需下沉，保持视觉零变更） */
+/* 瀑布流容器组件 - Frosted Paper Theme */
 
-/* 容器根节点（与页面 .waterfall-mode 一致） */
+/* ========== 主题色变量 ========== */
+page {
+  --bg-paper: #Fdfbf7;
+  --theme-blue: rgb(8, 132, 255);
+  --theme-blue-light: rgba(8, 132, 255, 0.1);
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a5568;
+  --text-tertiary: #9ca3af;
+}
+
+/* ========== 容器根节点 ========== */
 .waterfall-mode {
   width: 100%;
-  height: 100vh;
-  background: var(--bg-primary);
+  min-height: 100vh;
+  background: var(--bg-paper);
   display: flex;
   flex-direction: column;
-  opacity: 1;
-  transform: translateX(0);
-  transition: all var(--animation-duration) var(--animation-timing);
+  position: relative;
 }
 
-.waterfall-mode.hiding {
-  opacity: 0;
-  transform: translateX(100%);
-}
-
-/* 内容滚动区域 */
+/* ========== 内容滚动区域 ========== */
 .waterfall-content {
-  flex: 1;
-  height: 0;
-  transform: translateZ(0);
+  width: 100%;
+  height: calc(100vh - 240rpx); /* 减去header高度 */
+  overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
-  will-change: scroll-position;
-  overscroll-behavior: contain;
+  position: relative;
+  z-index: 10;
 }
 
-/* 双列布局 */
+/* 隐藏滚动条（可选） */
+.waterfall-content::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* ========== 双列布局网格 ========== */
 .waterfall-grid {
   display: flex;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-  contain: layout style;
+  gap: 24rpx;
+  padding: 24rpx;
 }
 
 .grid-column {
   flex: 1;
   display: flex;
   flex-direction: column;
-  transform: translateZ(0);
-  will-change: contents;
 }
 
-/* 卡片进入动画 */
+/* 右列错位效果（与参考设计保持一致） - 如不需要可移除 */
+.grid-column.right-column {
+  /* padding-top: 48rpx; */ /* 已移除错位效果 */
+}
+
+/* ========== 卡片进入动画 ========== */
+/* 暂时注释掉动画，用于调试 */
+/*
 .waterfall-card {
   opacity: 0;
-  transform: translateY(30rpx) scale(0.9);
-  animation: cardFadeIn 0.4s var(--animation-timing) forwards;
+  transform: translateY(30rpx) scale(0.95);
+  animation: cardFadeIn 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
 }
 
-.waterfall-card:nth-child(even) { animation-delay: 0.1s; }
-.waterfall-card:nth-child(odd) { animation-delay: 0.05s; }
+.waterfall-card:nth-child(1) { animation-delay: 0.05s; }
+.waterfall-card:nth-child(2) { animation-delay: 0.1s; }
+.waterfall-card:nth-child(3) { animation-delay: 0.15s; }
+.waterfall-card:nth-child(4) { animation-delay: 0.2s; }
+.waterfall-card:nth-child(5) { animation-delay: 0.25s; }
 
 @keyframes cardFadeIn {
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
+*/
 
-/* 头部进入动画 */
-.waterfall-header {
-  opacity: 0;
-  transform: translateY(-20rpx);
-  animation: headerSlideDown 0.3s var(--animation-timing) forwards;
-}
-
-@keyframes headerSlideDown {
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* 加载/空态 */
+/* ========== 加载更多指示器 ========== */
 .waterfall-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-lg);
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
+  gap: 16rpx;
+  padding: 48rpx 24rpx;
+  color: var(--text-tertiary);
+  font-size: 26rpx;
 }
 
+.waterfall-loading text {
+  font-weight: 500;
+  letter-spacing: 0.5rpx;
+}
+
+/* ========== 没有更多数据 ========== */
 .no-more-data {
   text-align: center;
-  padding: var(--spacing-lg);
+  padding: 48rpx 24rpx;
   color: var(--text-tertiary);
-  font-size: var(--font-size-sm);
+  font-size: 24rpx;
+  font-weight: 500;
+  letter-spacing: 0.5rpx;
 }
 
+/* ========== 空状态 ========== */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-4xl) var(--spacing-lg);
+  padding: 120rpx 48rpx;
   color: var(--text-tertiary);
   text-align: center;
+  min-height: 60vh;
 }
 
 .empty-text {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-medium);
-  margin: var(--spacing-md) 0 var(--spacing-sm);
+  font-size: 32rpx;
+  font-weight: 600;
+  margin: 32rpx 0 16rpx;
+  color: var(--text-secondary);
+  letter-spacing: 0.5rpx;
 }
 
 .empty-hint {
-  font-size: var(--font-size-sm);
+  font-size: 26rpx;
   opacity: 0.7;
+  line-height: 1.5;
+  max-width: 400rpx;
+  letter-spacing: 0.3rpx;
+}
+
+/* ========== 性能优化 ========== */
+/* 暂时注释掉 contain，用于调试 */
+/*
+.waterfall-content,
+.waterfall-grid,
+.grid-column {
+  contain: layout style;
+}
+
+.waterfall-card {
+  contain: layout style paint;
+  will-change: transform, opacity;
+}
+*/
+
+/* ========== 响应式适配 ========== */
+@media (max-width: 375px) {
+  .waterfall-grid {
+    gap: 16rpx;
+    padding: 16rpx;
+  }
+
+  .grid-column.right-column {
+    padding-top: 32rpx;
+  }
+
+  .waterfall-loading,
+  .no-more-data,
+  .empty-state {
+    padding-left: 16rpx;
+    padding-right: 16rpx;
+  }
+
+  .empty-text {
+    font-size: 30rpx;
+  }
+
+  .empty-hint {
+    font-size: 24rpx;
+  }
+}
+
+/* ========== 下拉刷新动画优化 ========== */
+.waterfall-content {
+  overscroll-behavior: contain;
+}
+
+/* ========== 模式切换动画 ========== */
+.waterfall-mode.hiding {
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.waterfall-mode {
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

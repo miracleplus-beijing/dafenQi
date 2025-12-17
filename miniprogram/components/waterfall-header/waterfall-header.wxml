@@ -1,91 +1,85 @@
-<!-- 瀑布流头部搜索筛选组件 -->
-<view class="waterfall-header">
-  <!-- 搜索栏 -->
-  <view class="search-section">
-    <t-search
-      value="{{searchValue}}"
-      placeholder="搜索播客、频道、作者..."
-      bind:change="handleSearchChange"
-      bind:submit="handleSearchSubmit"
-      bind:clear="handleSearchClear"
-      class="search-input" />
-  </view>
+<!-- 瀑布流头部搜索筛选组件 - Frosted Paper Theme -->
+<view class="waterfall-header frosted-paper-header">
 
-  <!-- 筛选栏 -->
-  <view class="filter-section">
-    <!-- 主筛选tab栏 -->
-    <view class="main-filter-tabs">
-      <!-- 分类tab -->
-      <view class="filter-tab {{currentActiveTab === 'category' ? 'active' : ''}} {{filterOptions.category ? 'has-selection' : ''}}"
-            bindtap="toggleFilterTab" data-tab="category">
-        <view>
-          <text class="tab-title">分类</text>
-          <text wx:if="{{filterOptions.category}}" class="tab-selection">{{getCategoryLabel(filterOptions.category)}}</text>
-        </view>
-        <t-icon name="{{currentActiveTab === 'category' ? 'chevron-up' : 'chevron-down'}}" size="28rpx" class="tab-arrow" />
-      </view>
-
-      <!-- 时间tab -->
-      <view class="filter-tab {{currentActiveTab === 'time' ? 'active' : ''}} {{filterOptions.timeRange ? 'has-selection' : ''}}"
-            bindtap="toggleFilterTab" data-tab="time">
-        <view>
-          <text class="tab-title">时间</text>
-          <text wx:if="{{filterOptions.timeRange}}" class="tab-selection">{{getTimeLabel(filterOptions.timeRange)}}</text>
-        </view>
-        <t-icon name="{{currentActiveTab === 'time' ? 'chevron-up' : 'chevron-down'}}" size="28rpx" class="tab-arrow" />
-      </view>
-
-      <!-- 排序tab -->
-      <view class="filter-tab {{currentActiveTab === 'sort' ? 'active' : ''}} {{filterOptions.sortType !== 'latest' ? 'has-selection' : ''}}"
-            bindtap="toggleFilterTab" data-tab="sort">
-        <view>
-          <text class="tab-title">排序</text>
-          <text wx:if="{{filterOptions.sortType !== 'latest'}}" class="tab-selection">{{getSortLabel(filterOptions.sortType)}}</text>
-        </view>
-        <t-icon name="{{currentActiveTab === 'sort' ? 'chevron-up' : 'chevron-down'}}" size="28rpx" class="tab-arrow" />
-      </view>
-
-      <!-- 清除筛选按钮 -->
-      <view wx:if="{{hasActiveFilters}}" class="clear-btn" bindtap="clearFilters">
-        <t-icon name="refresh" size="32rpx" color="#ed8936" />
+  <!-- 搜索栏 (Frosted Glass) -->
+  <view class="search-wrapper frosted-glass-search">
+    <view class="search-inner">
+      <t-icon name="search" size="40rpx" color="#9ca3af" class="search-icon" />
+      <input class="search-input"
+             type="text"
+             placeholder="搜索播客、话题..."
+             value="{{searchValue}}"
+             bindinput="handleSearchChange"
+             bindconfirm="handleSearchSubmit"
+             placeholder-class="search-placeholder"
+             confirm-type="search" />
+      <view wx:if="{{searchValue}}" class="clear-icon" bindtap="handleSearchClear">
+        <t-icon name="close" size="32rpx" color="#9ca3af" />
       </view>
     </view>
+  </view>
 
-    <!-- 下拉选项面板 -->
-    <view wx:if="{{currentActiveTab}}" class="dropdown-panel">
+  <!-- 筛选标签 (水平滚动) -->
+  <scroll-view class="filter-tags-scroll" scroll-x enable-flex scroll-with-animation>
+    <view class="filter-tags-container">
+      <!-- 全部 tag -->
+      <view class="filter-tag {{!hasActiveFilters ? 'active' : ''}}" bindtap="clearFilters">
+        <text class="tag-label">全部</text>
+      </view>
+
+      <!-- 分类 tag -->
+      <view class="filter-tag {{filterOptions.category ? 'active' : ''}}"
+            bindtap="toggleFilterTab" data-tab="category">
+        <text class="tag-label">{{filterOptions.category ? getCategoryLabel(filterOptions.category) : '分类'}}</text>
+      </view>
+
+      <!-- 时间 tag -->
+      <view class="filter-tag {{filterOptions.timeRange ? 'active' : ''}}"
+            bindtap="toggleFilterTab" data-tab="time">
+        <text class="tag-label">{{filterOptions.timeRange ? getTimeLabel(filterOptions.timeRange) : '时间'}}</text>
+      </view>
+
+      <!-- 排序 tag -->
+      <view class="filter-tag {{filterOptions.sortType !== 'latest' ? 'active' : ''}}"
+            bindtap="toggleFilterTab" data-tab="sort">
+        <text class="tag-label">{{filterOptions.sortType !== 'latest' ? getSortLabel(filterOptions.sortType) : '排序'}}</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 下拉选项面板 (与参考设计一致的下拉面板) -->
+  <view wx:if="{{currentActiveTab}}" class="dropdown-overlay" catchtap="closeDropdown">
+    <view class="dropdown-panel frosted-glass-panel" catchtap="preventBubble">
       <!-- 分类选项 -->
-      <view wx:if="{{currentActiveTab === 'category'}}" class="option-group">
+      <scroll-view wx:if="{{currentActiveTab === 'category'}}" class="option-scroll" scroll-y>
         <view wx:for="{{categoryOptions}}" wx:key="value"
               class="option-item {{filterOptions.category === item.value ? 'selected' : ''}}"
               bindtap="handleOptionSelect" data-type="category" data-value="{{item.value}}">
           <text class="option-label">{{item.label}}</text>
-          <t-icon wx:if="{{filterOptions.category === item.value}}" name="check" size="32rpx" color="#ed8936" />
+          <t-icon wx:if="{{filterOptions.category === item.value}}" name="check-circle-filled" size="40rpx" color="#0884ff" />
         </view>
-      </view>
+      </scroll-view>
 
       <!-- 时间选项 -->
-      <view wx:if="{{currentActiveTab === 'time'}}" class="option-group">
+      <scroll-view wx:if="{{currentActiveTab === 'time'}}" class="option-scroll" scroll-y>
         <view wx:for="{{timeOptions}}" wx:key="value"
               class="option-item {{filterOptions.timeRange === item.value ? 'selected' : ''}}"
               bindtap="handleOptionSelect" data-type="timeRange" data-value="{{item.value}}">
           <text class="option-label">{{item.label}}</text>
-          <t-icon wx:if="{{filterOptions.timeRange === item.value}}" name="check" size="32rpx" color="#ed8936" />
+          <t-icon wx:if="{{filterOptions.timeRange === item.value}}" name="check-circle-filled" size="40rpx" color="#0884ff" />
         </view>
-      </view>
+      </scroll-view>
 
       <!-- 排序选项 -->
-      <view wx:if="{{currentActiveTab === 'sort'}}" class="option-group">
+      <scroll-view wx:if="{{currentActiveTab === 'sort'}}" class="option-scroll" scroll-y>
         <view wx:for="{{sortOptions}}" wx:key="value"
               class="option-item {{filterOptions.sortType === item.value ? 'selected' : ''}}"
               bindtap="handleOptionSelect" data-type="sortType" data-value="{{item.value}}">
           <text class="option-label">{{item.label}}</text>
-          <t-icon wx:if="{{filterOptions.sortType === item.value}}" name="check" size="32rpx" color="#ed8936" />
+          <t-icon wx:if="{{filterOptions.sortType === item.value}}" name="check-circle-filled" size="40rpx" color="#0884ff" />
         </view>
-      </view>
+      </scroll-view>
     </view>
-
-    <!-- 下拉面板遮罩 -->
-    <view wx:if="{{currentActiveTab}}" class="dropdown-mask" bindtap="closeDropdown"></view>
   </view>
 
 </view>

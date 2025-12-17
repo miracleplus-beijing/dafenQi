@@ -1,16 +1,9 @@
-<!-- 瀑布流卡片组件 -->
-<view class="waterfall-card {{isSelected ? 'selected' : ''}}"
-      bindlongpress="handleCardLongPress">
-
-  <!-- 选择标识 -->
-  <view wx:if="{{batchMode}}" class="select-indicator">
-    <t-icon name="{{isSelected ? 'check-circle-filled' : 'circle'}}"
-            size="32rpx"
-            color="{{isSelected ? '#ed8936' : '#cbd5e0'}}" />
-  </view>
+<!-- 瀑布流卡片组件 - Frosted Paper Theme -->
+<view class="waterfall-card {{isSelected ? 'selected' : ''}} {{isPlaying ? 'playing' : ''}}"
+      bindtap="handleCardTap">
 
   <!-- 播客封面 -->
-  <view class="card-cover">
+  <view class="card-cover-wrapper">
     <image src="{{podcast.cover_url}}"
            class="cover-image"
            mode="aspectFill"
@@ -18,12 +11,12 @@
            bindload="handleImageLoad"
            binderror="handleImageError" />
 
-    <!-- 播放状态指示器 -->
-    <view wx:if="{{isPlaying}}" class="play-indicator">
-      <view class="play-waves">
-        <view class="wave"></view>
-        <view class="wave"></view>
-        <view class="wave"></view>
+    <!-- 正在播放态遮罩 (蓝色毛玻璃 + 波形动画) -->
+    <view wx:if="{{isPlaying}}" class="playing-overlay">
+      <view class="play-pulse-icon">
+        <view class="pulse-bar"></view>
+        <view class="pulse-bar"></view>
+        <view class="pulse-bar"></view>
       </view>
     </view>
 
@@ -32,37 +25,32 @@
       <text>{{formattedDuration}}</text>
     </view>
 
-    <!-- 播放按钮悬浮层 -->
-    <view class="play-overlay" bindtap="handlePlayTap" data-prevent-bubble="true">
-      <t-icon name="play" size="48rpx" color="#ffffff" />
+    <!-- 播放按钮悬浮层 (非播放态显示) -->
+    <view wx:if="{{!isPlaying}}" class="play-btn-overlay" catchtap="handlePlayTap">
+      <view class="play-btn-circle">
+        <t-icon name="play" size="40rpx" color="#0884ff" />
+      </view>
     </view>
   </view>
 
   <!-- 卡片信息 -->
-  <view class="card-info">
+  <view class="card-body">
     <!-- 标题 -->
     <text class="card-title">{{podcast.title}}</text>
 
-    <!-- 频道信息 -->
-    <view class="channel-info">
-      <text class="channel-name">{{podcast.channel_name}}</text>
-      <!-- <text class="publish-time">{{formattedTime}}</text> -->
-    </view>
-
-   
-
-    <!-- 快速操作 -->
-    <view class="quick-actions">
-      <view class="action-btn {{podcast.isFavorited ? 'favorited' : ''}}"
-            bindtap="handleFavoriteTap"
-            data-prevent-bubble="true">
-        <t-icon name="{{podcast.isFavorited ? 'heart-filled' : 'heart'}}"
-                size="32rpx"
-                color="{{podcast.isFavorited ? '#ed8936' : '#718096'}}" />
+    <!-- 底部操作栏 -->
+    <view class="card-footer">
+      <!-- 左侧：频道标签 -->
+      <view class="channel-tag">
+        <text class="tag-text">{{podcast.channel_name || '奇绩信号'}}</text>
       </view>
 
-      <view class="action-btn" bindtap="handleMoreTap" data-prevent-bubble="true">
-        <t-icon name="more" size="32rpx" color="#718096" />
+      <!-- 右侧：收藏按钮 -->
+      <view class="action-btn {{podcast.isFavorited ? 'favorited' : ''}}"
+            catchtap="handleFavoriteTap">
+        <t-icon name="{{podcast.isFavorited ? 'heart-filled' : 'heart'}}"
+                size="32rpx"
+                color="{{podcast.isFavorited ? '#ef4444' : '#9ca3af'}}" />
       </view>
     </view>
   </view>
