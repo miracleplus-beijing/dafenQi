@@ -18,16 +18,7 @@
 
   <!-- 内容区域 -->
   <view wx:else class="content-wrapper">
-    <!-- 自定义导航栏（透明） -->
-    <view class="custom-navbar frosted-paper">
-      <view class="navbar-btn" bindtap="goBack">
-        <t-icon name="chevron-left" size="20px" />
-      </view>
-      <view class="navbar-title">{{ categoryName }}</view>
-      <view class="navbar-btn" bindtap="toggleSortMenu">
-        <t-icon name="filter" size="20px" />
-      </view>
-    </view>
+  
 
     <!-- 排序菜单 -->
     <view wx:if="{{showSortMenu}}" class="sort-menu frosted-paper" catchtap="stopPropagation">
@@ -49,7 +40,7 @@
     </view>
 
     <!-- 主内容区域 -->
-    <scroll-view class="main-content" scroll-y enable-back-to-top lower-threshold="50" bindscrolltolower="onReachBottom">
+    <view class="main-content" scroll-y enable-back-to-top lower-threshold="50" bindscrolltolower="onReachBottom">
       <!-- 分类信息 Hero 区域 -->
       <view class="category-hero">
         <!-- 动态渐变背景 -->
@@ -155,7 +146,7 @@
 
       <!-- 底部占位 -->
       <view class="bottom-spacer"></view>
-    </scroll-view>
+    </view>
   </view>
 
   <!-- 分享浮动按钮 -->

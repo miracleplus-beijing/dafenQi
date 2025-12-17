@@ -180,9 +180,6 @@ page {
   color: var(--text-primary);
   letter-spacing: -0.3px;
   padding: 0 16px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* === 7. 排序菜单 === */
@@ -276,9 +273,7 @@ page {
 
 /* === 8. 主内容滚动区域 === */
 .main-content {
-  flex: 1;
-  height: 100vh;
-  padding: 8px 16px 0;
+  margin: 8px 16px;
   overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
 }
