@@ -82,7 +82,7 @@ Page({
         // 波形进度条相关
         waveformBars: [], // 波形条数据
         waveformTotalWidth: 750, // 波形总宽度 (rpx)
-        waveformBarCount: 22, // 波形条数量（与 demo.html 保持一致）
+        waveformBarCount: 50, // 波形条数量
         isDraggingWaveform: false, // 是否正在拖动波形滑块
         waveformContainerWidth: 0, // 波形容器实际宽度 (px)
     },

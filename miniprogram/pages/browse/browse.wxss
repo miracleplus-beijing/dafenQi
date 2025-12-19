@@ -302,7 +302,7 @@ page {
     justify-content: space-between;
     width: 100%;
     height: 100%;
-    gap: 6rpx;
+    gap: 1rpx;
 }
 
 .wave-bar {
